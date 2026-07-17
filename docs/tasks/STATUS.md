@@ -1,12 +1,12 @@
 # 実装進捗 (WBS: docs/design/03\_実装タスク分割書.md)
 
-最終更新: 2026-07-17
+最終更新: 2026-07-18
 
 ## Phase 0: 基盤
 
 | タスク | 名称                         | サイズ | 状態 | ブランチ/PR | 備考 |
 | ------ | ---------------------------- | ------ | ---- | ----------- | ---- |
-| T-000  | Walking Skeleton             | L      | ⏳   | —           |      |
+| T-000  | Walking Skeleton             | L      | 🔄   | feat/T-000-walking-skeleton | docs/skeleton-notes.md参照 |
 | T-001  | リポジトリ基盤整備           | M      | ⏳   | —           |      |
 | T-002  | CIパイプライン               | S      | ⏳   | —           |      |
 | T-003  | i18n骨格                     | M      | ⏳   | —           |      |
@@ -118,3 +118,4 @@
 ## 決定事項ログ(設計からの逸脱・追加判断)
 
 - 2026-07-17: ADR-007採用(Cloudflare Workers)。T-000検証項目にwrangler preview上の動作確認を追加。T-002にサーババンドルサイズゲートを追加。T-304の再検証実行環境をGitHub Actionsに変更。
+- 2026-07-18: T-000実施中、`next-mdx-remote` + `node:fs/promises` によるリクエスト時MDX読込がwrangler preview環境で `[unenv] fs.readFile is not implemented yet!` により失敗することを確認(Workersにはリクエスト時に読めるファイルシステムが存在しないため)。`@next/mdx` によるビルド時コンパイルに切替えて解消。T-006(コンテンツビルドパイプライン)は `lib/content.ts` を実行時fs読込に依存させず、ビルド時に静的解決する設計とすること(詳細: docs/skeleton-notes.md)。
