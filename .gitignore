@@ -1,4 +1,14 @@
-# === 以下を既存の .gitignore に追記 ===
 .env
+.env*.local
 .claude/worktrees/
 .claude/settings.local.json
+node_modules/
+.next/
+out/
+build/
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+.open-next/
+.wrangler/
+.vercel/

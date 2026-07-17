@@ -1,0 +1,19 @@
+{
+  "demo": {
+    "pageTitle": "Walking Skeleton デモレッスン",
+    "switchLocale": "English",
+    "labHeading": "演習: sum(numbers) を実装する"
+  },
+  "lab": {
+    "run": "実行",
+    "loadSolution": "正解コードを読み込む",
+    "loadInfiniteLoop": "無限ループコードを読み込む",
+    "running": "実行中…",
+    "testsPassed": "{passed}/{total} 件のテストに合格",
+    "resultPass": "合格",
+    "resultFail": "不合格",
+    "resultError": "エラー",
+    "resultTimeout": "タイムアウトしました(強制停止)",
+    "durationLabel": "実行時間: {ms}ms"
+  }
+}

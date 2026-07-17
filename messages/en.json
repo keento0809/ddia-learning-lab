@@ -1,0 +1,19 @@
+{
+  "demo": {
+    "pageTitle": "Walking Skeleton Demo Lesson",
+    "switchLocale": "日本語",
+    "labHeading": "Exercise: implement sum(numbers)"
+  },
+  "lab": {
+    "run": "Run",
+    "loadSolution": "Load correct solution",
+    "loadInfiniteLoop": "Load infinite loop",
+    "running": "Running…",
+    "testsPassed": "{passed}/{total} tests passed",
+    "resultPass": "Pass",
+    "resultFail": "Fail",
+    "resultError": "Error",
+    "resultTimeout": "Timed out (force-terminated)",
+    "durationLabel": "Duration: {ms}ms"
+  }
+}
