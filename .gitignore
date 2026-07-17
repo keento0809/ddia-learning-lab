@@ -1,0 +1,4 @@
+# === 以下を既存の .gitignore に追記 ===
+.env
+.claude/worktrees/
+.claude/settings.local.json
