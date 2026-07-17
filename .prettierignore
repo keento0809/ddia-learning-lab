@@ -1,0 +1,7 @@
+node_modules
+.next
+.open-next
+.wrangler
+package-lock.json
+# docs/design/ は仕様の正であり変更禁止(CLAUDE.md 絶対規則2)
+docs/design/

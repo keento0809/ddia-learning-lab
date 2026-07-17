@@ -7,7 +7,7 @@
 | タスク | 名称                         | サイズ | 状態 | ブランチ/PR | 備考 |
 | ------ | ---------------------------- | ------ | ---- | ----------- | ---- |
 | T-000  | Walking Skeleton             | L      | 🔄   | feat/T-000-walking-skeleton | docs/skeleton-notes.md参照 |
-| T-001  | リポジトリ基盤整備           | M      | ⏳   | —           |      |
+| T-001  | リポジトリ基盤整備           | M      | 🔄   | feat/T-001-repo-foundation | Tailwind/ESLint(no-literal-jsx-text)/Prettier/Vitest追加。lint/typecheck/test/build全green |
 | T-002  | CIパイプライン               | S      | ⏳   | —           |      |
 | T-003  | i18n骨格                     | M      | ⏳   | —           |      |
 | T-010  | コントラクト定義             | M      | ⏳   | —           |      |
@@ -119,3 +119,5 @@
 
 - 2026-07-17: ADR-007採用(Cloudflare Workers)。T-000検証項目にwrangler preview上の動作確認を追加。T-002にサーババンドルサイズゲートを追加。T-304の再検証実行環境をGitHub Actionsに変更。
 - 2026-07-18: T-000実施中、`next-mdx-remote` + `node:fs/promises` によるリクエスト時MDX読込がwrangler preview環境で `[unenv] fs.readFile is not implemented yet!` により失敗することを確認(Workersにはリクエスト時に読めるファイルシステムが存在しないため)。`@next/mdx` によるビルド時コンパイルに切替えて解消。T-006(コンテンツビルドパイプライン)は `lib/content.ts` を実行時fs読込に依存させず、ビルド時に静的解決する設計とすること(詳細: docs/skeleton-notes.md)。
+- 2026-07-18: T-001で02§5.2の「no-literal-jsx-text」規約を `eslint-plugin-react` の `react/jsx-no-literals` ルールで実装(同名の独立ルールは存在しないため)。このルールはJSX子要素直下の文字列リテラルを全て(句読点含む)禁止するため、`{t.x}: {y}` のように翻訳済み値の間に裸の記号(`:` `(` `)` など)を置く書き方はエラーになる。**恒久対策**: 今後同様のケースは `{`${t.x}: ${y}`}` のように単一のテンプレートリテラル式コンテナへ畳み込むこと(components/Lab.tsxで実施済み)。
+- 2026-07-18: T-001の「ディレクトリ骨格(02§1どおり)」は、T-001のOut of Scope(機能実装/i18n/DB)およびCLAUDE.md規則3(モック・スタブ禁止)と衝突するため、app/[locale]再構成・app/api・prisma/schema.prisma・lib/db.ts・lib/content.ts・components/{viz,lab,mdx,ui}等の空スタブは作成しなかった。実体を伴わないディレクトリ作成は「実装したことにする」偽装と区別がつかないため、各ディレクトリは対応タスク(T-003/T-004/T-006/T-007/T-101+/T-203+)が実装と同時に作成する方針とする。T-001では既存の app/, components/, content/, lib/, messages/, types/ に加え、Vitestの実体テストを伴う tests/unit/ のみを新設した。
