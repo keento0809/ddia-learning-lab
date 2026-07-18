@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
@@ -19,5 +19,8 @@ export default defineConfig({
         inline: ["next-intl"],
       },
     },
+    // tests/e2e/**はPlaywright(@playwright/test)専用のため、vitestのデフォルト
+    // includeパターン(**/*.spec.*)から除外する(npm run test:e2eで実行)。
+    exclude: [...configDefaults.exclude, "tests/e2e/**"],
   },
 });
