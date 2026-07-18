@@ -1,22 +1,44 @@
+# === 環境変数・秘密情報 ===
 .env
-.env*.local
-.claude/worktrees/
-.claude/settings.local.json
+.env.*
+!.env.example
+
+# === Node.js ===
 node_modules/
+.npm
+
+# === Next.js ===
 .next/
 out/
 build/
-.DS_Store
+
+# === TypeScript ===
 *.tsbuildinfo
 next-env.d.ts
-.open-next/
-.wrangler/
-.vercel/
-.worker-dryrun/
-lib/generated/
-content/generated/
-test-results/
+
+# === テスト ===
+coverage/
+.nyc_output/
 playwright-report/
-blob-report/
-playwright/.cache/
-.playwright-mcp/
+test-results/
+
+# === Cloudflare / Wrangler ===
+.wrangler/
+.dev.vars
+
+# === Claude Code ===
+.claude/worktrees/
+.claude/settings.local.json
+
+# === 一時ファイル ===
+tmp/
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === エディタ ===
+.vscode/
+.idea/
+*.swp
+*.swo

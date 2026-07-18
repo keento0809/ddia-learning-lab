@@ -73,7 +73,13 @@
       "Bash(zip:*)",
       "Bash(tar:*)",
       "Bash(curl -X POST http://localhost:*)",
-      "Bash(curl -X GET http://localhost:*)"
+      "Bash(curl -X GET http://localhost:*)",
+      "Bash(eval \"$(nodenv init -)\":*)",
+      "Bash(nodenv:*)",
+      "Read(tmp/**)",
+      "Write(tmp/**)",
+      "Edit(tmp/**)",
+      "Bash(mkdir -p tmp:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
