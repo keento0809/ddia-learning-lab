@@ -12,3 +12,4 @@ next-env.d.ts
 .open-next/
 .wrangler/
 .vercel/
+.worker-dryrun/
