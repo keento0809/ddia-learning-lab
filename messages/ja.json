@@ -51,5 +51,55 @@
     "resultError": "エラー",
     "resultTimeout": "タイムアウトしました(強制停止)",
     "durationLabel": "実行時間: {ms}ms"
+  },
+  "auth": {
+    "rateLimited": "試行回数が多すぎます。しばらく待ってから再度お試しください",
+    "signin": {
+      "title": "サインイン",
+      "emailLabel": "メールアドレス",
+      "passwordLabel": "パスワード",
+      "submit": "サインイン",
+      "submitting": "サインイン中…",
+      "errorInvalidCredentials": "メールアドレスまたはパスワードが正しくありません",
+      "success": "サインインしました",
+      "signupPrompt": "アカウントをお持ちでない場合は",
+      "signupLink": "サインアップ",
+      "resetLink": "パスワードをお忘れですか?"
+    },
+    "signup": {
+      "title": "サインアップ",
+      "displayNameLabel": "表示名",
+      "emailLabel": "メールアドレス",
+      "passwordLabel": "パスワード(8文字以上)",
+      "submit": "サインアップ",
+      "submitting": "登録中…",
+      "errorEmailTaken": "このメールアドレスは既に登録されています",
+      "errorValidation": "入力内容を確認してください",
+      "errorGeneric": "登録に失敗しました。しばらくしてから再度お試しください",
+      "success": "登録が完了し、サインインしました",
+      "signinPrompt": "既にアカウントをお持ちの場合は",
+      "signinLink": "サインイン"
+    },
+    "reset": {
+      "requestTitle": "パスワードリセット",
+      "emailLabel": "メールアドレス",
+      "requestSubmit": "リセットリンクを発行",
+      "requestSubmitting": "発行中…",
+      "requestNotice": "登録されているメールアドレスの場合、以下にリセットリンクが表示されます(このプロジェクトはメール送信基盤が未導入のため、リンクを直接表示します)",
+      "linkGeneratedLabel": "リセットリンク",
+      "confirmTitle": "新しいパスワードを設定",
+      "newPasswordLabel": "新しいパスワード(8文字以上)",
+      "confirmSubmit": "パスワードを更新",
+      "confirmSubmitting": "更新中…",
+      "confirmSuccess": "パスワードを更新しました。新しいパスワードでサインインしてください",
+      "confirmError": "リンクが無効か期限切れです。もう一度リセットをお試しください",
+      "missingToken": "リセットトークンが見つかりません。パスワードリセットをもう一度お試しください",
+      "backToSignin": "サインインに戻る"
+    },
+    "oauth": {
+      "continueWith": "{provider}で続ける",
+      "github": "GitHub",
+      "google": "Google"
+    }
   }
 }
