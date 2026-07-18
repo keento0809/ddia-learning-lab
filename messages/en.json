@@ -21,5 +21,55 @@
     "resultError": "Error",
     "resultTimeout": "Timed out (force-terminated)",
     "durationLabel": "Duration: {ms}ms"
+  },
+  "auth": {
+    "rateLimited": "Too many attempts. Please wait a moment and try again",
+    "signin": {
+      "title": "Sign in",
+      "emailLabel": "Email address",
+      "passwordLabel": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "errorInvalidCredentials": "Incorrect email or password",
+      "success": "Signed in",
+      "signupPrompt": "Don't have an account?",
+      "signupLink": "Sign up",
+      "resetLink": "Forgot your password?"
+    },
+    "signup": {
+      "title": "Sign up",
+      "displayNameLabel": "Display name",
+      "emailLabel": "Email address",
+      "passwordLabel": "Password (8+ characters)",
+      "submit": "Sign up",
+      "submitting": "Signing up…",
+      "errorEmailTaken": "This email address is already registered",
+      "errorValidation": "Please check your input",
+      "errorGeneric": "Sign up failed. Please try again later",
+      "success": "Account created and signed in",
+      "signinPrompt": "Already have an account?",
+      "signinLink": "Sign in"
+    },
+    "reset": {
+      "requestTitle": "Reset password",
+      "emailLabel": "Email address",
+      "requestSubmit": "Generate reset link",
+      "requestSubmitting": "Generating…",
+      "requestNotice": "If that email is registered, a reset link will appear below (this project has no email sending infrastructure yet, so the link is shown directly).",
+      "linkGeneratedLabel": "Reset link",
+      "confirmTitle": "Set a new password",
+      "newPasswordLabel": "New password (8+ characters)",
+      "confirmSubmit": "Update password",
+      "confirmSubmitting": "Updating…",
+      "confirmSuccess": "Your password has been updated. Please sign in with your new password",
+      "confirmError": "This link is invalid or expired. Please request a new reset link",
+      "missingToken": "Reset token not found. Please request a password reset again",
+      "backToSignin": "Back to sign in"
+    },
+    "oauth": {
+      "continueWith": "Continue with {provider}",
+      "github": "GitHub",
+      "google": "Google"
+    }
   }
 }

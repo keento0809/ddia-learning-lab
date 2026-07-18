@@ -2,6 +2,13 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  // T-005で.tsxコンポーネントを直接呼び出すテスト(tests/unit/auth/oauthButtons.test.tsx)を
+  // 初めて追加した際、Viteのデフォルト(esbuildのclassic変換)でコンパイルされ
+  // 「React is not defined」で失敗した(Next.js本体はSWCでautomatic runtimeを使うため
+  // これまで顕在化していなかった)。Next.jsと同じautomatic runtimeに揃える。
+  esbuild: {
+    jsx: "automatic",
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL(".", import.meta.url)),
