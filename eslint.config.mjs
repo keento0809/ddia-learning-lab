@@ -13,6 +13,7 @@ const eslintConfig = [
       ".next/**",
       ".open-next/**",
       ".wrangler/**",
+      ".worker-dryrun/**",
       "next-env.d.ts",
     ],
   },
