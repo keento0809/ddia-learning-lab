@@ -36,6 +36,17 @@
     "retryLabel": "再試行",
     "homeLinkLabel": "トップページへ戻る"
   },
+  "curriculum": {
+    "pageTitle": "カリキュラム一覧",
+    "parts": {
+      "I": { "title": "Part I: データシステムの基礎" },
+      "II": { "title": "Part II: 分散データ" },
+      "III": { "title": "Part III: 派生データ" }
+    },
+    "minutesLabel": "{minutes}分",
+    "lessonCountLabel": "レッスン{count}件",
+    "progressAriaLabel": "進捗 {percent}%"
+  },
   "demo": {
     "pageTitle": "Walking Skeleton デモレッスン",
     "labHeading": "演習: sum(numbers) を実装する"

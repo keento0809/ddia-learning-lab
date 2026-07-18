@@ -4,6 +4,11 @@
   "private": true,
   "scripts": {
     "postinstall": "prisma generate",
+    "generate:curriculum": "tsx scripts/generate-curriculum.ts",
+    "predev": "npm run generate:curriculum",
+    "prebuild": "npm run generate:curriculum",
+    "pretypecheck": "npm run generate:curriculum",
+    "pretest": "npm run generate:curriculum",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
