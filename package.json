@@ -21,7 +21,8 @@
     "@next/mdx": "^15.5.20",
     "next": "15.5.20",
     "react": "19.2.7",
-    "react-dom": "19.2.7"
+    "react-dom": "19.2.7",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.2.0",
