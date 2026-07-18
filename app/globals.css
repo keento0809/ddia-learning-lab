@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+/*
+ * Tailwind v4はデフォルトでdark:をprefers-color-schemeメディアクエリに
+ * 束縛する。02§6のテーマ状態(Zustand+localStorage)によるユーザー手動切替を
+ * 反映するため、.dark クラス戦略に切り替える。
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  @apply bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-50;
+}
+
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-blue-600 dark:outline-blue-400;
+}

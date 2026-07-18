@@ -21,7 +21,12 @@ export function LocaleToggle({ locale }: { locale: AppLocale }) {
   const t = getMessages(locale).nav.localeToggle;
 
   return (
-    <button type="button" aria-label={t.ariaLabel} onClick={() => router.push(pathname, { locale: other })}>
+    <button
+      type="button"
+      aria-label={t.ariaLabel}
+      onClick={() => router.push(pathname, { locale: other })}
+      className="rounded px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+    >
       {t[other]}
     </button>
   );

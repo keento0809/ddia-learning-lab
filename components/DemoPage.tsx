@@ -1,6 +1,5 @@
 import type { ComponentType } from "react";
 import { Lab } from "@/components/Lab";
-import { LocaleToggle } from "@/components/LocaleToggle";
 import { getMessages, type Locale } from "@/lib/i18n/messages";
 import JaDemoContent from "@/content/ja/demo.mdx";
 import EnDemoContent from "@/content/en/demo.mdx";
@@ -20,9 +19,6 @@ export function DemoPage({ locale }: { locale: Locale }) {
 
   return (
     <main style={{ maxWidth: "720px", margin: "0 auto", padding: "1rem" }}>
-      <nav>
-        <LocaleToggle locale={locale} />
-      </nav>
       <article>
         <Content />
       </article>
