@@ -1,7 +1,13 @@
 {
+  "nav": {
+    "localeToggle": {
+      "ariaLabel": "Switch display language",
+      "ja": "日本語",
+      "en": "English"
+    }
+  },
   "demo": {
     "pageTitle": "Walking Skeleton Demo Lesson",
-    "switchLocale": "日本語",
     "labHeading": "Exercise: implement sum(numbers)"
   },
   "lab": {

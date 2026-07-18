@@ -1,11 +1,9 @@
-import Link from "next/link";
 import type { ComponentType } from "react";
 import { Lab } from "@/components/Lab";
+import { LocaleToggle } from "@/components/LocaleToggle";
 import { getMessages, type Locale } from "@/lib/i18n/messages";
 import JaDemoContent from "@/content/ja/demo.mdx";
 import EnDemoContent from "@/content/en/demo.mdx";
-
-const OTHER_LOCALE: Record<Locale, Locale> = { ja: "en", en: "ja" };
 
 // 02§1のとおりMDXは実行時fsではなくビルド時ロードとする(@next/mdxのwebpackローダで
 // import時にコンパイル)。next-mdx-remote + fs.readFileでの実装はCloudflare Workers
@@ -18,13 +16,12 @@ const CONTENT: Record<Locale, ComponentType> = {
 
 export function DemoPage({ locale }: { locale: Locale }) {
   const t = getMessages(locale);
-  const other = OTHER_LOCALE[locale];
   const Content = CONTENT[locale];
 
   return (
     <main style={{ maxWidth: "720px", margin: "0 auto", padding: "1rem" }}>
       <nav>
-        <Link href={`/${other}/demo`}>{t.demo.switchLocale}</Link>
+        <LocaleToggle locale={locale} />
       </nav>
       <article>
         <Content />

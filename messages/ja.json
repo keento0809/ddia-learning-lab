@@ -1,7 +1,13 @@
 {
+  "nav": {
+    "localeToggle": {
+      "ariaLabel": "表示言語を切り替える",
+      "ja": "日本語",
+      "en": "English"
+    }
+  },
   "demo": {
     "pageTitle": "Walking Skeleton デモレッスン",
-    "switchLocale": "English",
     "labHeading": "演習: sum(numbers) を実装する"
   },
   "lab": {
