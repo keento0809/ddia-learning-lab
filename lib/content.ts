@@ -3,6 +3,7 @@ import path from "node:path";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { ExerciseDefinitionSchema, type ExerciseDefinition } from "./contracts/exercise";
+import { ModuleMetaSchema, type ModuleMeta } from "./contracts/module";
 import type { Locale } from "./contracts/common";
 
 /**
@@ -26,22 +27,6 @@ export class ContentValidationError extends Error {
     this.name = "ContentValidationError";
   }
 }
-
-/**
- * module.yamlの最小スキーマ(T-006検証専用)。
- * 03文書T-101行は「module.yamlスキーマ(T-010の型)」を前提とするが、T-010の
- * 公式成果物にmodule.yaml定義は含まれず(STATUS.md 2026-07-18決定事項ログ)、
- * lib/contracts/は変更禁止(CLAUDE.md規則2)のため、ここではT-006自身の検証
- * (slug列挙・frontmatter必須項目)に必要な最小限の項目のみをローカルスキーマ
- * として定義する。T-101着手前に公式contract化するかの判断が別途必要。
- */
-const ModuleMetaSchema = z.object({
-  slug: z.string().min(1),
-  title: z.string().min(1),
-  order: z.number().int().positive(),
-  minutes: z.number().positive(),
-});
-export type ModuleMeta = z.infer<typeof ModuleMetaSchema>;
 
 /** レッスンMDXのfrontmatter必須項目(02§9「4. frontmatter必須項目 (title, order, minutes)」) */
 const LessonFrontmatterSchema = z.object({
