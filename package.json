@@ -16,6 +16,7 @@
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "build:worker": "opennextjs-cloudflare build",
     "check:bundle-size": "node scripts/check-bundle-size.mjs",
+    "validate:content": "tsx scripts/validate-content.ts",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:generate": "prisma generate"
@@ -30,6 +31,7 @@
     "pg": "^8.22.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
+    "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

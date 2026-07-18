@@ -1,0 +1,17 @@
+slug: 01-reliability/percentile-lab
+language: js
+entry: percentile
+template: |
+  // Given an array of numbers and a percentile (0-100), return the value
+  export function percentile(values, p) {
+    // TODO: implement
+  }
+tests:
+  - id: t1
+    name:
+      ja: "p50が中央値になる"
+      en: "p50 equals the median"
+    call: { fn: "percentile", args: [[1, 2, 3, 4, 5], 90] }
+    assert: { type: "equals", value: 5 }
+timeoutMs: 3000
+hints: []

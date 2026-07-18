@@ -14,5 +14,4 @@ next-env.d.ts
 .vercel/
 .worker-dryrun/
 lib/generated/
-
-/lib/generated/prisma
+content/generated/
