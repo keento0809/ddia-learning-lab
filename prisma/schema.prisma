@@ -1,0 +1,138 @@
+// Prisma schema — 02_詳細設計書.md §2.1 テーブル定義の物理化。
+// マイグレーション方針は §2.2 (Prisma Migrateで管理)。
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../lib/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+// Prisma 7: 接続URLはschema.prismaではなくprisma.config.ts/PrismaClientの
+// adapterで指定する(P1012)。ここではprovider/extensionsのみ宣言する。
+datasource db {
+  provider   = "postgresql"
+  extensions = [citext]
+}
+
+/// 02 §2.1 users
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String    @unique @db.Citext
+  passwordHash String?   @map("password_hash")
+  displayName  String    @map("display_name") @db.VarChar(50)
+  localePref   String    @default("ja") @map("locale_pref") @db.VarChar(5)
+  themePref    String    @default("system") @map("theme_pref") @db.VarChar(10)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  oauthAccounts OauthAccount[]
+  progress      Progress[]
+  submissions   Submission[]
+  notes         Note[]
+  userBadges    UserBadge[]
+  streak        Streak?
+
+  @@map("users")
+}
+
+/// 02 §2.1 oauth_accounts
+model OauthAccount {
+  id                String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String @map("user_id") @db.Uuid
+  provider          String @db.VarChar(20)
+  providerAccountId String @map("provider_account_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("oauth_accounts")
+}
+
+/// 02 §2.1 progress
+model Progress {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  itemType    String    @map("item_type") @db.VarChar(10)
+  itemSlug    String    @map("item_slug") @db.VarChar(120)
+  status      String    @db.VarChar(15)
+  score       Int?      @db.SmallInt
+  completedAt DateTime? @map("completed_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, itemType, itemSlug])
+  @@index([userId, updatedAt(sort: Desc)])
+  @@map("progress")
+}
+
+/// 02 §2.1 submissions
+model Submission {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String   @map("user_id") @db.Uuid
+  exerciseSlug        String   @map("exercise_slug") @db.VarChar(120)
+  language            String   @db.VarChar(10)
+  code                String
+  result              String   @db.VarChar(10)
+  passedTests         Int      @map("passed_tests") @db.SmallInt
+  totalTests          Int      @map("total_tests") @db.SmallInt
+  durationMs          Int?     @map("duration_ms")
+  clientGraderVersion String   @map("client_grader_version") @db.VarChar(20)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, exerciseSlug, createdAt(sort: Desc)])
+  @@map("submissions")
+}
+
+/// 02 §2.1 notes
+model Note {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  lessonSlug String   @map("lesson_slug") @db.VarChar(120)
+  bodyMd     String   @map("body_md")
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, lessonSlug])
+  @@map("notes")
+}
+
+/// 02 §2.1 badges
+model Badge {
+  id       Int    @id @default(autoincrement()) @db.SmallInt
+  slug     String @unique @db.VarChar(50)
+  criteria Json
+
+  userBadges UserBadge[]
+
+  @@map("badges")
+}
+
+/// 02 §2.1 user_badges
+model UserBadge {
+  userId    String   @map("user_id") @db.Uuid
+  badgeId   Int      @map("badge_id") @db.SmallInt
+  grantedAt DateTime @default(now()) @map("granted_at") @db.Timestamptz
+
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@id([userId, badgeId])
+  @@map("user_badges")
+}
+
+/// 02 §2.1 streaks(学習ストリーク)
+model Streak {
+  userId         String    @id @map("user_id") @db.Uuid
+  currentDays    Int       @default(0) @map("current_days")
+  longestDays    Int       @default(0) @map("longest_days")
+  lastActiveDate DateTime? @map("last_active_date") @db.Date
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("streaks")
+}

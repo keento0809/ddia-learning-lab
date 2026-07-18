@@ -21,6 +21,9 @@ export default defineConfig({
     },
     // tests/e2e/**はPlaywright(@playwright/test)専用のため、vitestのデフォルト
     // includeパターン(**/*.spec.*)から除外する(npm run test:e2eで実行)。
-    exclude: [...configDefaults.exclude, "tests/e2e/**"],
+    // tests/integration は docker-compose のテスト用DBが必要なため、
+    // 通常の `npm run test` からは除外する(専用DBなしでも全green)。
+    // 実行は `npm run test:integration` / vitest.integration.config.ts。
+    exclude: [...configDefaults.exclude, "tests/e2e/**", "tests/integration/**"],
   },
 });
