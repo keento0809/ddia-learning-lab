@@ -1,0 +1,17 @@
+slug: 01-reliability/percentile-lab
+language: js
+entry: percentile
+template: |
+  // 数値配列とパーセンタイル(0-100)を受け取り、値を返す
+  export function percentile(values, p) {
+    // TODO: 実装
+  }
+tests:
+  - id: t1
+    name:
+      ja: "p50が中央値になる"
+      en: "p50 equals the median"
+    call: { fn: "percentile", args: [[1, 2, 3, 4, 5], 50] }
+    assert: { type: "equals", value: 3 }
+timeoutMs: 3000
+hints: []
