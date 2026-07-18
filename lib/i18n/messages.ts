@@ -1,14 +1,14 @@
 import ja from "@/messages/ja.json";
 import en from "@/messages/en.json";
+import type { AppLocale } from "@/lib/i18n/routing";
 
 /**
- * Walking Skeleton (T-000) 用の最小メッセージ参照ヘルパ。
- * next-intl本体・middlewareによるロケール解決は T-003 の成果物であり、
- * ここでは「UI文言をハードコードせず messages/{ja,en}.json から取得する」
- * という規約(CLAUDE.md 規則5)だけを、貫通確認に必要な範囲で満たす。
+ * 「UI文言をハードコードせず messages/{ja,en}.json から取得する」という規約
+ * (CLAUDE.md 規則5)を満たすための軽量メッセージ参照ヘルパ。ロケール解決・
+ * ルーティング自体は middleware.ts / lib/i18n/routing.ts(next-intl)が担う。
  */
 
-export type Locale = "ja" | "en";
+export type Locale = AppLocale;
 
 const catalogs = { ja, en } satisfies Record<Locale, unknown>;
 
