@@ -13,7 +13,8 @@
     "format:check": "prettier --check .",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "build:worker": "opennextjs-cloudflare build",
-    "check:bundle-size": "node scripts/check-bundle-size.mjs"
+    "check:bundle-size": "node scripts/check-bundle-size.mjs",
+    "validate:content": "tsx scripts/validate-content.ts"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
@@ -22,6 +23,7 @@
     "next": "15.5.20",
     "react": "19.2.7",
     "react-dom": "19.2.7",
+    "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -37,6 +39,7 @@
     "postcss": "^8.5.19",
     "prettier": "^3.9.5",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.1",
     "typescript": "5.7.2",
     "vitest": "3.2.4",
     "wrangler": "4.112.0"

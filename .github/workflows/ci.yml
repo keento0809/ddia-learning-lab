@@ -73,9 +73,7 @@ jobs:
       - run: npx wrangler deploy --dry-run --outdir .worker-dryrun
       - run: npm run check:bundle-size
 
-  # T-006(コンテンツビルドパイプライン)で `validate:content` スクリプト実装後に有効化するplaceholder。
   content-validate:
-    if: false
     runs-on: ubuntu-latest
     needs: build
     steps:
