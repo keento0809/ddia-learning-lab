@@ -8,7 +8,7 @@
 | ------ | ---------------------------- | ------ | ---- | ----------- | ---- |
 | T-000  | Walking Skeleton             | L      | 🔄   | feat/T-000-walking-skeleton | docs/skeleton-notes.md参照 |
 | T-001  | リポジトリ基盤整備           | M      | 🔄   | feat/T-001-repo-foundation | Tailwind/ESLint(no-literal-jsx-text)/Prettier/Vitest追加。lint/typecheck/test/build全green |
-| T-002  | CIパイプライン               | S      | ⏳   | —           |      |
+| T-002  | CIパイプライン               | S      | 🔄   | feat/T-002-ci | lint→typecheck→unit→build(直列)+ADR-007バンドルサイズゲート(2.5MiB警告/3MiB失敗)。content-validate/e2eはplaceholder(if: false) |
 | T-003  | i18n骨格                     | M      | ⏳   | —           |      |
 | T-010  | コントラクト定義             | M      | ⏳   | —           |      |
 | T-004  | DB/Prisma                    | M      | ⏳   | —           |      |
@@ -122,3 +122,4 @@
 - 2026-07-18: T-001で02§5.2の「no-literal-jsx-text」規約を `eslint-plugin-react` の `react/jsx-no-literals` ルールで実装(同名の独立ルールは存在しないため)。このルールはJSX子要素直下の文字列リテラルを全て(句読点含む)禁止するため、`{t.x}: {y}` のように翻訳済み値の間に裸の記号(`:` `(` `)` など)を置く書き方はエラーになる。**恒久対策**: 今後同様のケースは `{`${t.x}: ${y}`}` のように単一のテンプレートリテラル式コンテナへ畳み込むこと(components/Lab.tsxで実施済み)。
 - 2026-07-18: T-001の「ディレクトリ骨格(02§1どおり)」は、T-001のOut of Scope(機能実装/i18n/DB)およびCLAUDE.md規則3(モック・スタブ禁止)と衝突するため、app/[locale]再構成・app/api・prisma/schema.prisma・lib/db.ts・lib/content.ts・components/{viz,lab,mdx,ui}等の空スタブは作成しなかった。実体を伴わないディレクトリ作成は「実装したことにする」偽装と区別がつかないため、各ディレクトリは対応タスク(T-003/T-004/T-006/T-007/T-101+/T-203+)が実装と同時に作成する方針とする。T-001では既存の app/, components/, content/, lib/, messages/, types/ に加え、Vitestの実体テストを伴う tests/unit/ のみを新設した。
 - 2026-07-18: T-001はツーリング整備タスクでUI新規実装を伴わないため当初qa-evaluatorを未実施だったが、components/Lab.tsx(既存UI)にlint適合のための機械的変更を加えていたため追加でqa-evaluatorを実施。ブラウザ操作(合格/タイムアウト/エラー、ja/en)で旧コミット(93fe2d5)と表示結果が完全一致することを確認しPASS。**恒久対策**: 既存UIコンポーネントに1行でも変更を加えた場合は、そのタスクが「UI系タスク」でなくてもqa-evaluatorでの回帰確認を完了報告前に行うこと。副次的発見として `lib/runner/harness.worker.ts` のエラーメッセージがロケール非依存で日本語ハードコードのまま(T-000由来の既存不具合)であることを検出。修正は本タスクのスコープ外のため実施せず、後続タスク(T-107b/T-107c想定)でのフォローアップ候補として記録。
+- 2026-07-18: T-002実施中、GitHub Actionsのワークフローが未マージのためローカルでの実行結果確認ができず、`act`もCI環境に未導入だったため、`actionlint`(brewで導入)によるワークフローYAMLのスキーマ検証+全コマンド(lint/typecheck/test/build)のローカルexit 0確認で受入基準を代替した(WBS T-002本文に明記された代替手段)。**恒久対策**: `actionlint`は意図的な`if: false`プレースホルダーjobを`constant expression in condition`として警告するが、これはWBS T-002が明示的に要求する設計(content-validate/e2eをT-006/T-403待ちのplaceholderとして先に定義)であり偽陽性として無視してよい。また、`wrangler deploy --dry-run`が生成する`.worker-dryrun/`配下のバンドル済みJSは`.gitignore`だけでは`npm run lint`の対象から除外されず(ESLintは.gitignoreを見ない)lintが壊れたため、`eslint.config.mjs`のignoresにも同ディレクトリを追加。**今後、ビルド/検証用に一時生成する新規ディレクトリを追加する際は、`.gitignore`と`eslint.config.mjs`の両方に追記すること。**
