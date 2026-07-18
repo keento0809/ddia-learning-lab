@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import "./globals.css";
 
 // タイトルはロケール別に app/{ja,en}/demo/page.tsx の generateMetadata で
 // messages/{ja,en}.json から解決する(CLAUDE.md規則5)。ルートlayoutはロケール

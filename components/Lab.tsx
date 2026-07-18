@@ -33,7 +33,9 @@ export function Lab({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div style={{ border: "1px solid #ccc", padding: "1rem", marginTop: "1rem" }}>
+    <div
+      style={{ border: "1px solid #ccc", padding: "1rem", marginTop: "1rem" }}
+    >
       <div style={{ marginBottom: "0.5rem" }}>
         <button type="button" onClick={() => setCode(SOLUTION_CODE)}>
           {t.loadSolution}
@@ -52,7 +54,11 @@ export function Lab({ locale }: { locale: Locale }) {
       />
 
       <div style={{ marginTop: "0.5rem" }}>
-        <button type="button" onClick={handleRun} disabled={status === "running"}>
+        <button
+          type="button"
+          onClick={handleRun}
+          disabled={status === "running"}
+        >
           {status === "running" ? t.running : t.run}
         </button>
       </div>
@@ -76,16 +82,14 @@ function ResultSummary({
   if (result.result === "timeout") {
     return (
       <p data-testid="lab-result-status">
-        {t.resultTimeout} ({formatMessage(t.durationLabel, { ms: result.durationMs })})
+        {`${t.resultTimeout} (${formatMessage(t.durationLabel, { ms: result.durationMs })})`}
       </p>
     );
   }
 
   if (result.result === "error") {
     return (
-      <p data-testid="lab-result-status">
-        {t.resultError}: {result.error}
-      </p>
+      <p data-testid="lab-result-status">{`${t.resultError}: ${result.error}`}</p>
     );
   }
 
@@ -93,12 +97,14 @@ function ResultSummary({
   return (
     <div data-testid="lab-result-status">
       <p>{result.result === "pass" ? t.resultPass : t.resultFail}</p>
-      <p>{formatMessage(t.testsPassed, { passed, total: result.perTest.length })}</p>
+      <p>
+        {formatMessage(t.testsPassed, { passed, total: result.perTest.length })}
+      </p>
       <p>{formatMessage(t.durationLabel, { ms: result.durationMs })}</p>
       <ul>
         {result.perTest.map((test) => (
           <li key={test.id}>
-            {test.id}: {test.pass ? "OK" : `NG (${test.error ?? test.actual})`}
+            {`${test.id}: ${test.pass ? "OK" : `NG (${test.error ?? test.actual})`}`}
           </li>
         ))}
       </ul>
