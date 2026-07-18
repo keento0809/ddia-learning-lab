@@ -1,0 +1,451 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (locale=en) 1`] = `
+<main
+  className="mx-auto max-w-3xl px-4 py-8"
+>
+  <h1
+    className="mb-6 text-2xl font-semibold"
+  >
+    Curriculum
+  </h1>
+  <section
+    aria-labelledby="curriculum-part-I"
+    className="mb-8"
+  >
+    <h2
+      className="mb-3 text-lg font-semibold"
+      id="curriculum-part-I"
+    >
+      Part I: Foundations of Data Systems
+    </h2>
+    <ul
+      className="flex flex-col gap-1"
+      data-testid="curriculum-part-I-list"
+    >
+      <ModuleCard
+        lessonCount={1}
+        locale="en"
+        meta={
+          {
+            "minutes": 45,
+            "order": 1,
+            "slug": "01-reliability",
+            "title": "Reliability, Scalability & Maintainability",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="en"
+        meta={
+          {
+            "minutes": 50,
+            "order": 2,
+            "slug": "02-data-models",
+            "title": "Data Models & Query Languages",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="en"
+        meta={
+          {
+            "minutes": 55,
+            "order": 3,
+            "slug": "03-storage-and-indexing",
+            "title": "Storage & Indexing",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="en"
+        meta={
+          {
+            "minutes": 40,
+            "order": 4,
+            "slug": "04-encoding",
+            "title": "Encoding & Evolution",
+          }
+        }
+        progressPercent={0}
+      />
+    </ul>
+  </section>
+  <section
+    aria-labelledby="curriculum-part-II"
+    className="mb-8"
+  >
+    <h2
+      className="mb-3 text-lg font-semibold"
+      id="curriculum-part-II"
+    >
+      Part II: Distributed Data
+    </h2>
+    <ul
+      className="flex flex-col gap-1"
+      data-testid="curriculum-part-II-list"
+    >
+      <ModuleCard
+        lessonCount={0}
+        locale="en"
+        meta={
+          {
+            "minutes": 50,
+            "order": 5,
+            "slug": "05-replication",
+            "title": "Replication",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="en"
+        meta={
+          {
+            "minutes": 45,
+            "order": 6,
+            "slug": "06-partitioning",
+            "title": "Partitioning",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="en"
+        meta={
+          {
+            "minutes": 60,
+            "order": 7,
+            "slug": "07-transactions",
+            "title": "Transactions",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="en"
+        meta={
+          {
+            "minutes": 50,
+            "order": 8,
+            "slug": "08-distributed-troubles",
+            "title": "Trouble with Distributed Systems",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="en"
+        meta={
+          {
+            "minutes": 55,
+            "order": 9,
+            "slug": "09-consistency-and-consensus",
+            "title": "Consistency & Consensus",
+          }
+        }
+        progressPercent={0}
+      />
+    </ul>
+  </section>
+  <section
+    aria-labelledby="curriculum-part-III"
+    className="mb-8"
+  >
+    <h2
+      className="mb-3 text-lg font-semibold"
+      id="curriculum-part-III"
+    >
+      Part III: Derived Data
+    </h2>
+    <ul
+      className="flex flex-col gap-1"
+      data-testid="curriculum-part-III-list"
+    >
+      <ModuleCard
+        lessonCount={0}
+        locale="en"
+        meta={
+          {
+            "minutes": 45,
+            "order": 10,
+            "slug": "10-batch-processing",
+            "title": "Batch Processing",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="en"
+        meta={
+          {
+            "minutes": 45,
+            "order": 11,
+            "slug": "11-stream-processing",
+            "title": "Stream Processing",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="en"
+        meta={
+          {
+            "minutes": 60,
+            "order": 12,
+            "slug": "12-capstone-design",
+            "title": "Capstone: Designing Data Systems",
+          }
+        }
+        progressPercent={0}
+      />
+    </ul>
+  </section>
+</main>
+`;
+
+exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (locale=ja) 1`] = `
+<main
+  className="mx-auto max-w-3xl px-4 py-8"
+>
+  <h1
+    className="mb-6 text-2xl font-semibold"
+  >
+    カリキュラム一覧
+  </h1>
+  <section
+    aria-labelledby="curriculum-part-I"
+    className="mb-8"
+  >
+    <h2
+      className="mb-3 text-lg font-semibold"
+      id="curriculum-part-I"
+    >
+      Part I: データシステムの基礎
+    </h2>
+    <ul
+      className="flex flex-col gap-1"
+      data-testid="curriculum-part-I-list"
+    >
+      <ModuleCard
+        lessonCount={1}
+        locale="ja"
+        meta={
+          {
+            "minutes": 45,
+            "order": 1,
+            "slug": "01-reliability",
+            "title": "信頼性・スケーラビリティ・保守性",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="ja"
+        meta={
+          {
+            "minutes": 50,
+            "order": 2,
+            "slug": "02-data-models",
+            "title": "データモデルとクエリ言語",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="ja"
+        meta={
+          {
+            "minutes": 55,
+            "order": 3,
+            "slug": "03-storage-and-indexing",
+            "title": "ストレージとインデックス",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="ja"
+        meta={
+          {
+            "minutes": 40,
+            "order": 4,
+            "slug": "04-encoding",
+            "title": "エンコーディングと進化",
+          }
+        }
+        progressPercent={0}
+      />
+    </ul>
+  </section>
+  <section
+    aria-labelledby="curriculum-part-II"
+    className="mb-8"
+  >
+    <h2
+      className="mb-3 text-lg font-semibold"
+      id="curriculum-part-II"
+    >
+      Part II: 分散データ
+    </h2>
+    <ul
+      className="flex flex-col gap-1"
+      data-testid="curriculum-part-II-list"
+    >
+      <ModuleCard
+        lessonCount={0}
+        locale="ja"
+        meta={
+          {
+            "minutes": 50,
+            "order": 5,
+            "slug": "05-replication",
+            "title": "レプリケーション",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="ja"
+        meta={
+          {
+            "minutes": 45,
+            "order": 6,
+            "slug": "06-partitioning",
+            "title": "パーティショニング",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="ja"
+        meta={
+          {
+            "minutes": 60,
+            "order": 7,
+            "slug": "07-transactions",
+            "title": "トランザクション",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="ja"
+        meta={
+          {
+            "minutes": 50,
+            "order": 8,
+            "slug": "08-distributed-troubles",
+            "title": "分散システムの困難",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="ja"
+        meta={
+          {
+            "minutes": 55,
+            "order": 9,
+            "slug": "09-consistency-and-consensus",
+            "title": "一貫性と合意",
+          }
+        }
+        progressPercent={0}
+      />
+    </ul>
+  </section>
+  <section
+    aria-labelledby="curriculum-part-III"
+    className="mb-8"
+  >
+    <h2
+      className="mb-3 text-lg font-semibold"
+      id="curriculum-part-III"
+    >
+      Part III: 派生データ
+    </h2>
+    <ul
+      className="flex flex-col gap-1"
+      data-testid="curriculum-part-III-list"
+    >
+      <ModuleCard
+        lessonCount={0}
+        locale="ja"
+        meta={
+          {
+            "minutes": 45,
+            "order": 10,
+            "slug": "10-batch-processing",
+            "title": "バッチ処理",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="ja"
+        meta={
+          {
+            "minutes": 45,
+            "order": 11,
+            "slug": "11-stream-processing",
+            "title": "ストリーム処理",
+          }
+        }
+        progressPercent={0}
+      />
+      <OrderConnector />
+      <ModuleCard
+        lessonCount={0}
+        locale="ja"
+        meta={
+          {
+            "minutes": 60,
+            "order": 12,
+            "slug": "12-capstone-design",
+            "title": "総合演習: データシステムの設計",
+          }
+        }
+        progressPercent={0}
+      />
+    </ul>
+  </section>
+</main>
+`;
