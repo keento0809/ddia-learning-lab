@@ -13,3 +13,6 @@ next-env.d.ts
 .wrangler/
 .vercel/
 .worker-dryrun/
+lib/generated/
+
+/lib/generated/prisma
