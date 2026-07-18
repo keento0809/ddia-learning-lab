@@ -15,4 +15,8 @@ next-env.d.ts
 .worker-dryrun/
 lib/generated/
 content/generated/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
 .playwright-mcp/

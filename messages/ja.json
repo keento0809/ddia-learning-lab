@@ -1,10 +1,40 @@
 {
   "nav": {
+    "brand": "DDIA Learning Lab",
+    "mainAriaLabel": "メインナビゲーション",
+    "learn": "学ぶ",
+    "glossary": "用語集",
+    "search": "検索",
     "localeToggle": {
       "ariaLabel": "表示言語を切り替える",
       "ja": "日本語",
       "en": "English"
     }
+  },
+  "theme": {
+    "switchToDark": "ダークテーマに切り替える",
+    "switchToLight": "ライトテーマに切り替える"
+  },
+  "account": {
+    "menuLabel": "アカウント",
+    "menuAriaLabel": "アカウントメニューを開く",
+    "settings": "設定",
+    "signIn": "ログイン"
+  },
+  "footer": {
+    "navAriaLabel": "フッタナビゲーション",
+    "copyright": "© {year} DDIA Learning Lab"
+  },
+  "notFound": {
+    "title": "ページが見つかりません",
+    "description": "お探しのページは存在しないか、移動した可能性があります。",
+    "homeLinkLabel": "トップページへ戻る"
+  },
+  "error": {
+    "title": "問題が発生しました",
+    "description": "予期しないエラーが発生しました。再試行するか、トップページへ戻ってください。",
+    "retryLabel": "再試行",
+    "homeLinkLabel": "トップページへ戻る"
   },
   "demo": {
     "pageTitle": "Walking Skeleton デモレッスン",

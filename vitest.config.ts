@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   // T-005で.tsxコンポーネントを直接呼び出すテスト(tests/unit/auth/oauthButtons.test.tsx)を
@@ -26,9 +26,11 @@ export default defineConfig({
         inline: ["next-intl"],
       },
     },
+    // tests/e2e/**はPlaywright(@playwright/test)専用のため、vitestのデフォルト
+    // includeパターン(**/*.spec.*)から除外する(npm run test:e2eで実行)。
     // tests/integration は docker-compose のテスト用DBが必要なため、
     // 通常の `npm run test` からは除外する(専用DBなしでも全green)。
     // 実行は `npm run test:integration` / vitest.integration.config.ts。
-    exclude: ["node_modules/**", "tests/integration/**"],
+    exclude: [...configDefaults.exclude, "tests/e2e/**", "tests/integration/**"],
   },
 });
