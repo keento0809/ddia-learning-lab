@@ -6,7 +6,7 @@
 
 | タスク | 名称                         | サイズ | 状態 | ブランチ/PR | 備考 |
 | ------ | ---------------------------- | ------ | ---- | ----------- | ---- |
-| T-000  | Walking Skeleton             | L      | 🔄   | feat/T-000-walking-skeleton | docs/skeleton-notes.md参照 |
+| T-000  | Walking Skeleton             | L      | ✅   | [#1](https://github.com/keento0809/ddia-learning-lab/pull/1) | docs/skeleton-notes.md参照 |
 | T-001  | リポジトリ基盤整備           | M      | 🔄   | feat/T-001-repo-foundation | Tailwind/ESLint(no-literal-jsx-text)/Prettier/Vitest追加。lint/typecheck/test/build全green |
 | T-002  | CIパイプライン               | S      | 🔄   | feat/T-002-ci | lint→typecheck→unit→build(直列)+ADR-007バンドルサイズゲート(2.5MiB警告/3MiB失敗)。content-validate/e2eはplaceholder(if: false) |
 | T-003  | i18n骨格                     | M      | ⏳   | —           |      |
