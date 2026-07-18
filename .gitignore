@@ -13,4 +13,5 @@ next-env.d.ts
 .wrangler/
 .vercel/
 .worker-dryrun/
+lib/generated/
 content/generated/
