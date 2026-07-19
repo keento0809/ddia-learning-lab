@@ -77,6 +77,9 @@
     "pageTitle": "Walking Skeleton デモレッスン",
     "labHeading": "演習: sum(numbers) を実装する"
   },
+  "labPreview": {
+    "pageTitle": "演習ページ プレビュー"
+  },
   "lesson": {
     "moduleTocHeading": "モジュール目次",
     "pageTocHeading": "ページ内目次",
@@ -130,6 +133,63 @@
     "resultError": "エラー",
     "resultTimeout": "タイムアウトしました(強制停止)",
     "durationLabel": "実行時間: {ms}ms"
+  },
+  "labWorkspace": {
+    "resizeHandleLabel": "ペイン幅を変更",
+    "editorLoading": "エディタを読み込み中…",
+    "tabs": {
+      "problem": "課題",
+      "hints": "ヒント",
+      "explanation": "解説"
+    },
+    "problem": {
+      "entryLabel": "採点対象の関数",
+      "constraintsHeading": "制約",
+      "timeLimitLabel": "制限時間: {sec}秒",
+      "testCountLabel": "テスト件数: {count}件",
+      "examplesHeading": "入出力例",
+      "exampleInput": "入力",
+      "exampleOutput": "出力",
+      "noExamplesLabel": "この演習にはequals/deepEquals形式の入出力例がありません"
+    },
+    "hints": {
+      "locked": "あと{remaining}回不合格でヒント{n}が開放されます",
+      "noneAvailable": "この演習にはヒントがありません",
+      "allRevealed": "すべてのヒントを表示しています"
+    },
+    "explanation": {
+      "locked": "合格するか「解説を見る」を押すと開放されます",
+      "reveal": "解説を見る(未合格のまま表示します)",
+      "notAvailable": "この演習の解説はまだ用意されていません"
+    },
+    "toolbar": {
+      "run": "実行",
+      "runShortcutHint": "⌘/Ctrl + Enter",
+      "reset": "リセット",
+      "autosaved": "自動保存済み ✓",
+      "saving": "保存中…"
+    },
+    "status": {
+      "idle": "編集中",
+      "validating": "検証中…",
+      "running": "実行中…",
+      "grading": "採点中…",
+      "passed": "合格",
+      "failed": "不合格",
+      "timeout": "タイムアウトしました(強制停止)",
+      "runtime_error": "実行時エラー"
+    },
+    "results": {
+      "tabs": { "tests": "テスト", "console": "コンソール" },
+      "testsPassed": "{passed}/{total} 件のテストに合格",
+      "notRunYet": "まだ実行していません",
+      "expectedLabel": "期待値",
+      "actualLabel": "実際の値",
+      "diffLabel": "差分",
+      "noLogs": "コンソール出力はありません",
+      "durationLabel": "実行時間: {ms}ms",
+      "emptyCodeError": "コードが入力されていません"
+    }
   },
   "auth": {
     "rateLimited": "試行回数が多すぎます。しばらく待ってから再度お試しください",
