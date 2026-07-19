@@ -25,18 +25,27 @@ import type { PutProgressResponse } from "@/lib/contracts";
  * 責務外とし、msw+mutation単体の成功/失敗/ロールバックを直接検証できるようにする)。
  * 失敗時はページ遷移せず、ボタン下にインラインの通知(role="alert")を表示する
  * (トースト同等のフィードバックを、専用の全画面通知基盤を新設せずに実現する)。
+ *
+ * 未ログイン(`isAuthenticated`false)の場合はPUT /api/progressが401になる
+ * ため呼び出さず、`onGuestComplete`(呼び出し側がlib/progress/guestProgress.tsの
+ * recordGuestProgressを呼ぶ)のみ実行してそのまま`onCompleted`へ進む
+ * (T-113、F-17「ゲスト: 進捗はlocalStorage」)。
  */
 export function CompleteAndNextButton({
   locale,
   itemSlug,
   mutation,
   dispatch,
+  isAuthenticated,
+  onGuestComplete,
   onCompleted,
 }: {
   locale: Locale;
   itemSlug: string;
   mutation: UseMutationResult<PutProgressResponse, Error, MarkProgressInput>;
   dispatch: (input: MarkProgressInput) => Promise<PutProgressResponse>;
+  isAuthenticated: boolean;
+  onGuestComplete: () => void;
   onCompleted: () => void;
 }) {
   const t = getMessages(locale).lesson;
@@ -44,6 +53,11 @@ export function CompleteAndNextButton({
 
   async function handleClick() {
     setShowError(false);
+    if (!isAuthenticated) {
+      onGuestComplete();
+      onCompleted();
+      return;
+    }
     try {
       await dispatch({ itemType: "lesson", itemSlug, status: "done" });
       onCompleted();

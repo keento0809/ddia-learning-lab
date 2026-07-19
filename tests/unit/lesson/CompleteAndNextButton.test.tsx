@@ -9,6 +9,7 @@ import { CompleteAndNextButton } from "@/components/lesson/CompleteAndNextButton
 import { PROGRESS_QUERY_KEY } from "@/lib/progress/useProgressQuery";
 import { useSerializedProgressMutation } from "@/lib/progress/useSerializedProgressMutation";
 import { useProgressStore } from "@/lib/store/progressStore";
+import { GUEST_PROGRESS_STORAGE_KEY, readGuestProgress } from "@/lib/progress/guestProgress";
 import type { GetProgressResponse, PutProgressResponse } from "@/lib/contracts";
 
 /**
@@ -87,9 +88,13 @@ function mountContainer(): { container: HTMLDivElement; root: Root } {
 function Host({
   itemSlug,
   onCompleted,
+  isAuthenticated = true,
+  onGuestComplete = () => {},
 }: {
   itemSlug: string;
   onCompleted: () => void;
+  isAuthenticated?: boolean;
+  onGuestComplete?: () => void;
 }) {
   const { mutation, dispatch } = useSerializedProgressMutation();
   return (
@@ -98,6 +103,8 @@ function Host({
       itemSlug={itemSlug}
       mutation={mutation}
       dispatch={dispatch}
+      isAuthenticated={isAuthenticated}
+      onGuestComplete={onGuestComplete}
       onCompleted={onCompleted}
     />
   );
@@ -269,6 +276,75 @@ describe("CompleteAndNextButton (T-105 msw mutation test)", () => {
     ).toMatchObject({ itemSlug: ITEM_SLUG, status: "in_progress" });
     expect(useProgressStore.getState().bySlug[ITEM_SLUG]?.status).toBe("in_progress");
 
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it("T-113: when unauthenticated, records to localStorage instead of calling PUT and still calls onCompleted", async () => {
+    let putCount = 0;
+    server.use(
+      http.put("/api/progress", () => {
+        putCount += 1;
+        return HttpResponse.json<PutProgressResponse>({
+          progress: {
+            id: "server-1",
+            itemType: "lesson",
+            itemSlug: ITEM_SLUG,
+            status: "done",
+            score: null,
+            completedAt: "2026-07-19T00:00:00.000Z",
+            updatedAt: "2026-07-19T00:00:00.000Z",
+          },
+          streak: { currentDays: 1, longestDays: 1 },
+          newBadges: [],
+        });
+      }),
+    );
+
+    window.localStorage.removeItem(GUEST_PROGRESS_STORAGE_KEY);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const onCompleted = vi.fn();
+    const onGuestComplete = vi.fn(() => {
+      window.localStorage.setItem(
+        GUEST_PROGRESS_STORAGE_KEY,
+        JSON.stringify([{ itemType: "lesson", itemSlug: ITEM_SLUG, status: "done" }]),
+      );
+    });
+    const { container, root } = mountContainer();
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <Host
+            itemSlug={ITEM_SLUG}
+            onCompleted={onCompleted}
+            isAuthenticated={false}
+            onGuestComplete={onGuestComplete}
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    const button = () =>
+      container.querySelector<HTMLButtonElement>('[data-testid="lesson-complete-next"]')!;
+
+    act(() => {
+      button().click();
+    });
+
+    await waitFor(() => {
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+    });
+    expect(onGuestComplete).toHaveBeenCalledTimes(1);
+    expect(putCount).toBe(0);
+    expect(readGuestProgress()).toEqual([
+      { itemType: "lesson", itemSlug: ITEM_SLUG, status: "done" },
+    ]);
+    expect(container.querySelector('[data-testid="lesson-complete-next-error"]')).toBeNull();
+
+    window.localStorage.removeItem(GUEST_PROGRESS_STORAGE_KEY);
     await act(async () => {
       root.unmount();
     });
