@@ -28,7 +28,7 @@
 | T-106   | クイズ (S-05)               | M      | ⏳   | —           |      |
 | T-107a  | Workerハーネス              | M      | 🔄   | worktree-T-107a-worker-harness | 静的チェック・危険グローバル無効化・Blob URL import・console捕捉(200件)・結果1MB上限+truncatedを実装。lint/typecheck/test/build全green |
 | T-107b  | 採点器 (grader)             | M      | 🔄   | worktree-T-107b-grader | `lib/runner/grader.ts`。4種assert(equals/deepEquals/oneOf/matches)+property(演習別ヘルパ登録機構)+complexity(参考表示)、部分点(score=round(passed/total*100))、失敗時diff生成、graderVersion。エッジケーステーブル駆動テスト(NaN/-0/循環参照拒否/深いネスト)全合格。lint/typecheck/test/build全green |
-| T-107c  | Runner統合                  | M      | 🔄   | feat/T-107c-runner |      |
+| T-107c  | Runner統合                  | M      | 🔄   | feat/T-107c-runner | `jsRunner.ts`(Worker使い捨て生成+Promise化+外部強制timeout 5000ms)+`harness.worker.ts`(内部協調timeout=request.timeoutMs)で二重タイムアウトを配線。while(true)結合テスト(Playwright、5.5s以内・Worker残存なし)+正常系/実行時例外/タイムアウトの単体テスト全合格。lint/typecheck/test/build全green |
 | T-108   | 演習ページ (S-06)           | L      | ⏳   | —           |      |
 | T-109   | 提出API                     | S      | ⏳   | —           |      |
 | T-110-1 | Part I 教材 JA: モジュール1 | M      | ⏳   | —           |      |
