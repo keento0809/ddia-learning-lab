@@ -16,6 +16,10 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 
+# === ビルド生成物(Node CLIスクリプトで生成、静的importで取り込む) ===
+lib/generated/
+content/generated/
+
 # === テスト ===
 coverage/
 .nyc_output/
