@@ -59,6 +59,46 @@
     "pageTitle": "Walking Skeleton Demo Lesson",
     "labHeading": "Exercise: implement sum(numbers)"
   },
+  "lesson": {
+    "moduleTocHeading": "Module contents",
+    "pageTocHeading": "On this page",
+    "openModuleTocLabel": "Open module contents",
+    "openPageTocLabel": "Open on-this-page contents",
+    "closeLabel": "Close",
+    "prevLabel": "Previous",
+    "nextLabel": "Next",
+    "minutesLabel": "{minutes} min",
+    "figureCaptions": {},
+    "callout": {
+      "info": "Info",
+      "warn": "Warning",
+      "tip": "Tip"
+    },
+    "term": {
+      "triggerAriaLabel": "Show definition for \"{term}\""
+    },
+    "viz": {
+      "fallbackTitle": "This visualization can't be displayed",
+      "fallbackDescription": "The visualization component \"{name}\" was not found."
+    },
+    "codeBlock": {
+      "tryLabel": "Try it",
+      "notAvailableLabel": "Live execution isn't available for this content yet",
+      "resultHeading": "Result"
+    },
+    "quizInline": {
+      "submitLabel": "Submit",
+      "retryLabel": "Try again",
+      "correctLabel": "Correct!",
+      "incorrectLabel": "Not quite",
+      "explanationHeading": "Explanation"
+    },
+    "bookRef": {
+      "title": "Designing Data-Intensive Applications",
+      "author": "Martin Kleppmann",
+      "label": "See the original text, Chapter {chapter}"
+    }
+  },
   "lab": {
     "run": "Run",
     "loadSolution": "Load correct solution",

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { loadAllModules } from "../lib/content";
+import { loadGlossary, type GlossaryEntry } from "../lib/glossaryContent";
 import type { Locale } from "../lib/contracts/common";
 import type { CurriculumModuleSummary } from "../lib/curriculum";
 import type { ModuleDetailSummary } from "../lib/moduleDetail";
@@ -66,6 +67,16 @@ export function generateModuleDetail(root: string): Record<Locale, ModuleDetailS
   return result;
 }
 
+/**
+ * <Term>(T-103, 02§4.1)向けのcontent/glossary.yaml静的データ生成。
+ * .claude/rules/i18n.md「用語はcontent/glossary.yamlを正とする」に対応するファイルは
+ * ロケール別ではなく単一(entryごとにja/enを併記)のため、curriculum/module-detailとは
+ * 異なりロケール分岐しない。
+ */
+export function generateGlossary(root: string): GlossaryEntry[] {
+  return loadGlossary(root);
+}
+
 function resolveArg(flag: string, fallback: string): string {
   const index = process.argv.indexOf(flag);
   const value = index !== -1 ? process.argv[index + 1] : undefined;
@@ -78,8 +89,14 @@ function main(): void {
 
   const curriculum = generateCurriculum(root);
   const moduleDetail = generateModuleDetail(root);
+  const glossary = generateGlossary(root);
 
   fs.mkdirSync(outDir, { recursive: true });
+
+  const glossaryOutPath = path.join(outDir, "glossary.json");
+  fs.writeFileSync(glossaryOutPath, `${JSON.stringify(glossary, null, 2)}\n`, "utf-8");
+  console.log(`用語集データを書き出しました: ${glossaryOutPath}(${glossary.length}件)`);
+
   for (const locale of LOCALES) {
     const outPath = path.join(outDir, `curriculum.${locale}.json`);
     fs.writeFileSync(outPath, `${JSON.stringify(curriculum[locale], null, 2)}\n`, "utf-8");
