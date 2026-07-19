@@ -1,0 +1,23 @@
+questions:
+  - id: q1
+    type: single
+    prompt: 可用性を高めるための一般的な手法はどれですか?
+    options:
+      - id: a
+        label: 冗長化
+      - id: b
+        label: 単一障害点の追加
+    correctOptionIds: [a]
+    explanation: 冗長化は単一障害点を減らし可用性を高めます。
+  - id: q2
+    type: multiple
+    prompt: フォールトトレランスに関係する要素はどれですか?(複数選択)
+    options:
+      - id: a
+        label: 冗長化
+      - id: b
+        label: エラー検知
+      - id: c
+        label: 単一障害点
+    correctOptionIds: [a, b]
+    explanation: 冗長化とエラー検知はフォールトトレランスを支える要素です。単一障害点はむしろ信頼性を損ないます。
