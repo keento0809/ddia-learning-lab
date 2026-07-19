@@ -29,6 +29,10 @@ test-results/
 # === Cloudflare / Wrangler ===
 .wrangler/
 .dev.vars
+.open-next/
+
+# === Playwright MCP(実ブラウザ検証時の一時スナップショット/ログ) ===
+.playwright-mcp/
 
 # === Claude Code ===
 .claude/worktrees/

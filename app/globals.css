@@ -14,3 +14,39 @@ body {
 :focus-visible {
   @apply outline-2 outline-offset-2 outline-blue-600 dark:outline-blue-400;
 }
+
+/*
+ * S-04 レッスン画面(T-103, 02§4.1)本文の最小限のタイポグラフィ。
+ * @tailwindcss/typography(prose)は未導入の依存(CLAUDE.md規則1、無許可の依存
+ * 追加禁止)のため、素のCSSで見出し/段落/リスト/コードの基本間隔のみを与える。
+ */
+.lesson-article :where(h2, h3) {
+  @apply mt-8 mb-3 font-semibold;
+}
+.lesson-article h2 {
+  @apply text-xl;
+}
+.lesson-article h3 {
+  @apply text-lg;
+}
+.lesson-article p {
+  @apply my-4 leading-relaxed;
+}
+.lesson-article :where(ul, ol) {
+  @apply my-4 pl-6;
+}
+.lesson-article ul {
+  @apply list-disc;
+}
+.lesson-article ol {
+  @apply list-decimal;
+}
+.lesson-article a {
+  @apply underline underline-offset-2 hover:no-underline;
+}
+.lesson-article :where(pre, code) {
+  @apply font-mono;
+}
+.lesson-article :not(pre) > code {
+  @apply rounded bg-neutral-100 px-1 py-0.5 text-[0.9em] dark:bg-neutral-800;
+}

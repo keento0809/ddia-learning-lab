@@ -59,6 +59,46 @@
     "pageTitle": "Walking Skeleton デモレッスン",
     "labHeading": "演習: sum(numbers) を実装する"
   },
+  "lesson": {
+    "moduleTocHeading": "モジュール目次",
+    "pageTocHeading": "ページ内目次",
+    "openModuleTocLabel": "モジュール目次を開く",
+    "openPageTocLabel": "ページ内目次を開く",
+    "closeLabel": "閉じる",
+    "prevLabel": "前へ",
+    "nextLabel": "次へ",
+    "minutesLabel": "{minutes}分",
+    "figureCaptions": {},
+    "callout": {
+      "info": "情報",
+      "warn": "注意",
+      "tip": "ヒント"
+    },
+    "term": {
+      "triggerAriaLabel": "「{term}」の用語説明を表示"
+    },
+    "viz": {
+      "fallbackTitle": "この可視化は表示できません",
+      "fallbackDescription": "可視化コンポーネント「{name}」が見つかりません。"
+    },
+    "codeBlock": {
+      "tryLabel": "試す",
+      "notAvailableLabel": "この教材ではまだ実行機能を利用できません",
+      "resultHeading": "実行結果"
+    },
+    "quizInline": {
+      "submitLabel": "回答する",
+      "retryLabel": "もう一度",
+      "correctLabel": "正解です",
+      "incorrectLabel": "不正解です",
+      "explanationHeading": "解説"
+    },
+    "bookRef": {
+      "title": "Designing Data-Intensive Applications",
+      "author": "Martin Kleppmann",
+      "label": "原著 第{chapter}章を参照"
+    }
+  },
   "lab": {
     "run": "実行",
     "loadSolution": "正解コードを読み込む",

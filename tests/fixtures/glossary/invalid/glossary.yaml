@@ -1,0 +1,6 @@
+- slug: latency
+  term:
+    ja: レイテンシ
+  definition:
+    ja: enが欠落している不正フィクスチャ。
+    en: Fixture missing the ja/en pair on term.

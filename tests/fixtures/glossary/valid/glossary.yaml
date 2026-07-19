@@ -1,0 +1,14 @@
+- slug: latency
+  term:
+    ja: レイテンシ
+    en: latency
+  definition:
+    ja: リクエストからレスポンスまでの所要時間(架空の説明、テスト用フィクスチャ)。
+    en: The time elapsed between a request and its response (fictional description, test fixture only).
+- slug: throughput
+  term:
+    ja: スループット
+    en: throughput
+  definition:
+    ja: 単位時間あたりに処理できる件数(架空の説明、テスト用フィクスチャ)。
+    en: The number of operations processed per unit of time (fictional description, test fixture only).
