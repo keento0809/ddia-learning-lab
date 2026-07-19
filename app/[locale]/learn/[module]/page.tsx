@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ModuleDetail } from "@/components/module/ModuleDetail";
+import { ModuleDetailWithProgress } from "@/components/module/ModuleDetailWithProgress";
 import { getModuleDetail } from "@/lib/moduleDetail";
 import { routing, type AppLocale } from "@/lib/i18n/routing";
 import { buildLanguageAlternates } from "@/lib/i18n/alternates";
+import { auth } from "@/lib/auth/config";
 
 function isAppLocale(value: string): value is AppLocale {
   return (routing.locales as readonly string[]).includes(value);
@@ -41,5 +42,12 @@ export default async function ModuleDetailPage({
   if (!detail) {
     notFound();
   }
-  return <ModuleDetail locale={locale} detail={detail} />;
+  const session = await auth();
+  return (
+    <ModuleDetailWithProgress
+      locale={locale}
+      detail={detail}
+      isAuthenticated={Boolean(session?.user?.id)}
+    />
+  );
 }

@@ -53,7 +53,11 @@
     "quizItemLabel": "Quiz",
     "exerciseItemLabel": "Exercise {index}",
     "nextItemLabel": "Continue",
-    "emptyLabel": "Content coming soon"
+    "emptyLabel": "Content coming soon",
+    "itemStatus": {
+      "done": "Done",
+      "inProgress": "In progress"
+    }
   },
   "quiz": {
     "heading": "{module} Quiz",
@@ -80,8 +84,10 @@
     "openPageTocLabel": "Open on-this-page contents",
     "closeLabel": "Close",
     "prevLabel": "Previous",
-    "nextLabel": "Next",
     "minutesLabel": "{minutes} min",
+    "completeNextLabel": "Complete & continue",
+    "completingLabel": "Saving…",
+    "completeErrorLabel": "Failed to save your progress. Please try again.",
     "figureCaptions": {},
     "callout": {
       "info": "Info",

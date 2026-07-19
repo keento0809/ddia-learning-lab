@@ -6,6 +6,7 @@ import { getModuleDetail } from "@/lib/moduleDetail";
 import { buildLessonPageData } from "@/lib/lessonPage";
 import { routing, type AppLocale } from "@/lib/i18n/routing";
 import { buildLanguageAlternates } from "@/lib/i18n/alternates";
+import { auth } from "@/lib/auth/config";
 
 function isAppLocale(value: string): value is AppLocale {
   return (routing.locales as readonly string[]).includes(value);
@@ -86,11 +87,13 @@ export default async function LessonPage({
   }
 
   const Content = await loadLessonContent(locale, moduleSlug, lessonId);
+  const session = await auth();
 
   return (
     <LessonLayout
       locale={locale}
       moduleSlug={data.moduleSlug}
+      lessonId={data.lessonId}
       moduleTitle={data.moduleTitle}
       lessonTitle={data.lessonTitle}
       minutes={data.minutes}
@@ -98,6 +101,7 @@ export default async function LessonPage({
       currentKey={data.currentKey}
       prevHref={data.prevHref}
       nextHref={data.nextHref}
+      isAuthenticated={Boolean(session?.user?.id)}
     >
       <Content />
     </LessonLayout>

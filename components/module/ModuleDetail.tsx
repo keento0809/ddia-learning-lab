@@ -1,34 +1,62 @@
 import { Link } from "@/lib/i18n/navigation";
 import { formatMessage, getMessages, type Locale } from "@/lib/i18n/messages";
+import { ProgressRing } from "@/components/curriculum/ProgressRing";
 import {
   buildModuleToc,
   nextItemHref,
   tocItemHref,
   tocItemKey,
+  tocItemSlug,
   type ModuleDetailSummary,
   type ModuleTocItem,
 } from "@/lib/moduleDetail";
+import type { ProgressRecord, ProgressStatus } from "@/lib/contracts";
 
 /**
  * S-03 モジュール詳細(02§7.7画面一覧, 03文書T-102)。
  * レッスン/クイズ/演習の目次、所要時間合計(module.yamlのminutes)、
- * 次アイテム導線(目次先頭へのCTA。進捗連動はT-105)を描画する。
+ * 次アイテム導線を描画する。
+ *
+ * `progress`は実データ接続(T-105、GET /api/progressのZustandキャッシュから
+ * オーバーレイ)向けのpropで、省略時は全アイテム未着手として描画する
+ * (T-102時点の挙動と同一)。このコンポーネント自体はhookを使わない純粋な
+ * 関数のまま保つ(tests/unit/module/ModuleDetail.test.tsxの「フックを使わない
+ * 関数コンポーネントを直接呼び出す」パターンとの整合、実データ取得は
+ * components/module/ModuleDetailWithProgress.tsxが担う)。
  */
 export function ModuleDetail({
   locale,
   detail,
+  progress = [],
 }: {
   locale: Locale;
   detail: ModuleDetailSummary;
+  progress?: readonly ProgressRecord[];
 }) {
   const messages = getMessages(locale);
   const t = messages.moduleDetail;
   const toc = buildModuleToc(detail);
-  const nextHref = nextItemHref(detail.meta.slug, toc);
+  const statusBySlug = new Map(progress.map((record) => [record.itemSlug, record.status]));
+  const doneSlugs = new Set(
+    progress.filter((record) => record.status === "done").map((record) => record.itemSlug),
+  );
+  const nextHref = nextItemHref(detail.meta.slug, toc, doneSlugs);
+  const doneCount = toc.filter((item) => doneSlugs.has(tocItemSlug(detail.meta.slug, item))).length;
+  const progressPercent = toc.length > 0 ? Math.round((doneCount / toc.length) * 100) : 0;
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="mb-2 text-2xl font-semibold">{detail.meta.title}</h1>
+      <div className="mb-2 flex items-center gap-3">
+        <h1 className="text-2xl font-semibold">{detail.meta.title}</h1>
+        {toc.length > 0 ? (
+          <ProgressRing
+            percent={progressPercent}
+            label={formatMessage(messages.curriculum.progressAriaLabel, {
+              percent: progressPercent,
+            })}
+          />
+        ) : null}
+      </div>
       <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400">
         {formatMessage(t.totalMinutesLabel, { minutes: detail.meta.minutes })}
       </p>
@@ -49,7 +77,12 @@ export function ModuleDetail({
         <ol data-testid="module-detail-toc" className="flex flex-col gap-1">
           {toc.map((item) => (
             <li key={tocItemKey(item)}>
-              <ModuleTocRow locale={locale} moduleSlug={detail.meta.slug} item={item} />
+              <ModuleTocRow
+                locale={locale}
+                moduleSlug={detail.meta.slug}
+                item={item}
+                status={statusBySlug.get(tocItemSlug(detail.meta.slug, item))}
+              />
             </li>
           ))}
         </ol>
@@ -68,10 +101,12 @@ function ModuleTocRow({
   locale,
   moduleSlug,
   item,
+  status,
 }: {
   locale: Locale;
   moduleSlug: string;
   item: ModuleTocItem;
+  status?: ProgressStatus;
 }) {
   const messages = getMessages(locale);
 
@@ -83,11 +118,21 @@ function ModuleTocRow({
       className="flex items-center justify-between gap-3 rounded border border-neutral-200 p-3 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900"
     >
       <span>{tocItemLabel(item, messages.moduleDetail)}</span>
-      {item.kind === "lesson" ? (
-        <span className="text-sm text-neutral-600 dark:text-neutral-400">
-          {formatMessage(messages.curriculum.minutesLabel, { minutes: item.minutes })}
-        </span>
-      ) : null}
+      <span className="flex items-center gap-2">
+        {status ? (
+          <span
+            data-testid={`module-toc-status-${tocItemKey(item)}`}
+            className="text-xs text-neutral-500 dark:text-neutral-400"
+          >
+            {status === "done" ? messages.moduleDetail.itemStatus.done : messages.moduleDetail.itemStatus.inProgress}
+          </span>
+        ) : null}
+        {item.kind === "lesson" ? (
+          <span className="text-sm text-neutral-600 dark:text-neutral-400">
+            {formatMessage(messages.curriculum.minutesLabel, { minutes: item.minutes })}
+          </span>
+        ) : null}
+      </span>
     </Link>
   );
 }

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CurriculumList } from "@/components/curriculum/CurriculumList";
+import { CurriculumListWithProgress } from "@/components/curriculum/CurriculumListWithProgress";
 import { getCurriculumModules } from "@/lib/curriculum";
 import { getMessages } from "@/lib/i18n/messages";
 import { routing, type AppLocale } from "@/lib/i18n/routing";
 import { buildLanguageAlternates } from "@/lib/i18n/alternates";
+import { auth } from "@/lib/auth/config";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -38,5 +39,12 @@ export default async function LearnPage({
   if (!isAppLocale(locale)) {
     notFound();
   }
-  return <CurriculumList locale={locale} modules={getCurriculumModules(locale)} />;
+  const session = await auth();
+  return (
+    <CurriculumListWithProgress
+      locale={locale}
+      modules={getCurriculumModules(locale)}
+      isAuthenticated={Boolean(session?.user?.id)}
+    />
+  );
 }

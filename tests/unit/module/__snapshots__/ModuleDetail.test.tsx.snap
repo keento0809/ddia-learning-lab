@@ -4,11 +4,19 @@ exports[`ModuleDetail > renders lessons/quiz/exercise TOC, total minutes and nex
 <main
   className="mx-auto max-w-3xl px-4 py-8"
 >
-  <h1
-    className="mb-2 text-2xl font-semibold"
+  <div
+    className="mb-2 flex items-center gap-3"
   >
-    Reliability, Scalability & Maintainability
-  </h1>
+    <h1
+      className="text-2xl font-semibold"
+    >
+      Reliability, Scalability & Maintainability
+    </h1>
+    <ProgressRing
+      label="0% complete"
+      percent={0}
+    />
+  </div>
   <p
     className="mb-6 text-sm text-neutral-600 dark:text-neutral-400"
   >
@@ -91,11 +99,19 @@ exports[`ModuleDetail > renders lessons/quiz/exercise TOC, total minutes and nex
 <main
   className="mx-auto max-w-3xl px-4 py-8"
 >
-  <h1
-    className="mb-2 text-2xl font-semibold"
+  <div
+    className="mb-2 flex items-center gap-3"
   >
-    信頼性・スケーラビリティ・保守性
-  </h1>
+    <h1
+      className="text-2xl font-semibold"
+    >
+      信頼性・スケーラビリティ・保守性
+    </h1>
+    <ProgressRing
+      label="進捗 0%"
+      percent={0}
+    />
+  </div>
   <p
     className="mb-6 text-sm text-neutral-600 dark:text-neutral-400"
   >
@@ -178,11 +194,15 @@ exports[`ModuleDetail > renders the empty state and no next-item CTA when the mo
 <main
   className="mx-auto max-w-3xl px-4 py-8"
 >
-  <h1
-    className="mb-2 text-2xl font-semibold"
+  <div
+    className="mb-2 flex items-center gap-3"
   >
-    Empty Module (Fixture)
-  </h1>
+    <h1
+      className="text-2xl font-semibold"
+    >
+      Empty Module (Fixture)
+    </h1>
+  </div>
   <p
     className="mb-6 text-sm text-neutral-600 dark:text-neutral-400"
   >
@@ -205,11 +225,15 @@ exports[`ModuleDetail > renders the empty state and no next-item CTA when the mo
 <main
   className="mx-auto max-w-3xl px-4 py-8"
 >
-  <h1
-    className="mb-2 text-2xl font-semibold"
+  <div
+    className="mb-2 flex items-center gap-3"
   >
-    空モジュール(フィクスチャ)
-  </h1>
+    <h1
+      className="text-2xl font-semibold"
+    >
+      空モジュール(フィクスチャ)
+    </h1>
+  </div>
   <p
     className="mb-6 text-sm text-neutral-600 dark:text-neutral-400"
   >

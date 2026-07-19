@@ -19,15 +19,19 @@ export default defineConfig({
     },
   },
   test: {
-    // next-intlはデフォルトでNode ESM経由で外部化されVite側のresolve.aliasが
-    // 適用されないため、inline化してエイリアス解決の対象に含める。
-    // next-authも同じ理由でinlineが必要(T-106: app/[locale]/learn/[module]/quiz/page.tsx
-    // を直接importするテストがlib/auth/config.ts経由でnext-authを読み込み、
+    // next-intl/next-authはデフォルトでNode ESM経由で外部化されVite側の
+    // resolve.aliasが適用されないため、inline化してエイリアス解決の対象に含める。
+    // next-authの追加はT-106(app/[locale]/learn/[module]/quiz/page.tsxを直接
+    // importするテストがlib/auth/config.ts経由でnext-authを読み込み、
     // next-auth/lib/env.jsの`import { NextRequest } from "next/server"`が
-    // 上記aliasの対象にならず解決失敗していたため追加)。
+    // 上記aliasの対象にならず解決失敗していたため追加)/T-105
+    // (app/[locale]/learn/**のpage.tsxがauth()を呼ぶようになったことで
+    // tests/unit/*/page404.test.tsが間接的にnext-authをimportするように
+    // なった)の両方で独立に必要になった。@auth/coreの追加はT-105時点で
+    // vitest.integration.config.tsの既存inline指定に揃えたもの。
     server: {
       deps: {
-        inline: ["next-intl", "next-auth"],
+        inline: ["next-intl", "next-auth", "@auth/core"],
       },
     },
     // tests/e2e/**はPlaywright(@playwright/test)専用のため、vitestのデフォルト

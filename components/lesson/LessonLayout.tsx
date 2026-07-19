@@ -1,15 +1,18 @@
 "use client";
 
 import { useRef, type ReactNode } from "react";
-import { Link } from "@/lib/i18n/navigation";
+import { Link, useRouter } from "@/lib/i18n/navigation";
 import { formatMessage, getMessages, type Locale } from "@/lib/i18n/messages";
 import { useLessonLayoutStore } from "@/lib/store/lessonLayoutStore";
 import { useScrollThreshold } from "@/lib/lesson/useScrollThreshold";
 import { useDrawerFocusTrap } from "@/lib/lesson/useDrawerFocusTrap";
 import { LessonLocaleProvider } from "@/lib/lesson/localeContext";
+import { useProgressQuery } from "@/lib/progress/useProgressQuery";
+import { useSerializedProgressMutation } from "@/lib/progress/useSerializedProgressMutation";
 import type { ModuleTocItem } from "@/lib/moduleDetail";
 import { LessonToc } from "./LessonToc";
 import { PageToc } from "./PageToc";
+import { CompleteAndNextButton } from "./CompleteAndNextButton";
 
 /**
  * S-04 レッスン画面(T-103, 02§4.1)。3カラムレイアウト(左=モジュール内目次、
@@ -17,8 +20,11 @@ import { PageToc } from "./PageToc";
  * では左右ペインをドロワー化する(02§4.1「モバイル(<768px): 左右ペインは
  * ドロワー化」)。
  *
- * スクロール80%検知(useScrollThreshold)はコールバックのみ実装し、実際の
- * in_progress記録(進捗API接続)はOut of Scope(T-105)のため何もしない。
+ * スクロール80%検知(useScrollThreshold)到達時、ログイン済み(GET /api/progress
+ * が成功済み)かつ現在レッスンが未完了(done)であれば PUT /api/progress
+ * {status:"in_progress"} を送る(02§4.1「スクロール80%到達で自動的に
+ * in_progress記録(ログイン時のみ)」、T-105)。「完了して次へ」ボタン
+ * (CompleteAndNextButton)はstatus:"done"を楽観更新で送る。
  *
  * 失敗→恒久対策: 当初MDXの本文コンポーネント自体を`Content: ComponentType`
  * propとして受け取り内部で`<Content />`のように呼び出す設計にしていたが、
@@ -37,6 +43,7 @@ import { PageToc } from "./PageToc";
 export function LessonLayout({
   locale,
   moduleSlug,
+  lessonId,
   moduleTitle,
   lessonTitle,
   minutes,
@@ -44,10 +51,12 @@ export function LessonLayout({
   currentKey,
   prevHref,
   nextHref,
+  isAuthenticated,
   children,
 }: {
   locale: Locale;
   moduleSlug: string;
+  lessonId: string;
   moduleTitle: string;
   lessonTitle: string;
   minutes: number;
@@ -55,16 +64,30 @@ export function LessonLayout({
   currentKey: string;
   prevHref: string | null;
   nextHref: string | null;
+  isAuthenticated: boolean;
   children: ReactNode;
 }) {
   const t = getMessages(locale).lesson;
+  const router = useRouter();
   const articleRef = useRef<HTMLElement | null>(null);
   const openDrawer = useLessonLayoutStore((state) => state.openDrawer);
   const openDrawerPanel = useLessonLayoutStore((state) => state.openDrawerPanel);
   const closeDrawer = useLessonLayoutStore((state) => state.closeDrawer);
 
+  const itemSlug = `${moduleSlug}/${lessonId}`;
+  const progressQuery = useProgressQuery({ enabled: isAuthenticated });
+  const { mutation: markProgress, dispatch: dispatchProgress } = useSerializedProgressMutation();
+  const isDone = progressQuery.data?.progress.some(
+    (record) => record.itemSlug === itemSlug && record.status === "done",
+  );
+
   useScrollThreshold(articleRef, () => {
-    // 進捗API接続(in_progress記録)はT-105のスコープ(Out of Scope)。検知のみ。
+    if (!progressQuery.isSuccess || isDone) return;
+    // 背景保存のため結果を待たない。ProgressMutationInFlightError(ボタン側の
+    // done保存と同時発火した場合)を含め、失敗はUIに出さない(スクロール検知の
+    // 性質上ユーザー操作へのフィードバックは不要、失敗時ロールバックは
+    // useMarkProgressMutation内で処理済み)。
+    dispatchProgress({ itemType: "lesson", itemSlug, status: "in_progress" }).catch(() => {});
   });
 
   const leftDrawerRef = useDrawerFocusTrap(openDrawer === "moduleToc", closeDrawer);
@@ -148,18 +171,13 @@ export function LessonLayout({
           ) : (
             <span />
           )}
-          {nextHref ? (
-            <Link
-              href={nextHref}
-              prefetch={false}
-              data-testid="lesson-next-link"
-              className="text-sm hover:underline"
-            >
-              {t.nextLabel}
-            </Link>
-          ) : (
-            <span />
-          )}
+          <CompleteAndNextButton
+            locale={locale}
+            itemSlug={itemSlug}
+            mutation={markProgress}
+            dispatch={dispatchProgress}
+            onCompleted={() => router.push(nextHref ?? `/learn/${moduleSlug}`)}
+          />
         </div>
       </main>
 

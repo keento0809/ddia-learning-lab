@@ -7,6 +7,7 @@ import {
   nextItemHref,
   tocItemHref,
   tocItemKey,
+  tocItemSlug,
   type ModuleDetailSummary,
 } from "@/lib/moduleDetail";
 
@@ -104,5 +105,37 @@ describe("nextItemHref", () => {
     const toc = buildModuleToc(detail);
 
     expect(nextItemHref("02-empty", toc)).toBeNull();
+  });
+
+  it("T-105: skips done items and resumes at the first non-done item when doneSlugs is given", () => {
+    const detail = loadDetail("ja", "01-reliability");
+    const toc = buildModuleToc(detail);
+    const doneSlugs = new Set(["01-reliability/01-intro"]);
+
+    expect(nextItemHref("01-reliability", toc, doneSlugs)).toBe(
+      "/learn/01-reliability/02-percentiles",
+    );
+  });
+
+  it("T-105: falls back to the first TOC item when every item is done", () => {
+    const detail = loadDetail("ja", "01-reliability");
+    const toc = buildModuleToc(detail);
+    const doneSlugs = new Set(toc.map((item) => tocItemSlug("01-reliability", item)));
+
+    expect(nextItemHref("01-reliability", toc, doneSlugs)).toBe("/learn/01-reliability/01-intro");
+  });
+});
+
+describe("tocItemSlug", () => {
+  it("builds the PUT/GET /api/progress itemSlug for each TOC item kind", () => {
+    const detail = loadDetail("ja", "01-reliability");
+    const toc = buildModuleToc(detail);
+
+    expect(toc.map((item) => tocItemSlug("01-reliability", item))).toEqual([
+      "01-reliability/01-intro",
+      "01-reliability/02-percentiles",
+      "01-reliability/quiz",
+      "percentile-lab",
+    ]);
   });
 });

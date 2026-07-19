@@ -1,5 +1,6 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import type { NextRequest } from "next/server";
+import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "./csrfConstants";
 
 /**
  * 02§3共通仕様「状態変更系はCSRFトークン必須」(01§CSRF: SameSite=Lax Cookie +
@@ -8,8 +9,7 @@ import type { NextRequest } from "next/server";
  * サーバはcookie値とヘッダ値の一致を検証する(値自体はセッションに紐付かない
  * 単純トークンで、盗聴されない限り第三者サイトはcookieを読めずヘッダを複製できない)。
  */
-export const CSRF_COOKIE_NAME = "csrf-token";
-export const CSRF_HEADER_NAME = "x-csrf-token";
+export { CSRF_COOKIE_NAME, CSRF_HEADER_NAME };
 
 export function generateCsrfToken(): string {
   return randomBytes(32).toString("hex");
