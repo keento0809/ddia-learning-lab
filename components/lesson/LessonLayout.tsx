@@ -9,6 +9,7 @@ import { useDrawerFocusTrap } from "@/lib/lesson/useDrawerFocusTrap";
 import { LessonLocaleProvider } from "@/lib/lesson/localeContext";
 import { useProgressQuery } from "@/lib/progress/useProgressQuery";
 import { useSerializedProgressMutation } from "@/lib/progress/useSerializedProgressMutation";
+import { recordGuestProgress } from "@/lib/progress/guestProgress";
 import type { ModuleTocItem } from "@/lib/moduleDetail";
 import { LessonToc } from "./LessonToc";
 import { PageToc } from "./PageToc";
@@ -176,6 +177,8 @@ export function LessonLayout({
             itemSlug={itemSlug}
             mutation={markProgress}
             dispatch={dispatchProgress}
+            isAuthenticated={isAuthenticated}
+            onGuestComplete={() => recordGuestProgress({ itemType: "lesson", itemSlug, status: "done" })}
             onCompleted={() => router.push(nextHref ?? `/learn/${moduleSlug}`)}
           />
         </div>

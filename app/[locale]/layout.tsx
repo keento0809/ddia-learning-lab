@@ -8,6 +8,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { buildThemeBootstrapScript } from "@/lib/store/themeBootstrapScript";
 import { AppQueryProvider } from "@/lib/query/AppQueryProvider";
+import { GuestProgressImportGate } from "@/components/progress/GuestProgressImportGate";
+import { auth } from "@/lib/auth/config";
 import "../globals.css";
 
 export function generateStaticParams() {
@@ -33,6 +35,8 @@ export default async function LocaleLayout({
   if (!isAppLocale(locale)) {
     notFound();
   }
+  const session = await auth();
+  const isAuthenticated = Boolean(session?.user?.id);
 
   return (
     // テーマ切替のbeforeInteractiveスクリプトがハイドレーション前に<html>へ
@@ -54,6 +58,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={{}}>
           <Header locale={locale} />
           <AppQueryProvider>
+            <GuestProgressImportGate isAuthenticated={isAuthenticated} />
             <div className="flex-1">{children}</div>
           </AppQueryProvider>
           <Footer locale={locale} />

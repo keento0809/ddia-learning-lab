@@ -10,41 +10,17 @@ import {
 } from "@/lib/api/csrf";
 import { isKnownSlug, slugsForModule } from "@/lib/progress/slugManifest";
 import { advanceStreak, isValidTimeZone, todayInTimeZone } from "@/lib/progress/streak";
+import { toProgressRecord } from "@/lib/progress/serialize";
 import {
   GetProgressQuerySchema,
   PutProgressRequestSchema,
   type GetProgressResponse,
-  type ProgressItemType,
-  type ProgressRecord,
-  type ProgressStatus,
   type PutProgressResponse,
 } from "@/lib/contracts";
 
 /**
  * PUT/GET /api/progress。03文書T-104 / 02§3.1「代表I/O定義」。
  */
-
-interface ProgressRow {
-  id: string;
-  itemType: string;
-  itemSlug: string;
-  status: string;
-  score: number | null;
-  completedAt: Date | null;
-  updatedAt: Date;
-}
-
-function toProgressRecord(row: ProgressRow): ProgressRecord {
-  return {
-    id: row.id,
-    itemType: row.itemType as ProgressItemType,
-    itemSlug: row.itemSlug,
-    status: row.status as ProgressStatus,
-    score: row.score,
-    completedAt: row.completedAt ? row.completedAt.toISOString() : null,
-    updatedAt: row.updatedAt.toISOString(),
-  };
-}
 
 /** dbのDate列(@db.Date)をYYYY-MM-DD文字列へ(UTC正午格納との往復)*/
 function isoDate(date: Date): string {
