@@ -79,7 +79,10 @@
       "Read(tmp/**)",
       "Write(tmp/**)",
       "Edit(tmp/**)",
-      "Bash(mkdir -p tmp:*)"
+      "Bash(mkdir -p tmp:*)",
+      "Read(node_modules/**)",
+      "Bash(ls node_modules:*)",
+      "Bash(ls node_modules/:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
