@@ -47,6 +47,14 @@
     "lessonCountLabel": "{count} lessons",
     "progressAriaLabel": "{percent}% complete"
   },
+  "moduleDetail": {
+    "totalMinutesLabel": "Total time: {minutes} min",
+    "tocHeading": "Contents",
+    "quizItemLabel": "Quiz",
+    "exerciseItemLabel": "Exercise {index}",
+    "nextItemLabel": "Continue",
+    "emptyLabel": "Content coming soon"
+  },
   "demo": {
     "pageTitle": "Walking Skeleton Demo Lesson",
     "labHeading": "Exercise: implement sum(numbers)"
