@@ -10,7 +10,7 @@ import {
   TESTS,
   TIMEOUT_MS,
 } from "@/lib/runner/exerciseFixture";
-import type { RunResult } from "@/lib/runner/types";
+import type { RunResult } from "@/lib/contracts/runner";
 import { formatMessage, getMessages, type Locale } from "@/lib/i18n/messages";
 
 export function Lab({ locale }: { locale: Locale }) {

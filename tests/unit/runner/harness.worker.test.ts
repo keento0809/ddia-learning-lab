@@ -1,9 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RunRequest, RunResult } from "@/lib/contracts/runner";
 import {
   MAX_LOG_ENTRIES,
   MAX_RESULT_BYTES,
   checkForbiddenTokens,
+  createOnMessageHandler,
   loadModuleFromCode,
   runHarness,
   truncateResult,
@@ -246,5 +247,91 @@ describe("truncateResult: 結果サイズ上限", () => {
     if (result.result === "pass" || result.result === "fail") {
       expect(result.truncated).toBe(true);
     }
+  });
+});
+
+describe("createOnMessageHandler: タイムアウトの二重化(内部協調タイムアウト)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("正常系: runHarnessの結果をそのままpostMessageする", async () => {
+    const postMessage = vi.fn();
+    const handler = createOnMessageHandler(
+      { loadModule: async () => ({ f: () => 1 }) },
+      postMessage,
+    );
+
+    handler({ data: baseRequest({ tests: [{ id: "t1", args: [], expected: 1 }] }) });
+    await vi.runAllTimersAsync();
+
+    expect(postMessage).toHaveBeenCalledTimes(1);
+    expect(postMessage.mock.calls[0][0].result).toBe("pass");
+  });
+
+  it("実行時例外: runHarnessがerror結果を返した場合もそのままpostMessageする", async () => {
+    const postMessage = vi.fn();
+    const handler = createOnMessageHandler(
+      {
+        loadModule: async () => {
+          throw new Error("boom");
+        },
+      },
+      postMessage,
+    );
+
+    handler({ data: baseRequest() });
+    await vi.runAllTimersAsync();
+
+    expect(postMessage).toHaveBeenCalledTimes(1);
+    const posted = postMessage.mock.calls[0][0] as RunResult;
+    expect(posted.result).toBe("error");
+    if (posted.result === "error") {
+      expect(posted.error).toContain("boom");
+    }
+  });
+
+  it("タイムアウト: request.timeoutMs以内にrunHarnessが解決しない場合、自発的にtimeout結果を1回だけpostMessageする", async () => {
+    const postMessage = vi.fn();
+    const neverResolves = new Promise<Record<string, unknown>>(() => {});
+    const handler = createOnMessageHandler({ loadModule: () => neverResolves }, postMessage);
+
+    handler({ data: baseRequest({ timeoutMs: 3000 }) });
+
+    await vi.advanceTimersByTimeAsync(2999);
+    expect(postMessage).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(postMessage).toHaveBeenCalledTimes(1);
+    expect(postMessage.mock.calls[0][0]).toEqual({ result: "timeout", logs: [], durationMs: 3000 });
+
+    // ハングしていたPromiseがその後解決しても、二重postMessageされないこと。
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(postMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it("タイムアウト後にrunHarnessが遅れて解決しても、後発の結果でtimeout結果が上書きされない", async () => {
+    const postMessage = vi.fn();
+    const lateModule = new Promise<Record<string, unknown>>((resolve) => {
+      setTimeout(() => resolve({ f: () => 1 }), 10_000);
+    });
+    const handler = createOnMessageHandler({ loadModule: () => lateModule }, postMessage);
+
+    handler({
+      data: baseRequest({ timeoutMs: 3000, tests: [{ id: "t1", args: [], expected: 1 }] }),
+    });
+
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(postMessage).toHaveBeenCalledTimes(1);
+    expect(postMessage.mock.calls[0][0]).toEqual({ result: "timeout", logs: [], durationMs: 3000 });
+
+    // loadModuleが10秒後に遅延解決し、runHarnessがpass結果を返しても無視されること
+    // (responded ガードを外すと、この時点でpostMessageが2回目呼ばれてpass結果に上書きされてしまう)。
+    await vi.advanceTimersByTimeAsync(7000);
+    expect(postMessage).toHaveBeenCalledTimes(1);
   });
 });

@@ -273,6 +273,41 @@ export async function runHarness(request: RunRequest, deps: HarnessDeps = {}): P
   }
 }
 
-ctx.onmessage = (event: { data: RunRequest }) => {
-  void runHarness(event.data).then((result) => ctx.postMessage(result));
-};
+/**
+ * タイムアウトの二重化(T-107c、02§7.1「Worker内部の協調タイムアウト」)のうち
+ * Worker側の担当分。`request.timeoutMs`経過時点で`runHarness`がまだ解決していなければ
+ * 自発的に`{result:"timeout"}`を返送する。非同期処理がイベントループを塞がずに
+ * ハングしているケース(例: 解決しないPromiseをawaitし続ける)はこれで捕捉できるが、
+ * 同期無限ループはこのタイマー自体が発火しないため捕捉できない
+ * (その場合はメインスレッド側jsRunner.tsの強制terminateが最終防衛線となる)。
+ */
+export function createOnMessageHandler(
+  deps: HarnessDeps = {},
+  postMessage: (message: RunResult) => void = (message) => ctx.postMessage(message),
+): (event: { data: RunRequest }) => void {
+  return (event) => {
+    const request = event.data;
+    let responded = false;
+
+    const internalTimeout = setTimeout(() => {
+      if (responded) return;
+      responded = true;
+      postMessage(
+        truncateResult({
+          result: "timeout",
+          logs: [],
+          durationMs: request.timeoutMs,
+        }),
+      );
+    }, request.timeoutMs);
+
+    void runHarness(request, deps).then((result) => {
+      if (responded) return;
+      responded = true;
+      clearTimeout(internalTimeout);
+      postMessage(result);
+    });
+  };
+}
+
+ctx.onmessage = createOnMessageHandler();
