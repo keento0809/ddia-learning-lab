@@ -21,9 +21,13 @@ export default defineConfig({
   test: {
     // next-intlはデフォルトでNode ESM経由で外部化されVite側のresolve.aliasが
     // 適用されないため、inline化してエイリアス解決の対象に含める。
+    // next-authも同じ理由でinlineが必要(T-106: app/[locale]/learn/[module]/quiz/page.tsx
+    // を直接importするテストがlib/auth/config.ts経由でnext-authを読み込み、
+    // next-auth/lib/env.jsの`import { NextRequest } from "next/server"`が
+    // 上記aliasの対象にならず解決失敗していたため追加)。
     server: {
       deps: {
-        inline: ["next-intl"],
+        inline: ["next-intl", "next-auth"],
       },
     },
     // tests/e2e/**はPlaywright(@playwright/test)専用のため、vitestのデフォルト

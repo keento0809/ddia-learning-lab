@@ -1,0 +1,23 @@
+questions:
+  - id: q1
+    type: single
+    prompt: Which is a common technique to increase availability?
+    options:
+      - id: a
+        label: Redundancy
+      - id: b
+        label: Adding a single point of failure
+    correctOptionIds: [a]
+    explanation: Redundancy reduces single points of failure and increases availability.
+  - id: q2
+    type: multiple
+    prompt: Which factors relate to fault tolerance? (select all that apply)
+    options:
+      - id: a
+        label: Redundancy
+      - id: b
+        label: Error detection
+      - id: c
+        label: Single point of failure
+    correctOptionIds: [a, b]
+    explanation: Redundancy and error detection support fault tolerance. A single point of failure undermines reliability instead.
