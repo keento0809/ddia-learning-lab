@@ -59,6 +59,20 @@
       "inProgress": "In progress"
     }
   },
+  "quiz": {
+    "heading": "{module} Quiz",
+    "checkLabel": "Check answer",
+    "recheckLabel": "Check again",
+    "correctLabel": "Correct!",
+    "incorrectLabel": "Not quite",
+    "explanationHeading": "Explanation",
+    "resultHeading": "Result: {correct}/{total} correct (score {score})",
+    "signInToSaveLabel": "Sign in to save your result",
+    "submittingLabel": "Submitting your result…",
+    "submittedLabel": "Result saved",
+    "submitErrorLabel": "Failed to submit your result",
+    "emptyLabel": "The quiz is coming soon"
+  },
   "demo": {
     "pageTitle": "Walking Skeleton Demo Lesson",
     "labHeading": "Exercise: implement sum(numbers)"

@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { loadAllModules } from "../lib/content";
 import { loadGlossary, type GlossaryEntry } from "../lib/glossaryContent";
+import { loadQuiz } from "../lib/quiz/content";
+import type { Quiz } from "../lib/quiz/schema";
 import type { Locale } from "../lib/contracts/common";
 import type { CurriculumModuleSummary } from "../lib/curriculum";
 import type { ModuleDetailSummary } from "../lib/moduleDetail";
@@ -68,6 +70,26 @@ export function generateModuleDetail(root: string): Record<Locale, ModuleDetailS
 }
 
 /**
+ * S-05 クイズ(T-106)向けのモジュール別quiz.yamlデータ。キーはモジュールslug。
+ * quiz.yamlを持たないモジュールはキー自体を含めない(呼び出し側は`hasQuiz`
+ * <lib/moduleDetail.ts>で存在有無を判定済みのため、undefinedは「未生成」ではなく
+ * 「quiz.yamlなし」を意味する)。
+ */
+export function generateQuiz(root: string): Record<Locale, Record<string, Quiz>> {
+  const result = {} as Record<Locale, Record<string, Quiz>>;
+  for (const locale of LOCALES) {
+    const byModule: Record<string, Quiz> = {};
+    for (const mod of loadAllModules(root, locale)) {
+      if (mod.quizFilePath) {
+        byModule[mod.slug] = loadQuiz(mod.quizFilePath);
+      }
+    }
+    result[locale] = byModule;
+  }
+  return result;
+}
+
+/**
  * <Term>(T-103, 02§4.1)向けのcontent/glossary.yaml静的データ生成。
  * .claude/rules/i18n.md「用語はcontent/glossary.yamlを正とする」に対応するファイルは
  * ロケール別ではなく単一(entryごとにja/enを併記)のため、curriculum/module-detailとは
@@ -89,6 +111,7 @@ function main(): void {
 
   const curriculum = generateCurriculum(root);
   const moduleDetail = generateModuleDetail(root);
+  const quiz = generateQuiz(root);
   const glossary = generateGlossary(root);
 
   fs.mkdirSync(outDir, { recursive: true });
@@ -110,6 +133,12 @@ function main(): void {
     );
     console.log(
       `モジュール詳細データを書き出しました: ${detailOutPath}(${moduleDetail[locale].length}件)`,
+    );
+
+    const quizOutPath = path.join(outDir, `quiz.${locale}.json`);
+    fs.writeFileSync(quizOutPath, `${JSON.stringify(quiz[locale], null, 2)}\n`, "utf-8");
+    console.log(
+      `クイズデータを書き出しました: ${quizOutPath}(${Object.keys(quiz[locale]).length}件)`,
     );
   }
 }

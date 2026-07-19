@@ -59,6 +59,20 @@
       "inProgress": "進行中"
     }
   },
+  "quiz": {
+    "heading": "{module} クイズ",
+    "checkLabel": "回答する",
+    "recheckLabel": "もう一度確認する",
+    "correctLabel": "正解です",
+    "incorrectLabel": "不正解です",
+    "explanationHeading": "解説",
+    "resultHeading": "結果: {correct}/{total}問正解(スコア {score}点)",
+    "signInToSaveLabel": "サインインすると結果が記録されます",
+    "submittingLabel": "結果を送信しています…",
+    "submittedLabel": "結果を記録しました",
+    "submitErrorLabel": "結果の送信に失敗しました",
+    "emptyLabel": "クイズは準備中です"
+  },
   "demo": {
     "pageTitle": "Walking Skeleton デモレッスン",
     "labHeading": "演習: sum(numbers) を実装する"
