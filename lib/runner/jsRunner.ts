@@ -1,15 +1,38 @@
-import type { RunRequest, RunResult } from "./types";
+import type { RunRequest, RunResult } from "@/lib/contracts/runner";
 
 /**
- * メインスレッド側のRunner(T-000原型)。
- * Workerを使い捨てで生成し、Promise化+ハードタイムアウト(limit+500ms→terminate)を行う。
- * 設計書 02§7.1 のタイムアウト二重化のうち、外側の強制terminateをここで担保する。
+ * メインスレッド側のRunner(T-107c、02§7.1)。
+ * Workerを使い捨てで生成し、Promise化+外部強制タイムアウトを行う。
+ * タイムアウトの二重化のうち、内部の協調タイムアウト(request.timeoutMs)は
+ * harness.worker.ts(createOnMessageHandler)側が担当し、ここでは同期無限ループ等
+ * Worker自身が応答不能になるケースに対する最終防衛線として固定5秒でterminateする。
  */
-export function runExercise(request: RunRequest): Promise<RunResult> {
+export const EXTERNAL_TIMEOUT_MS = 5000;
+
+/** テスト時にモックへ差し替え可能な最小限のWorkerインターフェース。 */
+export type WorkerLike = {
+  postMessage: (message: RunRequest) => void;
+  terminate: () => void;
+  onmessage: ((event: MessageEvent<RunResult>) => void) | null;
+  onerror: ((event: ErrorEvent) => void) | null;
+};
+
+export type WorkerFactory = () => WorkerLike;
+
+const defaultWorkerFactory: WorkerFactory = () =>
+  new Worker(new URL("./harness.worker.ts", import.meta.url), {
+    type: "module",
+  }) as unknown as WorkerLike;
+
+export type RunExerciseDeps = {
+  createWorker?: WorkerFactory;
+};
+
+export function runExercise(request: RunRequest, deps: RunExerciseDeps = {}): Promise<RunResult> {
+  const createWorker = deps.createWorker ?? defaultWorkerFactory;
+
   return new Promise((resolve) => {
-    const worker = new Worker(new URL("./harness.worker.ts", import.meta.url), {
-      type: "module",
-    });
+    const worker = createWorker();
 
     let settled = false;
     const settle = (result: RunResult) => {
@@ -21,8 +44,8 @@ export function runExercise(request: RunRequest): Promise<RunResult> {
     };
 
     const hardTimeout = setTimeout(() => {
-      settle({ result: "timeout", logs: [], durationMs: request.timeoutMs + 500 });
-    }, request.timeoutMs + 500);
+      settle({ result: "timeout", logs: [], durationMs: EXTERNAL_TIMEOUT_MS });
+    }, EXTERNAL_TIMEOUT_MS);
 
     worker.onmessage = (event: MessageEvent<RunResult>) => {
       settle(event.data);

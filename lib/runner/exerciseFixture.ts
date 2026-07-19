@@ -1,4 +1,4 @@
-import type { TestCase } from "./types";
+import type { RunRequest } from "@/lib/contracts/runner";
 
 /**
  * Walking Skeleton (T-000) 用のダミー演習定義。
@@ -8,7 +8,7 @@ import type { TestCase } from "./types";
 
 export const ENTRY = "sum";
 
-export const TESTS: TestCase[] = [
+export const TESTS: RunRequest["tests"] = [
   { id: "t1", args: [[1, 2, 3]], expected: 6 },
   { id: "t2", args: [[]], expected: 0 },
   { id: "t3", args: [[-5, 5, 10]], expected: 10 },
