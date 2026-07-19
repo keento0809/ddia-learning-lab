@@ -77,6 +77,9 @@
     "pageTitle": "Walking Skeleton Demo Lesson",
     "labHeading": "Exercise: implement sum(numbers)"
   },
+  "labPreview": {
+    "pageTitle": "Exercise Page Preview"
+  },
   "lesson": {
     "moduleTocHeading": "Module contents",
     "pageTocHeading": "On this page",
@@ -130,6 +133,63 @@
     "resultError": "Error",
     "resultTimeout": "Timed out (force-terminated)",
     "durationLabel": "Duration: {ms}ms"
+  },
+  "labWorkspace": {
+    "resizeHandleLabel": "Resize panes",
+    "editorLoading": "Loading editor…",
+    "tabs": {
+      "problem": "Problem",
+      "hints": "Hints",
+      "explanation": "Explanation"
+    },
+    "problem": {
+      "entryLabel": "Function to implement",
+      "constraintsHeading": "Constraints",
+      "timeLimitLabel": "Time limit: {sec}s",
+      "testCountLabel": "{count} test case(s)",
+      "examplesHeading": "Input/output examples",
+      "exampleInput": "Input",
+      "exampleOutput": "Output",
+      "noExamplesLabel": "This exercise has no equals/deepEquals-style examples"
+    },
+    "hints": {
+      "locked": "Hint {n} unlocks after {remaining} more failed attempt(s)",
+      "noneAvailable": "This exercise has no hints",
+      "allRevealed": "All hints are shown"
+    },
+    "explanation": {
+      "locked": "Unlocks once you pass, or reveal it now",
+      "reveal": "Show explanation (without passing first)",
+      "notAvailable": "An explanation isn't available for this exercise yet"
+    },
+    "toolbar": {
+      "run": "Run",
+      "runShortcutHint": "⌘/Ctrl + Enter",
+      "reset": "Reset",
+      "autosaved": "Saved ✓",
+      "saving": "Saving…"
+    },
+    "status": {
+      "idle": "Editing",
+      "validating": "Validating…",
+      "running": "Running…",
+      "grading": "Grading…",
+      "passed": "Passed",
+      "failed": "Failed",
+      "timeout": "Timed out (force-terminated)",
+      "runtime_error": "Runtime error"
+    },
+    "results": {
+      "tabs": { "tests": "Tests", "console": "Console" },
+      "testsPassed": "{passed}/{total} tests passed",
+      "notRunYet": "Not run yet",
+      "expectedLabel": "Expected",
+      "actualLabel": "Actual",
+      "diffLabel": "Diff",
+      "noLogs": "No console output",
+      "durationLabel": "Duration: {ms}ms",
+      "emptyCodeError": "No code has been entered"
+    }
   },
   "auth": {
     "rateLimited": "Too many attempts. Please wait a moment and try again",

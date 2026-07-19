@@ -32,6 +32,7 @@
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
+    "@monaco-editor/react": "^4.7.0",
     "@next/mdx": "^15.5.20",
     "@prisma/adapter-pg": "7.8.0",
     "@prisma/client": "7.8.0",
