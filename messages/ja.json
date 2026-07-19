@@ -47,6 +47,14 @@
     "lessonCountLabel": "レッスン{count}件",
     "progressAriaLabel": "進捗 {percent}%"
   },
+  "moduleDetail": {
+    "totalMinutesLabel": "所要時間合計 {minutes}分",
+    "tocHeading": "目次",
+    "quizItemLabel": "クイズ",
+    "exerciseItemLabel": "演習 {index}",
+    "nextItemLabel": "次へ進む",
+    "emptyLabel": "コンテンツは準備中です"
+  },
   "demo": {
     "pageTitle": "Walking Skeleton デモレッスン",
     "labHeading": "演習: sum(numbers) を実装する"

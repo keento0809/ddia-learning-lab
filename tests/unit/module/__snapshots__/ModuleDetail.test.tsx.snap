@@ -1,0 +1,229 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ModuleDetail > renders lessons/quiz/exercise TOC, total minutes and next-item CTA (locale=en) 1`] = `
+<main
+  className="mx-auto max-w-3xl px-4 py-8"
+>
+  <h1
+    className="mb-2 text-2xl font-semibold"
+  >
+    Reliability, Scalability & Maintainability
+  </h1>
+  <p
+    className="mb-6 text-sm text-neutral-600 dark:text-neutral-400"
+  >
+    Total time: 45 min
+  </p>
+  <ForwardRef(Link)
+    className="mb-6 inline-block rounded bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+    data-testid="module-detail-next-item"
+    href="/learn/01-reliability/01-intro"
+    prefetch={false}
+  >
+    Continue
+  </ForwardRef(Link)>
+  <h2
+    className="mb-3 text-lg font-semibold"
+  >
+    Contents
+  </h2>
+  <ol
+    className="flex flex-col gap-1"
+    data-testid="module-detail-toc"
+  >
+    <li>
+      <ModuleTocRow
+        item={
+          {
+            "id": "01-intro",
+            "kind": "lesson",
+            "minutes": 10,
+            "title": "Introduction",
+          }
+        }
+        locale="en"
+        moduleSlug="01-reliability"
+      />
+    </li>
+    <li>
+      <ModuleTocRow
+        item={
+          {
+            "id": "02-percentiles",
+            "kind": "lesson",
+            "minutes": 15,
+            "title": "Percentiles",
+          }
+        }
+        locale="en"
+        moduleSlug="01-reliability"
+      />
+    </li>
+    <li>
+      <ModuleTocRow
+        item={
+          {
+            "kind": "quiz",
+          }
+        }
+        locale="en"
+        moduleSlug="01-reliability"
+      />
+    </li>
+    <li>
+      <ModuleTocRow
+        item={
+          {
+            "index": 1,
+            "kind": "exercise",
+            "slug": "percentile-lab",
+          }
+        }
+        locale="en"
+        moduleSlug="01-reliability"
+      />
+    </li>
+  </ol>
+</main>
+`;
+
+exports[`ModuleDetail > renders lessons/quiz/exercise TOC, total minutes and next-item CTA (locale=ja) 1`] = `
+<main
+  className="mx-auto max-w-3xl px-4 py-8"
+>
+  <h1
+    className="mb-2 text-2xl font-semibold"
+  >
+    信頼性・スケーラビリティ・保守性
+  </h1>
+  <p
+    className="mb-6 text-sm text-neutral-600 dark:text-neutral-400"
+  >
+    所要時間合計 45分
+  </p>
+  <ForwardRef(Link)
+    className="mb-6 inline-block rounded bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+    data-testid="module-detail-next-item"
+    href="/learn/01-reliability/01-intro"
+    prefetch={false}
+  >
+    次へ進む
+  </ForwardRef(Link)>
+  <h2
+    className="mb-3 text-lg font-semibold"
+  >
+    目次
+  </h2>
+  <ol
+    className="flex flex-col gap-1"
+    data-testid="module-detail-toc"
+  >
+    <li>
+      <ModuleTocRow
+        item={
+          {
+            "id": "01-intro",
+            "kind": "lesson",
+            "minutes": 10,
+            "title": "はじめに",
+          }
+        }
+        locale="ja"
+        moduleSlug="01-reliability"
+      />
+    </li>
+    <li>
+      <ModuleTocRow
+        item={
+          {
+            "id": "02-percentiles",
+            "kind": "lesson",
+            "minutes": 15,
+            "title": "パーセンタイル",
+          }
+        }
+        locale="ja"
+        moduleSlug="01-reliability"
+      />
+    </li>
+    <li>
+      <ModuleTocRow
+        item={
+          {
+            "kind": "quiz",
+          }
+        }
+        locale="ja"
+        moduleSlug="01-reliability"
+      />
+    </li>
+    <li>
+      <ModuleTocRow
+        item={
+          {
+            "index": 1,
+            "kind": "exercise",
+            "slug": "percentile-lab",
+          }
+        }
+        locale="ja"
+        moduleSlug="01-reliability"
+      />
+    </li>
+  </ol>
+</main>
+`;
+
+exports[`ModuleDetail > renders the empty state and no next-item CTA when the module has no items (locale=en) 1`] = `
+<main
+  className="mx-auto max-w-3xl px-4 py-8"
+>
+  <h1
+    className="mb-2 text-2xl font-semibold"
+  >
+    Empty Module (Fixture)
+  </h1>
+  <p
+    className="mb-6 text-sm text-neutral-600 dark:text-neutral-400"
+  >
+    Total time: 20 min
+  </p>
+  <h2
+    className="mb-3 text-lg font-semibold"
+  >
+    Contents
+  </h2>
+  <p
+    className="text-neutral-600 dark:text-neutral-400"
+  >
+    Content coming soon
+  </p>
+</main>
+`;
+
+exports[`ModuleDetail > renders the empty state and no next-item CTA when the module has no items (locale=ja) 1`] = `
+<main
+  className="mx-auto max-w-3xl px-4 py-8"
+>
+  <h1
+    className="mb-2 text-2xl font-semibold"
+  >
+    空モジュール(フィクスチャ)
+  </h1>
+  <p
+    className="mb-6 text-sm text-neutral-600 dark:text-neutral-400"
+  >
+    所要時間合計 20分
+  </p>
+  <h2
+    className="mb-3 text-lg font-semibold"
+  >
+    目次
+  </h2>
+  <p
+    className="text-neutral-600 dark:text-neutral-400"
+  >
+    コンテンツは準備中です
+  </p>
+</main>
+`;

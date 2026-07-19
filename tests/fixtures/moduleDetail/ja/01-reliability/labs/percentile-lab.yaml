@@ -1,0 +1,14 @@
+slug: "percentile-lab"
+language: "js"
+entry: "solve"
+template: "function solve(values) {\n  // TODO\n}\n"
+tests:
+  - id: "t1"
+    call:
+      fn: "solve"
+      args: [[1, 2, 3]]
+    assert:
+      type: "equals"
+      value: 2
+timeoutMs: 3000
+hints: []
