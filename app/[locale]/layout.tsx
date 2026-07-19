@@ -7,6 +7,7 @@ import { routing, type AppLocale } from "@/lib/i18n/routing";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { buildThemeBootstrapScript } from "@/lib/store/themeBootstrapScript";
+import { AppQueryProvider } from "@/lib/query/AppQueryProvider";
 import "../globals.css";
 
 export function generateStaticParams() {
@@ -52,7 +53,9 @@ export default async function LocaleLayout({
             Provider自体は必須)。 */}
         <NextIntlClientProvider locale={locale} messages={{}}>
           <Header locale={locale} />
-          <div className="flex-1">{children}</div>
+          <AppQueryProvider>
+            <div className="flex-1">{children}</div>
+          </AppQueryProvider>
           <Footer locale={locale} />
         </NextIntlClientProvider>
       </body>

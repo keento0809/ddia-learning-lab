@@ -81,11 +81,29 @@ export function tocItemKey(item: ModuleTocItem): string {
 }
 
 /**
- * 次アイテム導線(03文書T-102受入基準)。進捗に基づく「続きから」はT-105の
- * スコープ(S-02/S-03への進捗オーバーレイ)のため、T-102時点では目次の
- * 先頭アイテムに固定する。目次が空(コンテンツ未投入)の場合はnull。
+ * PUT/GET /api/progress の itemSlug 形式(02§3.1、lib/contracts/manifest.ts)。
+ * lesson/quizは`{moduleSlug}/{id}`、exerciseはcontent YAMLのslugをそのまま使う
+ * (T-006決定事項、演習YAMLの`slug`フィールドはモジュールprefixを持たない、
+ * scripts/validate-content.ts参照)。T-105(進捗オーバーレイ)向け。
  */
-export function nextItemHref(moduleSlug: string, toc: readonly ModuleTocItem[]): string | null {
-  const first = toc[0];
-  return first ? tocItemHref(moduleSlug, first) : null;
+export function tocItemSlug(moduleSlug: string, item: ModuleTocItem): string {
+  if (item.kind === "lesson") return `${moduleSlug}/${item.id}`;
+  if (item.kind === "quiz") return `${moduleSlug}/quiz`;
+  return item.slug;
+}
+
+/**
+ * 次アイテム導線(03文書T-102受入基準)。`doneSlugs`省略時(またはいずれも
+ * 一致しない場合)は目次の先頭アイテムに固定する(T-102時点の挙動を維持)。
+ * `doneSlugs`を渡すと、完了済みでない最初のアイテムへ導線を切り替える
+ * (「続きから」、T-105 進捗オーバーレイのスコープ)。目次が空(コンテンツ
+ * 未投入)の場合はnull。
+ */
+export function nextItemHref(
+  moduleSlug: string,
+  toc: readonly ModuleTocItem[],
+  doneSlugs: ReadonlySet<string> = new Set(),
+): string | null {
+  const target = toc.find((item) => !doneSlugs.has(tocItemSlug(moduleSlug, item))) ?? toc[0];
+  return target ? tocItemHref(moduleSlug, target) : null;
 }
