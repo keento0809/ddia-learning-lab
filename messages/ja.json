@@ -240,5 +240,54 @@
       "github": "GitHub",
       "google": "Google"
     }
+  },
+  "dashboard": {
+    "pageTitle": "ダッシュボード",
+    "loading": "読み込み中…",
+    "loadError": "ダッシュボードの読み込みに失敗しました。再読み込みしてください。",
+    "overall": {
+      "lessonsLabel": "レッスン {done}/{total}",
+      "exercisesPassedLabel": "合格した演習 {count}件"
+    },
+    "resume": {
+      "heading": "続きから再開",
+      "cta": "再開する",
+      "emptyTitle": "進行中の学習はありません",
+      "emptyBody": "カリキュラムから学習を始めましょう",
+      "emptyCta": "カリキュラムを見る",
+      "quizLabel": "確認クイズ",
+      "exerciseLabel": "演習"
+    },
+    "parts": {
+      "heading": "Part別進捗"
+    },
+    "heatmap": {
+      "heading": "学習カレンダー(直近12週)",
+      "cellAriaLabel": "{date}: {count}件"
+    },
+    "streak": {
+      "heading": "学習ストリーク",
+      "currentLabel": "{days}日連続",
+      "longestLabel": "最長{days}日"
+    },
+    "badges": {
+      "heading": "バッジ",
+      "lockedAriaLabel": "未取得のバッジ",
+      "grantedAriaLabel": "獲得済みバッジ: {slug}"
+    },
+    "submissions": {
+      "heading": "最近の提出履歴",
+      "emptyLabel": "提出履歴はまだありません",
+      "exerciseColumn": "演習",
+      "resultColumn": "結果",
+      "scoreColumn": "テスト結果",
+      "dateColumn": "日時",
+      "result": {
+        "pass": "合格",
+        "fail": "不合格",
+        "error": "エラー",
+        "timeout": "タイムアウト"
+      }
+    }
   }
 }

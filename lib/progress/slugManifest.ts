@@ -27,3 +27,11 @@ export function isKnownSlug(itemType: ProgressItemType, itemSlug: string): boole
 export function slugsForModule(moduleSlug: string): string[] {
   return slugsByModule.get(moduleSlug) ?? [];
 }
+
+/**
+ * T-112 ダッシュボード(GET /api/dashboard の overall.lessonsTotal)向け。
+ * itemType別の全有効slug件数(マニフェスト全体)を返す。
+ */
+export function countSlugsByType(itemType: ProgressItemType): number {
+  return manifest.entries.filter((entry) => entry.itemType === itemType).length;
+}
