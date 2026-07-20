@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueries } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import type { ProgressRecord, SubmissionRecord } from "@/lib/contracts";
 import { fetchLatestSubmission } from "./api";
 
@@ -16,6 +16,11 @@ const RECENT_SUBMISSIONS_LIMIT = 10;
  * (GET /api/progress、既存・変更なし)からitemType="exercise"のslug集合を求め、
  * 演習ごとにGET /api/submissions?exercise={slug}&latest=1を並行取得して
  * クライアント側でcreatedAt降順に統合する。
+ *
+ * 単一のuseQuery内でPromise.allにより並行取得する(TanStack Queryの
+ * useQueriesは本タスクでのみ使用される追加コードパスのため、Cloudflare
+ * Workers Freeプランのバンドルサイズ上限〈3MiB gzip、scripts/check-bundle-size.mjs〉
+ * に抵触しないよう、既にlib/progress/*で使用されている既存のuseQueryのみで完結させる)。
  */
 export function useRecentSubmissionsQuery(
   progressRecords: readonly ProgressRecord[],
@@ -25,23 +30,20 @@ export function useRecentSubmissionsQuery(
     new Set(
       progressRecords.filter((record) => record.itemType === "exercise").map((record) => record.itemSlug),
     ),
-  );
-  const enabled = options?.enabled ?? true;
+  ).sort();
+  const enabled = (options?.enabled ?? true) && exerciseSlugs.length > 0;
 
-  const results = useQueries({
-    queries: exerciseSlugs.map((slug) => ({
-      queryKey: ["dashboard", "latest-submission", slug] as const,
-      queryFn: () => fetchLatestSubmission(slug),
-      enabled,
-    })),
+  const query = useQuery({
+    queryKey: ["dashboard", "recent-submissions", exerciseSlugs] as const,
+    queryFn: async () => {
+      const submissions = await Promise.all(exerciseSlugs.map((slug) => fetchLatestSubmission(slug)));
+      return submissions
+        .filter((submission): submission is SubmissionRecord => submission != null)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .slice(0, RECENT_SUBMISSIONS_LIMIT);
+    },
+    enabled,
   });
 
-  const isLoading = enabled && results.some((result) => result.isLoading);
-  const data = results
-    .map((result) => result.data)
-    .filter((submission): submission is SubmissionRecord => submission != null)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, RECENT_SUBMISSIONS_LIMIT);
-
-  return { data, isLoading };
+  return { data: query.data ?? [], isLoading: enabled && query.isLoading };
 }
