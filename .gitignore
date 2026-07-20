@@ -30,6 +30,8 @@ test-results/
 .wrangler/
 .dev.vars
 .open-next/
+.worker-dryrun*/
+.tmp-worker-api-dryrun-*/
 
 # === Playwright MCP(実ブラウザ検証時の一時スナップショット/ログ) ===
 .playwright-mcp/
