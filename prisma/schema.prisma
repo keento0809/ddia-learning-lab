@@ -1,10 +1,16 @@
 // Prisma schema — 02_詳細設計書.md §2.1 テーブル定義の物理化。
 // マイグレーション方針は §2.2 (Prisma Migrateで管理)。
 
+// compilerBuild = "small": Cloudflare Workers Freeプラン上限(3MiB gzip、ADR-007 C-1)
+// に対しquery compiler WASM(driver adapter経由のclient engine)が最大の単体依存
+// (esbuild metafile分析で4.86MiB)だったため、既定の"fast"から切替。
+// API/クエリ機能に変更はなく(Prisma 7.3 changelogが明記するsize/perfトレードオフの
+// ビルド差し替えのみ)、実行速度と引き換えにバンドルサイズを縮小する。
 generator client {
   provider        = "prisma-client"
   output          = "../lib/generated/prisma"
   previewFeatures = ["postgresqlExtensions"]
+  compilerBuild   = "small"
 }
 
 // Prisma 7: 接続URLはschema.prismaではなくprisma.config.ts/PrismaClientの
