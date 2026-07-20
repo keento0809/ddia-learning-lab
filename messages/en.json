@@ -240,5 +240,54 @@
       "github": "GitHub",
       "google": "Google"
     }
+  },
+  "dashboard": {
+    "pageTitle": "Dashboard",
+    "loading": "Loading…",
+    "loadError": "Failed to load the dashboard. Please reload the page.",
+    "overall": {
+      "lessonsLabel": "Lessons {done}/{total}",
+      "exercisesPassedLabel": "{count} exercises passed"
+    },
+    "resume": {
+      "heading": "Resume where you left off",
+      "cta": "Resume",
+      "emptyTitle": "No learning in progress",
+      "emptyBody": "Start learning from the curriculum",
+      "emptyCta": "View curriculum",
+      "quizLabel": "Quiz",
+      "exerciseLabel": "Exercise"
+    },
+    "parts": {
+      "heading": "Progress by part"
+    },
+    "heatmap": {
+      "heading": "Learning calendar (last 12 weeks)",
+      "cellAriaLabel": "{date}: {count}"
+    },
+    "streak": {
+      "heading": "Learning streak",
+      "currentLabel": "{days}-day streak",
+      "longestLabel": "Longest {days} days"
+    },
+    "badges": {
+      "heading": "Badges",
+      "lockedAriaLabel": "Locked badge",
+      "grantedAriaLabel": "Badge earned: {slug}"
+    },
+    "submissions": {
+      "heading": "Recent submissions",
+      "emptyLabel": "No submissions yet",
+      "exerciseColumn": "Exercise",
+      "resultColumn": "Result",
+      "scoreColumn": "Test results",
+      "dateColumn": "Date",
+      "result": {
+        "pass": "Pass",
+        "fail": "Fail",
+        "error": "Error",
+        "timeout": "Timeout"
+      }
+    }
   }
 }

@@ -16,7 +16,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "pretest:integration": "npm run validate:content -- --root tests/fixtures/content/valid",
+    "pretest:integration": "npm run generate:curriculum -- --root tests/fixtures/content/valid && npm run validate:content -- --root tests/fixtures/content/valid",
     "test:integration": "bash scripts/test-integration.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
