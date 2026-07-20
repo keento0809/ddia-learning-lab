@@ -1,5 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  // ADR-008(docs/design/09) §2: worker-app。公開Worker。workers/api/wrangler.jsonc
+  // (worker-api)へservice binding経由でリクエストをフォワードする(実際のフォワーダ
+  // 実装・APIルート移設はT-502のスコープ)。
   "name": "ddia-learning-lab",
   "main": ".open-next/worker.js",
   "compatibility_date": "2024-09-23",
@@ -7,5 +10,6 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
-  }
+  },
+  "services": [{ "binding": "API", "service": "ddia-learning-lab-api" }]
 }

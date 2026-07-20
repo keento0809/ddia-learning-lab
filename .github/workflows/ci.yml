@@ -57,11 +57,21 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-  # Cloudflare Workers サーババンドルサイズゲート(ADR-007 C-1 / STATUS.md 2026-07-17決定事項)。
-  # Free プランのスクリプトサイズ上限(3MiB, gzip後)に対し2.5MiBで警告・3MiBで失敗する。
+  # Cloudflare Workers サーババンドルサイズゲート(ADR-008 §3、ADR-007 C-1を改訂)。
+  # worker-app/worker-api共通のWorker別サイズ予算(gzip後2.5MiB)に対し2.0MiBで警告・
+  # 2.5MiBで失敗する。Worker別マトリクスで両方を検査する。
   bundle-size:
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      matrix:
+        include:
+          - worker: worker-app
+            config: wrangler.jsonc
+            entry: worker.js
+          - worker: worker-api
+            config: workers/api/wrangler.jsonc
+            entry: index.js
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -69,9 +79,13 @@ jobs:
           node-version: "22"
           cache: "npm"
       - run: npm ci
-      - run: npm run build:worker
-      - run: npx wrangler deploy --dry-run --outdir .worker-dryrun
-      - run: npm run check:bundle-size
+      - if: matrix.worker == 'worker-app'
+        run: npm run build:worker
+      # --outdirは(--configで指定した)設定ファイルのディレクトリ基準で解決されるため、
+      # worker-api(workers/api/wrangler.jsonc)とworker-app(ルートのwrangler.jsonc)で
+      # 出力先が食い違わないよう絶対パスを渡す。
+      - run: npx wrangler deploy --dry-run --config ${{ matrix.config }} --outdir ${{ github.workspace }}/.worker-dryrun-${{ matrix.worker }}
+      - run: npm run check:bundle-size -- ${{ github.workspace }}/.worker-dryrun-${{ matrix.worker }}/${{ matrix.entry }} ${{ matrix.worker }}
 
   content-validate:
     runs-on: ubuntu-latest
