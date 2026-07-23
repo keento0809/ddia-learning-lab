@@ -10,6 +10,7 @@ import { submissionsRoute } from "./routes/submissions";
 import { dashboardRoute } from "./routes/dashboard";
 import { guestProgressImportRoute } from "./routes/guestProgressImport";
 import { notesRoute } from "./routes/notes";
+import { internalAuthRoute } from "./routes/internalAuth";
 
 /**
  * worker-api。ADR-008(docs/design/09) §2・§4。T-501で骨格(health・JWT検証
@@ -63,6 +64,13 @@ async function requireSession(c: Context<{ Bindings: Bindings; Variables: Variab
 }
 
 app.get("/internal/session", requireSession, (c) => c.json({ userId: c.get("userId") }));
+
+/**
+ * ADR-008 §2・§4 T-503: 認証のDB操作(pre-auth、requireSession対象外)。
+ * このルート群も他と同様に非公開のworker-api自体(公開ルートを持たない)経由で
+ * のみ到達可能なため、追加の共有シークレットは設けない。
+ */
+app.route("/internal/auth", internalAuthRoute);
 
 app.use("/api/progress", requireSession);
 app.route("/api/progress", progressRoute);

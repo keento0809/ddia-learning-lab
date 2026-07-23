@@ -56,3 +56,49 @@ vi.mock("@/lib/api/workerApiDispatch", async () => {
     },
   };
 });
+
+/**
+ * T-503(ADR-008): lib/auth/workerApiAuth.ts(dispatchToWorkerApiとは別モジュール、
+ * 同ファイルのコメント参照)も同様にworker-apiの本体(実Honoアプリ・実Prisma)へ
+ * インプロセスで委譲する。こちらはCredentials照合・OAuth upsert・サインアップ・
+ * パスワードリセットのpre-auth操作のみを扱うため、上のdispatchToWorkerApiモックと
+ * 異なり`auth()`は一切呼ばない(呼ぶ必要がなく、tests/integration/auth.flow.
+ * integration.test.tsのように`@/lib/auth/config`をモックしないテストファイルから
+ * 呼ばれた場合に実`auth()`がNext.jsのリクエストスコープ外で例外になるのを避ける)。
+ */
+vi.mock("@/lib/auth/workerApiAuth", async () => {
+  const bindings = {
+    AUTH_SECRET: process.env.AUTH_SECRET!,
+    DATABASE_URL: process.env.DATABASE_URL!,
+  };
+
+  async function callInternal(path: string, body: unknown): Promise<Response> {
+    const { default: app } = await import("@/workers/api/src/index");
+    const request = new Request(`http://worker-api.internal${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return app.fetch(request, bindings);
+  }
+
+  return {
+    verifyCredentialsViaWorkerApi: async (email: string, password: string) => {
+      const response = await callInternal("/internal/auth/verify-credentials", {
+        email,
+        password,
+      });
+      if (response.status !== 200) {
+        return null;
+      }
+      return response.json();
+    },
+    oauthUpsertViaWorkerApi: async (input: unknown) => {
+      const response = await callInternal("/internal/auth/oauth-upsert", input);
+      return response.json();
+    },
+    signupViaWorkerApi: (body: unknown) => callInternal("/internal/auth/signup", body),
+    resetRequestViaWorkerApi: (body: unknown) => callInternal("/internal/auth/reset-request", body),
+    resetConfirmViaWorkerApi: (body: unknown) => callInternal("/internal/auth/reset-confirm", body),
+  };
+});

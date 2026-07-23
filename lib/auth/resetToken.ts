@@ -9,6 +9,11 @@ import { createHash } from "node:crypto";
  * 「使い切り」制約は、発行時点のpasswordHashのダイジェストをクレームに含め、
  * 検証時に現在のpasswordHashと一致するかを照合することで満たす
  * (リセット成功でpasswordHashが変わるため、同じトークンは再利用できなくなる)。
+ *
+ * ADR-008(docs/design/09)T-503: このモジュールはworker-api(workers/api/src/routes/
+ * internalAuth.ts)からも呼ばれる共有ロジック。Cloudflare Workers(workerd)には
+ * `process.env`が存在しないため、secretは呼び出し側から明示的に渡す
+ * (worker-appはprocess.env.AUTH_SECRET、worker-apiはc.env.AUTH_SECRETをそれぞれ渡す)。
  */
 
 const PURPOSE = "password-reset";
@@ -18,15 +23,15 @@ function digestPasswordHash(passwordHash: string | null): string {
   return createHash("sha256").update(passwordHash ?? "").digest("hex");
 }
 
-function getSecretKey(): Uint8Array {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) {
-    throw new Error("AUTH_SECRET is not set");
-  }
+function getSecretKey(secret: string): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-export async function createResetToken(userId: string, currentPasswordHash: string | null) {
+export async function createResetToken(
+  userId: string,
+  currentPasswordHash: string | null,
+  secret: string,
+) {
   return new SignJWT({
     purpose: PURPOSE,
     pwd: digestPasswordHash(currentPasswordHash),
@@ -35,15 +40,16 @@ export async function createResetToken(userId: string, currentPasswordHash: stri
     .setSubject(userId)
     .setIssuedAt()
     .setExpirationTime(`${TTL_SECONDS}s`)
-    .sign(getSecretKey());
+    .sign(getSecretKey(secret));
 }
 
 export async function verifyResetToken(
   token: string,
   currentPasswordHash: string | null,
+  secret: string,
 ): Promise<{ userId: string } | null> {
   try {
-    const { payload } = await jwtVerify(token, getSecretKey());
+    const { payload } = await jwtVerify(token, getSecretKey(secret));
     if (
       payload.purpose !== PURPOSE ||
       typeof payload.sub !== "string" ||
@@ -52,6 +58,26 @@ export async function verifyResetToken(
       return null;
     }
     return { userId: payload.sub };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 署名検証前にsub(userId)だけを取り出す。トークンからユーザーを特定しないと
+ * currentPasswordHashが得られず検証できないため(verifyResetTokenのコメント参照)、
+ * 検証前の値として扱う前提で呼び出し側(internalAuth.ts)が使う。
+ */
+export function decodeUnverifiedSubject(token: string): string | null {
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return null;
+  }
+  try {
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")) as {
+      sub?: unknown;
+    };
+    return typeof payload.sub === "string" ? payload.sub : null;
   } catch {
     return null;
   }

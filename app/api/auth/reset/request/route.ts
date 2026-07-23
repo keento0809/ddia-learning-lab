@@ -1,7 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { prisma } from "@/lib/db";
-import { ResetRequestSchema } from "@/lib/auth/schemas";
-import { createResetToken } from "@/lib/auth/resetToken";
+import type { NextRequest } from "next/server";
+import { resetRequestViaWorkerApi } from "@/lib/auth/workerApiAuth";
 import { problemResponse } from "@/lib/auth/http";
 
 /**
@@ -11,6 +9,10 @@ import { problemResponse } from "@/lib/auth/http";
  * リセットリンクをレスポンスとして直接返す設計とする。
  * 該当ユーザーが存在しない場合もリンクを返さず200を返し(メールアドレス列挙対策)、
  * UI側は常に同一の案内を表示する。
+ *
+ * ADR-008(docs/design/09) §2・§4 T-503: ユーザー検索・トークン発行(Prisma操作+
+ * AUTH_SECRET署名)はworker-apiの`/internal/auth/reset-request`へ移設した。
+ * このRoute Handlerは薄いフォワーダ。
  */
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -20,16 +22,5 @@ export async function POST(request: NextRequest) {
     return problemResponse(400, "about:blank#invalid-json", "invalid_json");
   }
 
-  const parsed = ResetRequestSchema.safeParse(body);
-  if (!parsed.success) {
-    return problemResponse(400, "about:blank#validation-error", "validation_error");
-  }
-
-  const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
-  if (!user || user.deletedAt) {
-    return NextResponse.json({ resetToken: null });
-  }
-
-  const resetToken = await createResetToken(user.id, user.passwordHash);
-  return NextResponse.json({ resetToken });
+  return resetRequestViaWorkerApi(body);
 }
