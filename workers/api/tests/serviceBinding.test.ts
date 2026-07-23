@@ -58,9 +58,18 @@ describe("worker-app -> worker-api service binding", () => {
           name: "ddia-learning-lab-api",
           modules: true,
           scriptPath: path.join(outDir, "index.js"),
+          // T-502失敗→恒久対策: `wrangler deploy --dry-run --outdir`が抽出した
+          // Prisma(runtime="workerd")のquery compiler WASMファイルは、`wrangler dev`/
+          // 実デプロイ時はwrangler自身がCompiledWasmモジュールとして自動認識するが、
+          // ビルド済みディレクトリを直接Miniflareへ渡す本テストの構成では明示的な
+          // modulesRulesが無いと解決できない("no matching module rules")。
+          modulesRules: [{ type: "CompiledWasm", include: ["**/*.wasm"] }],
           compatibilityDate: COMPATIBILITY_DATE,
           compatibilityFlags: ["nodejs_compat"],
-          bindings: { AUTH_SECRET: "test-service-binding-secret" },
+          bindings: {
+            AUTH_SECRET: "test-service-binding-secret",
+            DATABASE_URL: "postgresql://ddia:ddia@localhost:5433/ddia_test?schema=public",
+          },
         },
       ],
     });

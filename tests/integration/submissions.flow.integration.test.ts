@@ -1,32 +1,36 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/db";
 import { generateCsrfToken } from "@/lib/api/csrf";
+import { issueSessionCookie } from "./helpers/sessionCookie";
 
 /**
  * 03文書T-109 受入基準「API統合テスト(201/413/422)」。02§3.1 POST/GET /api/submissions。
  * 実行にはテスト用DB(docker-compose.test.yml)が必要。`npm run test:integration`から実行する。
  *
- * セッション解決(lib/auth/config.tsのauth())はT-005で検証済みのためモックし、
- * 提出APIのロジック(64KB制限/graderVersion検証/CRUD)に焦点を当てる
- * (tests/integration/progress.flow.integration.test.tsと同じ方針)。
+ * ADR-008(docs/design/09) §2・T-502: POST/GET /api/submissionsの実装は
+ * workers/api/src/routes/submissions.ts(Hono)へ移設され、app/api/submissions/route.ts
+ * はservice binding経由の薄いフォワーダ(lib/api/workerApiDispatch.ts)になった。
+ * worker-apiはNext.jsのauth()を経由せずCookie内JWTを自己完結で検証するため、
+ * このテストはauth()のモックではなく、実際に署名したセッションJWT Cookieを
+ * リクエストに付与する(tests/integration/progress.flow.integration.test.tsと同じ方針)。
  */
-vi.mock("@/lib/auth/config", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/workerApiDispatch", async () => {
+  const { default: app } = await import("@/workers/api/src/index");
+  return {
+    dispatchToWorkerApi: (request: Request) =>
+      app.fetch(request, {
+        AUTH_SECRET: process.env.AUTH_SECRET!,
+        DATABASE_URL: process.env.DATABASE_URL!,
+      }),
+  };
+});
 
-const { auth } = await import("@/lib/auth/config");
 const { GET, POST } = await import("@/app/api/submissions/route");
-
-type SessionLike = { user: { id: string }; expires: string } | null;
-const mockedAuth = auth as unknown as Mock<(...args: unknown[]) => Promise<SessionLike>>;
 
 const BASE_URL = "http://localhost:3000/api/submissions";
 const EXERCISE_SLUG = "03-storage/kv-store";
-
-function csrfCookiePair(): { cookies: Record<string, string>; token: string } {
-  const token = generateCsrfToken();
-  return { cookies: { "csrf-token": token }, token };
-}
 
 function toCookieHeader(cookies: Record<string, string>): string {
   return Object.entries(cookies)
@@ -68,21 +72,27 @@ async function postSubmission(
 
 describe("POST/GET /api/submissions (T-109)", () => {
   let userId: string;
+  /** セッションJWT Cookie(1件)のみを含む基底cookie */
+  let baseCookies: Record<string, string>;
+
+  /** CSRF cookie+ヘッダのペア。cookiesにはセッションJWTも合成して含める */
+  function csrfCookiePair(): { cookies: Record<string, string>; token: string } {
+    const token = generateCsrfToken();
+    return { cookies: { ...baseCookies, "csrf-token": token }, token };
+  }
 
   beforeAll(async () => {
     await prisma.$connect();
   });
 
   beforeEach(async () => {
-    vi.clearAllMocks();
     const user = await prisma.user.create({
       data: { email: `submissions-${randomUUID()}@example.com`, displayName: "Submissions Test User" },
     });
     userId = user.id;
-    mockedAuth.mockResolvedValue({
-      user: { id: userId },
-      expires: new Date(Date.now() + 60_000).toISOString(),
-    });
+    const sessionCookie = await issueSessionCookie(userId);
+    const eq = sessionCookie.indexOf("=");
+    baseCookies = { [sessionCookie.slice(0, eq)]: sessionCookie.slice(eq + 1) };
   });
 
   afterAll(async () => {
@@ -90,16 +100,14 @@ describe("POST/GET /api/submissions (T-109)", () => {
   });
 
   it("401: 未認証のPOSTはunauthorizedを返す", async () => {
-    mockedAuth.mockResolvedValue(null);
-    const { cookies, token } = csrfCookiePair();
-    const response = await postSubmission(cookies, validSubmissionBody(), token);
+    const token = generateCsrfToken();
+    const response = await postSubmission({ "csrf-token": token }, validSubmissionBody(), token);
     expect(response.status).toBe(401);
     const body = (await response.json()) as { title: string };
     expect(body.title).toBe("unauthorized");
   });
 
   it("401: 未認証のGETはunauthorizedを返す", async () => {
-    mockedAuth.mockResolvedValue(null);
     const response = await GET(new NextRequest(`${BASE_URL}?exercise=${EXERCISE_SLUG}&latest=1`));
     expect(response.status).toBe(401);
     const body = (await response.json()) as { title: string };
@@ -232,7 +240,9 @@ describe("POST/GET /api/submissions (T-109)", () => {
 
   it("GET: 該当する提出が存在しない場合はnullを返す", async () => {
     const getResponse = await GET(
-      new NextRequest(`${BASE_URL}?exercise=99-unknown/does-not-exist&latest=1`),
+      new NextRequest(`${BASE_URL}?exercise=99-unknown/does-not-exist&latest=1`, {
+        headers: { cookie: toCookieHeader(baseCookies) },
+      }),
     );
     expect(getResponse.status).toBe(200);
     const getBody = (await getResponse.json()) as { submission: unknown | null };
@@ -240,7 +250,9 @@ describe("POST/GET /api/submissions (T-109)", () => {
   });
 
   it("400: exerciseクエリパラメータ欠落はvalidation_errorを返す", async () => {
-    const getResponse = await GET(new NextRequest(BASE_URL));
+    const getResponse = await GET(
+      new NextRequest(BASE_URL, { headers: { cookie: toCookieHeader(baseCookies) } }),
+    );
     expect(getResponse.status).toBe(400);
     const body = (await getResponse.json()) as { title: string };
     expect(body.title).toBe("validation_error");

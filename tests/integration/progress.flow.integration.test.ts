@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/db";
+import { issueSessionCookie } from "./helpers/sessionCookie";
 
 /**
  * 03文書T-104 受入基準「API統合テストで02§3.1の仕様表を1ケース=1テストで網羅
@@ -9,17 +10,29 @@ import { prisma } from "@/lib/db";
  * 実行にはテスト用DB(docker-compose.test.yml)が必要。`npm run test:integration`から実行する
  * (`pretest:integration`がtests/fixtures/content/validを対象にslugマニフェストを再生成する)。
  *
- * セッション解決(lib/auth/config.tsのauth())はT-005で既に検証済みのため、
- * ここではモックして固定ユーザーのセッションとして扱い、進捗API自体のロジック
- * (slugマニフェスト照合/単調性/ストリーク/CSRF)に焦点を当てる。
+ * ADR-008(docs/design/09) §2・T-502: PUT/GET /api/progressの実装は
+ * workers/api/src/routes/progress.ts(Hono)へ移設され、app/api/progress/route.ts
+ * はservice binding経由の薄いフォワーダ(lib/api/workerApiDispatch.ts)になった。
+ * worker-apiはNext.jsのauth()を経由せずCookie内JWTを自己完結で検証するため、
+ * このテストはauth()のモックではなく、実際に署名したセッションJWT Cookieを
+ * リクエストに付与する(tests/integration/helpers/sessionCookie.ts参照)。
+ * dispatchToWorkerApiはCloudflare service binding(env.API.fetch)の代わりに、
+ * worker-apiの本体(workers/api/src/index.tsのHonoアプリ)をインプロセスで
+ * 直接呼び出すようモックする(ビジネスロジック・JWT検証・Prismaは実物のまま、
+ * Cloudflareのデプロイ環境依存部分のみを差し替える)。
  */
-vi.mock("@/lib/auth/config", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/workerApiDispatch", async () => {
+  const { default: app } = await import("@/workers/api/src/index");
+  return {
+    dispatchToWorkerApi: (request: Request) =>
+      app.fetch(request, {
+        AUTH_SECRET: process.env.AUTH_SECRET!,
+        DATABASE_URL: process.env.DATABASE_URL!,
+      }),
+  };
+});
 
-const { auth } = await import("@/lib/auth/config");
 const { GET, PUT } = await import("@/app/api/progress/route");
-
-type SessionLike = { user: { id: string }; expires: string } | null;
-const mockedAuth = auth as unknown as Mock<(...args: unknown[]) => Promise<SessionLike>>;
 
 const BASE_URL = "http://localhost:3000/api/progress";
 
@@ -48,30 +61,6 @@ function toCookieHeader(cookies: Record<string, string>): string {
     .join("; ");
 }
 
-/** GET /api/progress を1回叩き、CSRF cookieを取得する(02§4.3の実利用フローと同順) */
-async function fetchCsrfCookie(): Promise<Record<string, string>> {
-  const response = await GET(new NextRequest(BASE_URL));
-  return extractCookiePairs(response);
-}
-
-async function putProgress(
-  cookies: Record<string, string>,
-  body: unknown,
-  csrfToken?: string,
-) {
-  return PUT(
-    new NextRequest(BASE_URL, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        cookie: toCookieHeader(cookies),
-        ...(csrfToken !== undefined ? { "x-csrf-token": csrfToken } : {}),
-      },
-      body: JSON.stringify(body),
-    }),
-  );
-}
-
 function daysBeforeUtcToday(days: number): string {
   const now = new Date();
   const utcToday = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
@@ -80,21 +69,43 @@ function daysBeforeUtcToday(days: number): string {
 
 describe("PUT/GET /api/progress (T-104)", () => {
   let userId: string;
+  /** セッションJWT Cookie(1件)のみを含む基底cookie。CSRF cookieはfetchCsrfCookie()で追加する */
+  let baseCookies: Record<string, string>;
+
+  /** GET /api/progress を1回叩き、CSRF cookieを取得する(02§4.3の実利用フローと同順) */
+  async function fetchCsrfCookie(): Promise<Record<string, string>> {
+    const response = await GET(
+      new NextRequest(BASE_URL, { headers: { cookie: toCookieHeader(baseCookies) } }),
+    );
+    return { ...baseCookies, ...extractCookiePairs(response) };
+  }
+
+  async function putProgress(cookies: Record<string, string>, body: unknown, csrfToken?: string) {
+    return PUT(
+      new NextRequest(BASE_URL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: toCookieHeader(cookies),
+          ...(csrfToken !== undefined ? { "x-csrf-token": csrfToken } : {}),
+        },
+        body: JSON.stringify(body),
+      }),
+    );
+  }
 
   beforeAll(async () => {
     await prisma.$connect();
   });
 
   beforeEach(async () => {
-    vi.clearAllMocks();
     const user = await prisma.user.create({
       data: { email: `progress-${randomUUID()}@example.com`, displayName: "Progress Test User" },
     });
     userId = user.id;
-    mockedAuth.mockResolvedValue({
-      user: { id: userId },
-      expires: new Date(Date.now() + 60_000).toISOString(),
-    });
+    const sessionCookie = await issueSessionCookie(userId);
+    const eq = sessionCookie.indexOf("=");
+    baseCookies = { [sessionCookie.slice(0, eq)]: sessionCookie.slice(eq + 1) };
   });
 
   afterAll(async () => {
@@ -102,7 +113,6 @@ describe("PUT/GET /api/progress (T-104)", () => {
   });
 
   it("401: 未認証のGETはunauthorizedを返す", async () => {
-    mockedAuth.mockResolvedValue(null);
     const response = await GET(new NextRequest(BASE_URL));
     expect(response.status).toBe(401);
     const body = (await response.json()) as { title: string };
@@ -110,7 +120,6 @@ describe("PUT/GET /api/progress (T-104)", () => {
   });
 
   it("401: 未認証のPUTはunauthorizedを返す", async () => {
-    mockedAuth.mockResolvedValue(null);
     const response = await PUT(
       new NextRequest(BASE_URL, {
         method: "PUT",

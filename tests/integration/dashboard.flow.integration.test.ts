@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { NextRequest } from "next/server";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/db";
 import type { GetDashboardResponse } from "@/lib/contracts";
+import { issueSessionCookie } from "./helpers/sessionCookie";
 
 /**
  * 03文書T-112受入基準「API統合テスト」。
@@ -10,46 +12,56 @@ import type { GetDashboardResponse } from "@/lib/contracts";
  * 既知slugはtests/integration/progress.flow.integration.test.tsと同一のフィクスチャに基づく:
  * モジュール"01-reliability"、レッスン2件・quiz1件・演習1件)。
  *
- * セッション解決(lib/auth/config.tsのauth())はT-005で既に検証済みのため、
- * ここではモックして固定ユーザーのセッションとして扱う(T-104のprogress統合
- * テストと同じ方針)。
+ * ADR-008(docs/design/09) §2・T-502: GET /api/dashboardの実装は
+ * workers/api/src/routes/dashboard.ts(Hono)へ移設され、app/api/dashboard/route.ts
+ * はservice binding経由の薄いフォワーダ(lib/api/workerApiDispatch.ts)になった。
+ * worker-apiはNext.jsのauth()を経由せずCookie内JWTを自己完結で検証するため、
+ * このテストはauth()のモックではなく、実際に署名したセッションJWT Cookieを
+ * リクエストに付与する。dispatchToWorkerApiは実際のCloudflare service binding
+ * (env.API.fetch)の代わりに、worker-apiの本体(workers/api/src/index.tsの
+ * Honoアプリ)をインプロセスで直接呼び出すようモックする(ビジネスロジック
+ * ・JWT検証・Prismaは実物のまま、Cloudflareのデプロイ環境依存部分のみを
+ * 差し替える)。
  */
-vi.mock("@/lib/auth/config", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/api/workerApiDispatch", async () => {
+  const { default: app } = await import("@/workers/api/src/index");
+  return {
+    dispatchToWorkerApi: (request: Request) =>
+      app.fetch(request, {
+        AUTH_SECRET: process.env.AUTH_SECRET!,
+        DATABASE_URL: process.env.DATABASE_URL!,
+      }),
+  };
+});
 
-const { auth } = await import("@/lib/auth/config");
 const { GET } = await import("@/app/api/dashboard/route");
 
-type SessionLike = { user: { id: string }; expires: string } | null;
-const mockedAuth = auth as unknown as Mock<(...args: unknown[]) => Promise<SessionLike>>;
-
+const BASE_URL = "http://localhost:3000/api/dashboard";
 const KNOWN_LESSON_1 = "01-reliability/01-load-and-performance";
 const KNOWN_LESSON_2 = "01-reliability/02-percentiles";
 const KNOWN_QUIZ = "01-reliability/quiz";
 const KNOWN_EXERCISE = "01-reliability/percentile-lab";
 
-async function getDashboard(): Promise<{ status: number; body: GetDashboardResponse }> {
-  const response = await GET();
+async function getDashboard(cookie: string): Promise<{ status: number; body: GetDashboardResponse }> {
+  const response = await GET(new NextRequest(BASE_URL, { headers: { cookie } }));
   const body = (await response.json()) as GetDashboardResponse;
   return { status: response.status, body };
 }
 
 describe("GET /api/dashboard (T-112)", () => {
   let userId: string;
+  let sessionCookie: string;
 
   beforeAll(async () => {
     await prisma.$connect();
   });
 
   beforeEach(async () => {
-    vi.clearAllMocks();
     const user = await prisma.user.create({
       data: { email: `dashboard-${randomUUID()}@example.com`, displayName: "Dashboard Test User" },
     });
     userId = user.id;
-    mockedAuth.mockResolvedValue({
-      user: { id: userId },
-      expires: new Date(Date.now() + 60_000).toISOString(),
-    });
+    sessionCookie = await issueSessionCookie(userId);
   });
 
   afterAll(async () => {
@@ -57,15 +69,14 @@ describe("GET /api/dashboard (T-112)", () => {
   });
 
   it("401: 未認証はunauthorizedを返す", async () => {
-    mockedAuth.mockResolvedValue(null);
-    const response = await GET();
+    const response = await GET(new NextRequest(BASE_URL));
     expect(response.status).toBe(401);
     const body = (await response.json()) as { title: string };
     expect(body.title).toBe("unauthorized");
   });
 
   it("進捗が無いユーザーは全項目ゼロ値・resume null・badges空配列を返す", async () => {
-    const { status, body } = await getDashboard();
+    const { status, body } = await getDashboard(sessionCookie);
     expect(status).toBe(200);
     expect(body.overall).toEqual({ lessonsDone: 0, lessonsTotal: 2, exercisesPassed: 0 });
     expect(body.modules).toEqual(
@@ -119,7 +130,7 @@ describe("GET /api/dashboard (T-112)", () => {
       data: { userId, currentDays: 4, longestDays: 11, lastActiveDate: new Date("2026-07-20T00:00:00.000Z") },
     });
 
-    const { status, body } = await getDashboard();
+    const { status, body } = await getDashboard(sessionCookie);
     expect(status).toBe(200);
 
     // lessonsTotal=2はフィクスチャ(01-reliability配下の2レッスン)由来の
@@ -148,7 +159,7 @@ describe("GET /api/dashboard (T-112)", () => {
       data: { userId, badgeId: badge.id, grantedAt: new Date("2026-07-15T00:00:00.000Z") },
     });
 
-    const { body } = await getDashboard();
+    const { body } = await getDashboard(sessionCookie);
     expect(body.badges).toEqual([
       { slug: "part1-complete", grantedAt: "2026-07-15T00:00:00.000Z" },
     ]);
