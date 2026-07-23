@@ -13,6 +13,34 @@ generator client {
   compilerBuild   = "small"
 }
 
+// 失敗→恒久対策(T-502): worker-api(workers/api/)はwrangler(esbuild)でバンドルされ
+// Cloudflare Workers(workerd)上で実行される。既定(runtime未指定="nodejs"扱い)の
+// 生成クライアントは`@prisma/client/runtime/client`をimportし、モジュール読み込み時に
+// `globalThis['__dirname'] = path.dirname(fileURLToPath(import.meta.url))`を実行する。
+// workerdでは`import.meta.url`が定義されないため、wrangler経由でバンドルしたWorkerは
+// この行で`TypeError: The "path" argument must be of type string or an instance of URL.
+// Received undefined`を起こしWorker起動自体に失敗する(workers/api/tests/でMiniflare
+// 実行時に検出)。Prismaの生成器は`runtime`設定で対象ランタイムを切り替えられ、
+// "workerd"を指定すると`@prisma/client/runtime/wasm-compiler-edge`(import.meta.urlに
+// 依存しない、WASM本体をCompiledWasmモジュールとしてimportする版)が使われる。
+//
+// 上記の既定generator(client)にruntime="workerd"を直接指定すると、今度は`next build`
+// (webpack、Node向け)側が同じ理由の逆方向で壊れる: webpackは`?module`サフィックス付き
+// wasmインポートをCloudflare Workers専用の規約として解釈できず
+// "Module parse failed"でビルド失敗する。worker-appは現時点でもlib/db.ts(Auth.js
+// アダプタ経由)を通じてPrismaを使っており(ADR-008 §2「worker-appからPrisma依存を
+// 完全除去」はT-503のスコープ)、next build自体はNode向けクライアントを要求し続ける。
+// そのため生成器を2本立てにし、worker-api専用に別出力先へworkerd向けクライアントを
+// 生成する(workers/api/src/db.tsが専用にimportする。lib/db.ts・Next.js側は既定の
+// generator clientの出力を使い続けるため無関係)。
+generator clientWorkerd {
+  provider        = "prisma-client"
+  output          = "../lib/generated/prisma-workerd"
+  previewFeatures = ["postgresqlExtensions"]
+  compilerBuild   = "small"
+  runtime         = "workerd"
+}
+
 // Prisma 7: 接続URLはschema.prismaではなくprisma.config.ts/PrismaClientの
 // adapterで指定する(P1012)。ここではprovider/extensionsのみ宣言する。
 datasource db {
