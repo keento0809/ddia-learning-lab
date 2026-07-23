@@ -79,6 +79,17 @@ jobs:
           node-version: "22"
           cache: "npm"
       - run: npm ci
+      # 失敗→恒久対策(T-502): lib/curriculum.ts・lib/progress/slugManifest.tsは
+      # ビルド時生成JSON(lib/generated/curriculum.*.json、content/generated/
+      # slug-manifest.json、いずれも.gitignore対象)を静的importする設計(T-101/T-006
+      # 決定事項ログ)。worker-app(Next.js全体)は元から両方に依存していたが、
+      # worker-apiはT-502でdashboard/progressハンドラを移設するまでこれらへ
+      # 依存していなかった(T-501時点はhealth+JWT検証のみ)。`npm run build:worker`
+      # (worker-appのみ実行)はprebuildフックを持たず生成JSONを作らないため、
+      # workspace内に生成JSONが一切存在しないクリーンチェックアウトでは
+      # `wrangler deploy --dry-run`がworker-app/worker-api双方で解決エラーになる
+      # (worker-apiで実際に検出、CI失敗)。Worker種別によらず両方の生成を先に行う。
+      - run: npm run generate:curriculum && npm run validate:content
       - if: matrix.worker == 'worker-app'
         run: npm run build:worker
       # --outdirは(--configで指定した)設定ファイルのディレクトリ基準で解決されるため、

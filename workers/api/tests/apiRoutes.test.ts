@@ -10,7 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /**
  * ADR-008(docs/design/09) §2・T-502受入基準(2)(3)(4): progress/submissions/
- * dashboard/guest-progressの4ハンドラがworker-api(Hono)へ実際に移設され、
+ * dashboard/guest-progress/notesの5ハンドラがworker-api(Hono)へ実際に移設され、
  * worker-appからservice binding経由で到達可能で、worker-api側のJWT検証で
  * ユーザーが特定されることを、T-501のserviceBinding.test.tsと同じ手法
  * (`wrangler deploy --dry-run`で実バンドルしたworker-apiをMiniflare(workerd)上で
@@ -173,5 +173,47 @@ describe("worker-app -> worker-api service binding: 実APIルート(T-502)", () 
       [userId, "lesson", "01-reliability/01-load-and-performance"],
     );
     expect(result.rows[0]?.status).toBe("in_progress");
+  });
+
+  it("PUT /api/notes/{lessonSlug} -> GET: service binding経由で保存・取得できる", async () => {
+    const cookie = await sessionCookieHeader();
+    const csrfToken = "test-csrf-token-for-worker-api-notes-test";
+    const lessonSlug = "01-reliability/01-load-and-performance";
+
+    const putRes = await mf.dispatchFetch(`http://worker-app.local/api/notes/${lessonSlug}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        cookie: `${cookie}; csrf-token=${csrfToken}`,
+        "x-csrf-token": csrfToken,
+      },
+      body: JSON.stringify({ bodyMd: "# メモ\nテスト本文" }),
+    });
+    expect(putRes.status).toBe(200);
+    const putBody = (await putRes.json()) as { note: { lessonSlug: string; bodyMd: string } | null };
+    expect(putBody.note?.lessonSlug).toBe(lessonSlug);
+    expect(putBody.note?.bodyMd).toBe("# メモ\nテスト本文");
+
+    const getRes = await mf.dispatchFetch(`http://worker-app.local/api/notes/${lessonSlug}`, {
+      headers: { cookie },
+    });
+    expect(getRes.status).toBe(200);
+    const getBody = (await getRes.json()) as { note: { bodyMd: string } | null };
+    expect(getBody.note?.bodyMd).toBe("# メモ\nテスト本文");
+
+    const result = await db.query<{ body_md: string }>(
+      `SELECT body_md FROM notes WHERE user_id = $1 AND lesson_slug = $2`,
+      [userId, lessonSlug],
+    );
+    expect(result.rows[0]?.body_md).toBe("# メモ\nテスト本文");
+  });
+
+  it("GET /api/notes/{lessonSlug}: 未認証はunauthorized(401)を返す", async () => {
+    const res = await mf.dispatchFetch(
+      "http://worker-app.local/api/notes/01-reliability/01-load-and-performance",
+    );
+    expect(res.status).toBe(401);
+    const body = (await res.json()) as { title: string };
+    expect(body.title).toBe("unauthorized");
   });
 });
