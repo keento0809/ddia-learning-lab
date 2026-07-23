@@ -1,99 +1,29 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
-import { prisma } from "@/lib/db";
-import { problemResponse } from "@/lib/auth/http";
-import { getCurriculumModules } from "@/lib/curriculum";
-import { computeCurriculumProgress } from "@/lib/progress/moduleProgress";
-import { countSlugsByType } from "@/lib/progress/slugManifest";
-import type {
-  Badge,
-  DashboardResume,
-  GetDashboardResponse,
-  ProgressItemType,
-  ProgressRecord,
-  ProgressStatus,
-} from "@/lib/contracts";
+import type { NextRequest } from "next/server";
+import { dispatchToWorkerApi } from "@/lib/api/workerApiDispatch";
 
 /**
- * GET /api/dashboard。03文書T-112 / 02§3.1「代表I/O定義」。
+ * GET /api/dashboard。ADR-008(docs/design/09) §2・T-502により、実装は
+ * workers/api/src/routes/dashboard.ts(Hono、Prisma+JWT検証)へ移設した。
+ * このRoute Handlerはservice binding経由でworker-apiへ委譲するだけの薄い
+ * フォワーダ(dispatchToWorkerApi、lib/api/workerApiDispatch.ts)。
+ *
+ * GETの引数を宣言していないのは、移設前のGET()(引数なし、セッションはauth()
+ * 内部でnext/headers経由に解決)を呼び出す既存のtests/integration/
+ * dashboard.flow.integration.test.tsを変更しないため(T-502受入基準
+ * 「既存のAPI統合テストが変更なしで全緑」)。`request?: NextRequest`や
+ * デフォルト値付き引数では、Next.jsが`next build`/typecheck時に生成する
+ * `.next/types/app/api/dashboard/route.ts`のParamCheckが`NextRequest |
+ * undefined`を許容せず(非undefinedの`NextRequest`を要求)型エラーになる。
+ * 一方Next.js本体は実行時、宣言の有無にかかわらず常に実requestを第一引数として
+ * 渡すため(移設前の元実装が引数を宣言していなかったのに問題なく動いていたのと
+ * 同じ理由)、`arguments[0]`で実際に渡された値を取得できる(引数を宣言していない
+ * 通常のfunctionでもarguments自体は利用可能)。本番では実requestが、テストでは
+ * undefined(テストはGET()を引数なしで呼ぶ)が入るため、undefinedの場合のみ
+ * 空のフォールバックRequestを使う(テストはauth()モック経由でユーザーを解決する
+ * ため、フォワード先のCookieヘッダ自体は不要)。
  */
-
-interface ProgressRow {
-  id: string;
-  itemType: string;
-  itemSlug: string;
-  status: string;
-  score: number | null;
-  completedAt: Date | null;
-  updatedAt: Date;
-}
-
-/** app/api/progress/route.tsのtoProgressRecordと同型(T-104既存パターンを踏襲) */
-function toProgressRecord(row: ProgressRow): ProgressRecord {
-  return {
-    id: row.id,
-    itemType: row.itemType as ProgressItemType,
-    itemSlug: row.itemSlug,
-    status: row.status as ProgressStatus,
-    score: row.score,
-    completedAt: row.completedAt ? row.completedAt.toISOString() : null,
-    updatedAt: row.updatedAt.toISOString(),
-  };
-}
-
 export async function GET() {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) {
-    return problemResponse(401, "about:blank#unauthorized", "unauthorized");
-  }
-
-  const [progressRowsRaw, streakRow, userBadgeRows] = await Promise.all([
-    prisma.progress.findMany({ where: { userId }, orderBy: { updatedAt: "desc" } }),
-    prisma.streak.findUnique({ where: { userId } }),
-    prisma.userBadge.findMany({ where: { userId }, include: { badge: true } }),
-  ]);
-  const progressRows = progressRowsRaw.map(toProgressRecord);
-
-  const lessonsDone = progressRows.filter(
-    (row) => row.itemType === "lesson" && row.status === "done",
-  ).length;
-  const exercisesPassed = progressRows.filter(
-    (row) => row.itemType === "exercise" && row.status === "done",
-  ).length;
-
-  // lib/curriculum.tsの生成データはタイトル以外(slug/lessonCount)がロケール間で
-  // 同一(.claude/rules/i18n.md「ja/enはファイルパス=slugで1:1対応」)のため、
-  // モジュール別進捗率(パーセントのみ、タイトル不使用)の算出にはロケールを問わない。
-  const modules = computeCurriculumProgress(getCurriculumModules("ja"), progressRows);
-
-  const resumeRow = progressRows.find((row) => row.status === "in_progress");
-  // titleKeyはitemSlugそのもの。表示用タイトルへの解決はフロントエンド側の責務とする
-  // (lib/moduleDetail.tsの生成済みJSONを通常のESM importで参照できるため、
-  // サーバ側で新規のタイトル解決用データ生成物を追加する必要がない)。
-  const resume: DashboardResume | null = resumeRow
-    ? { itemType: resumeRow.itemType, itemSlug: resumeRow.itemSlug, titleKey: resumeRow.itemSlug }
-    : null;
-
-  const badges: Badge[] = userBadgeRows.map((row) => ({
-    slug: row.badge.slug,
-    grantedAt: row.grantedAt.toISOString(),
-  }));
-
-  const body: GetDashboardResponse = {
-    overall: {
-      lessonsDone,
-      lessonsTotal: countSlugsByType("lesson"),
-      exercisesPassed,
-    },
-    modules,
-    resume,
-    streak: {
-      currentDays: streakRow?.currentDays ?? 0,
-      longestDays: streakRow?.longestDays ?? 0,
-    },
-    badges,
-  };
-
-  return NextResponse.json(body, { status: 200 });
+  // eslint-disable-next-line prefer-rest-params -- 上記コメント参照。意図的にargumentsを使う。
+  const request = (arguments[0] as NextRequest | undefined) ?? new Request("http://localhost/api/dashboard");
+  return dispatchToWorkerApi(request);
 }
