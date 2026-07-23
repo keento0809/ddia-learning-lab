@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { prisma } from "@/lib/db";
-import { issueSessionCookie } from "./helpers/sessionCookie";
 
 /**
  * T-113受入基準「マージロジックのテーブル駆動テスト(両方done/片方のみ/競合)」の
@@ -11,28 +10,15 @@ import { issueSessionCookie } from "./helpers/sessionCookie";
  * /api/guest-progress/importを叩いて既存DB行とのマージ・upsertが正しく
  * 行われることを確認する(T-104のtests/integration/progress.flow.integration.test.ts
  * と同じパターン、`npm run test:integration`が必要)。
- *
- * ADR-008(docs/design/09) §2・T-502: POST /api/guest-progress/importの実装は
- * workers/api/src/routes/guestProgressImport.ts(Hono)へ移設され、
- * app/api/guest-progress/import/route.ts はservice binding経由の薄いフォワーダ
- * (lib/api/workerApiDispatch.ts)になった。worker-apiはNext.jsのauth()を経由せず
- * Cookie内JWTを自己完結で検証するため、このテストはauth()のモックではなく、
- * 実際に署名したセッションJWT Cookieをリクエストに付与する
- * (tests/integration/progress.flow.integration.test.tsと同じ方針)。
  */
-vi.mock("@/lib/api/workerApiDispatch", async () => {
-  const { default: app } = await import("@/workers/api/src/index");
-  return {
-    dispatchToWorkerApi: (request: Request) =>
-      app.fetch(request, {
-        AUTH_SECRET: process.env.AUTH_SECRET!,
-        DATABASE_URL: process.env.DATABASE_URL!,
-      }),
-  };
-});
+vi.mock("@/lib/auth/config", () => ({ auth: vi.fn() }));
 
+const { auth } = await import("@/lib/auth/config");
 const { GET } = await import("@/app/api/progress/route");
 const { POST } = await import("@/app/api/guest-progress/import/route");
+
+type SessionLike = { user: { id: string }; expires: string } | null;
+const mockedAuth = auth as unknown as Mock<(...args: unknown[]) => Promise<SessionLike>>;
 
 const PROGRESS_URL = "http://localhost:3000/api/progress";
 const IMPORT_URL = "http://localhost:3000/api/guest-progress/import";
@@ -56,6 +42,11 @@ function toCookieHeader(cookies: Record<string, string>): string {
     .join("; ");
 }
 
+async function fetchCsrfCookie(): Promise<Record<string, string>> {
+  const response = await GET(new NextRequest(PROGRESS_URL));
+  return extractCookiePairs(response);
+}
+
 async function importGuestProgress(
   cookies: Record<string, string>,
   body: unknown,
@@ -76,29 +67,21 @@ async function importGuestProgress(
 
 describe("POST /api/guest-progress/import (T-113)", () => {
   let userId: string;
-  /** セッションJWT Cookie(1件)のみを含む基底cookie。CSRF cookieはfetchCsrfCookie()で追加する */
-  let baseCookies: Record<string, string>;
-
-  /** GET /api/progress を1回叩き、CSRF cookieを取得する(progress.flow.integration.test.tsと同じ手順) */
-  async function fetchCsrfCookie(): Promise<Record<string, string>> {
-    const response = await GET(
-      new NextRequest(PROGRESS_URL, { headers: { cookie: toCookieHeader(baseCookies) } }),
-    );
-    return { ...baseCookies, ...extractCookiePairs(response) };
-  }
 
   beforeAll(async () => {
     await prisma.$connect();
   });
 
   beforeEach(async () => {
+    vi.clearAllMocks();
     const user = await prisma.user.create({
       data: { email: `guest-import-${randomUUID()}@example.com`, displayName: "Guest Import Test User" },
     });
     userId = user.id;
-    const sessionCookie = await issueSessionCookie(userId);
-    const eq = sessionCookie.indexOf("=");
-    baseCookies = { [sessionCookie.slice(0, eq)]: sessionCookie.slice(eq + 1) };
+    mockedAuth.mockResolvedValue({
+      user: { id: userId },
+      expires: new Date(Date.now() + 60_000).toISOString(),
+    });
   });
 
   afterAll(async () => {
@@ -106,6 +89,7 @@ describe("POST /api/guest-progress/import (T-113)", () => {
   });
 
   it("401: 未認証はunauthorizedを返す", async () => {
+    mockedAuth.mockResolvedValue(null);
     const response = await POST(
       new NextRequest(IMPORT_URL, {
         method: "POST",

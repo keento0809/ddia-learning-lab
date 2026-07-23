@@ -34,6 +34,10 @@ export default defineConfig({
   },
   test: {
     include: ["tests/integration/**/*.integration.test.ts"],
+    // 失敗→恒久対策(T-502): tests/integration/setup.tsのコメント参照。既存の
+    // 4テストファイル自体は一切変更せず、dispatchToWorkerApiのモックをここで
+    // グローバルに差し込む(全テストファイル実行前に1回読み込まれる)。
+    setupFiles: ["tests/integration/setup.ts"],
     // 全ファイルが同一のテスト用Postgres(docker-compose.test.yml)を共有するため、
     // ファイル並列実行だとbeforeEachの全件deleteMany(db.crud.integration.test.ts等)が
     // 他ファイルの実行中データを消し飛ばし、外部キー制約違反等で不安定化する
