@@ -19,6 +19,8 @@ next-env.d.ts
 # === ビルド生成物(Node CLIスクリプトで生成、静的importで取り込む) ===
 lib/generated/
 content/generated/
+# sql.jsのWASM資産(scripts/copy-sql-wasm.mjsでnode_modulesからコピー、T-201 02§7.3)
+public/generated/
 
 # === テスト ===
 coverage/

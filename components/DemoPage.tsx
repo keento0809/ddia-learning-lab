@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { Lab } from "@/components/Lab";
+import { SqlLab } from "@/components/SqlLab";
 import { getMessages, type Locale } from "@/lib/i18n/messages";
 import JaDemoContent from "@/content/ja/demo.mdx";
 import EnDemoContent from "@/content/en/demo.mdx";
@@ -24,6 +25,8 @@ export function DemoPage({ locale }: { locale: Locale }) {
       </article>
       <h2>{t.demo.labHeading}</h2>
       <Lab locale={locale} />
+      <h2>{t.demo.sqlLabHeading}</h2>
+      <SqlLab locale={locale} />
     </main>
   );
 }
