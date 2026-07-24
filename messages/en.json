@@ -317,5 +317,46 @@
     "narrator": {
       "ariaLabel": "Visualization state changes"
     }
+  },
+  "replicationLagViz": {
+    "heading": "Replication Lag",
+    "nodeLabel": {
+      "leader": "Leader",
+      "follower-1": "Follower 1",
+      "follower-2": "Follower 2"
+    },
+    "versionLabel": "v{version}",
+    "clientLabel": "You",
+    "networkDelayLabel": "Network delay: {ticks} ticks",
+    "networkDelayInputAriaLabel": "Network delay (0 to 6 ticks)",
+    "mitigationGroupLabel": "Mitigation",
+    "mitigationOption": {
+      "none": "No mitigation",
+      "read-from-leader": "Pin reads to leader",
+      "wait-for-version": "Wait for version"
+    },
+    "writeButtonLabel": "Write (you)",
+    "readTargetSelectLabel": "Read from",
+    "readButtonLabel": "Read",
+    "scenarioButtonLabel": "Run the \"can't read my own write\" scenario",
+    "violationsLabel": "Read-your-writes violations: {count}",
+    "droppedLabel": "Dropped: {count}",
+    "inFlightHeading": "Requests in flight",
+    "inFlightEmpty": "No requests are in flight",
+    "messageKindLabel": {
+      "write-request": "Write request",
+      "replication": "Replication",
+      "read-request": "Read request"
+    },
+    "messageRouteLabel": "{from} → {to}",
+    "messageTicksLabel": "{ticks} ticks remaining",
+    "messageHeldLabel": "waiting for version",
+    "dropButtonLabel": "Drop ({description})",
+    "readLogHeading": "Read result log",
+    "readLogEmpty": "No reads yet",
+    "readLogEntry": "tick {tick}: {clientId} read from {target} → v{resultVersion} (required v{requiredVersion})",
+    "readLogViolation": "read-your-writes violation",
+    "readLogOk": "consistent",
+    "narratorSummary": "tick {tick}: leader v{leaderVersion}, follower-1 v{follower1}, follower-2 v{follower2}, mitigation={mitigation}, {inFlight} in flight, {violations} read-your-writes violations"
   }
 }
