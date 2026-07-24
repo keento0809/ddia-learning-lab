@@ -317,5 +317,46 @@
     "narrator": {
       "ariaLabel": "可視化の状態変化"
     }
+  },
+  "isolationViz": {
+    "heading": "分離レベルシミュレータ",
+    "presetLabel": "シナリオ",
+    "presetSelectAriaLabel": "シナリオを選択",
+    "levelLabel": "分離レベル",
+    "levelSelectAriaLabel": "分離レベルを選択",
+    "levelNames": {
+      "read-uncommitted": "Read Uncommitted",
+      "read-committed": "Read Committed",
+      "repeatable-read": "Repeatable Read(スナップショット分離)",
+      "serializable": "Serializable"
+    },
+    "timelineHeading": "操作のタイムライン",
+    "reorderHint": "実行前(0件完了時)のみ、各操作の左右移動ボタンまたはドラッグで並べ替えられます。",
+    "stageAriaLabel": "トランザクションの状態図",
+    "moveEarlierLabel": "1つ前に移動",
+    "moveLaterLabel": "1つ後ろに移動",
+    "moveEarlierGlyph": "◀",
+    "moveLaterGlyph": "▶",
+    "chipStatus": {
+      "pending": "未実行",
+      "blocked": "ブロック中",
+      "done": "完了",
+      "aborted": "アボート"
+    },
+    "dirtyReadTag": "未コミット値(ダーティ)",
+    "storeHeading": "コミット済みストア",
+    "txnHeading": "トランザクション状態",
+    "txnStatus": {
+      "pending": "未開始",
+      "active": "実行中",
+      "committed": "コミット済み",
+      "aborted": "アボート"
+    },
+    "emptyStoreValue": "(なし)"
+  },
+  "vizPreview": {
+    "pageTitle": "Viz検証ページ",
+    "heading": "Viz検証ページ",
+    "description": "各可視化コンポーネントを content/ のカリキュラム教材投入前に検証するための固定ページ。"
   }
 }
