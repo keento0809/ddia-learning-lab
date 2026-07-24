@@ -289,5 +289,19 @@
         "timeout": "タイムアウト"
       }
     }
+  },
+  "vizCore": {
+    "timeline": {
+      "groupLabel": "再生コントロール",
+      "playLabel": "再生",
+      "pauseLabel": "一時停止",
+      "stepLabel": "ステップ実行",
+      "resetLabel": "リセット",
+      "speedLabel": "速度 {speed}倍",
+      "speedInputAriaLabel": "再生速度(0.5〜4倍)"
+    },
+    "narrator": {
+      "ariaLabel": "可視化の状態変化"
+    }
   }
 }
