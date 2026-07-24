@@ -289,5 +289,19 @@
         "timeout": "Timeout"
       }
     }
+  },
+  "vizCore": {
+    "timeline": {
+      "groupLabel": "Playback controls",
+      "playLabel": "Play",
+      "pauseLabel": "Pause",
+      "stepLabel": "Step",
+      "resetLabel": "Reset",
+      "speedLabel": "Speed {speed}x",
+      "speedInputAriaLabel": "Playback speed (0.5x to 4x)"
+    },
+    "narrator": {
+      "ariaLabel": "Visualization state changes"
+    }
   }
 }
