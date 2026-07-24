@@ -2,28 +2,42 @@
 
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
+import * as Sentry from "@sentry/browser";
 import { Link } from "@/lib/i18n/navigation";
 import { getMessages } from "@/lib/i18n/messages";
 import { routing, type AppLocale } from "@/lib/i18n/routing";
 
 function isAppLocale(value: unknown): value is AppLocale {
-  return typeof value === "string" && (routing.locales as readonly string[]).includes(value);
+  return (
+    typeof value === "string" &&
+    (routing.locales as readonly string[]).includes(value)
+  );
 }
 
 /**
  * 02§10 Error Boundary方針: レンダリングエラー発生時もページ全体を落とさず、
  * 復旧導線(再試行/ホームへ)を提示する。error.tsxはNext.jsの規約上params
  * を受け取らないためnot-found.tsxと同様にuseParams()でロケールを解決する。
- * Sentry等の外部ログ送信はT-007の対象外(未導入、ADR未決)のためconsole.error
- * のみ行う。
+ * T-505(ADR-008 §2): Sentry(@sentry/browser、通常のSDK)へcaptureException。
+ * NEXT_PUBLIC_SENTRY_DSN未設定時はinstrumentation-client.tsがinitを呼ばないため
+ * captureExceptionはno-op。
  */
-export default function LocaleError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function LocaleError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   const params = useParams<{ locale?: string }>();
-  const locale: AppLocale = isAppLocale(params?.locale) ? params.locale : routing.defaultLocale;
+  const locale: AppLocale = isAppLocale(params?.locale)
+    ? params.locale
+    : routing.defaultLocale;
   const t = getMessages(locale).error;
 
   useEffect(() => {
     console.error(error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (
