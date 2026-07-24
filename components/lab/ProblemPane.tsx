@@ -111,6 +111,26 @@ function ProblemTab({ exercise, locale }: { exercise: ExerciseDefinition; locale
     (tc) => "call" in tc && (tc.assert.type === "equals" || tc.assert.type === "deepEquals"),
   );
 
+  // SQL演習では`exercise.entry`はsetupSql、`call.fn`/`assert.value`は検証用SELECT文/
+  // 結果集合を保持している(lib/lab/buildSqlRunRequest.tsの読み替え、ドキュメント参照)。
+  // JS版と同じ「採点対象の関数」「入出力例」表示をそのまま使うと利用者に誤解を
+  // 与えるため、SQL演習ではスキーマビューア(components/lab/SchemaViewer.tsx)側に
+  // テーブル構造の提示を委ね、ここでは制約情報のみを表示する。
+  if (exercise.language === "sql") {
+    return (
+      <div className="space-y-4">
+        <p data-testid="lab-problem-sql-note">{t.sqlNote}</p>
+        <div>
+          <h3 className="mb-1 font-medium">{t.constraintsHeading}</h3>
+          <ul className="list-inside list-disc text-neutral-600 dark:text-neutral-400">
+            <li>{formatMessage(t.timeLimitLabel, { sec: Math.round(exercise.timeoutMs / 1000) })}</li>
+            <li>{formatMessage(t.testCountLabel, { count: exercise.tests.length })}</li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <p>

@@ -81,6 +81,9 @@
   "labPreview": {
     "pageTitle": "演習ページ プレビュー"
   },
+  "labPreviewSql": {
+    "pageTitle": "SQL演習ページ プレビュー"
+  },
   "lesson": {
     "moduleTocHeading": "モジュール目次",
     "pageTocHeading": "ページ内目次",
@@ -164,7 +167,16 @@
       "examplesHeading": "入出力例",
       "exampleInput": "入力",
       "exampleOutput": "出力",
-      "noExamplesLabel": "この演習にはequals/deepEquals形式の入出力例がありません"
+      "noExamplesLabel": "この演習にはequals/deepEquals形式の入出力例がありません",
+      "sqlNote": "SQL演習です。下のスキーマビューアでテーブル一覧とサンプル行を確認できます。"
+    },
+    "schemaViewer": {
+      "heading": "スキーマ",
+      "loading": "スキーマを読み込み中…",
+      "error": "スキーマの取得に失敗しました",
+      "noTables": "テーブルがありません",
+      "sampleRowsLabel": "サンプル行:",
+      "noSampleRows": "サンプル行はありません"
     },
     "hints": {
       "locked": "あと{remaining}回不合格でヒント{n}が開放されます",
