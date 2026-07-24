@@ -106,7 +106,7 @@ export function IsolationViz({ preset }: VizComponentProps) {
 
   return (
     <div data-testid="isolation-viz" className="my-4 rounded border border-neutral-300 p-4 dark:border-neutral-700">
-      <h3 className="text-lg font-semibold">{t.heading}</h3>
+      <h2 className="text-lg font-semibold">{t.heading}</h2>
 
       <div className="mt-3 flex flex-wrap gap-4">
         <label className="flex flex-col text-sm">
@@ -176,7 +176,7 @@ export function IsolationViz({ preset }: VizComponentProps) {
         </g>
       </SvgStage>
 
-      <h4 className="mt-4 font-semibold">{t.timelineHeading}</h4>
+      <h3 className="mt-4 font-semibold">{t.timelineHeading}</h3>
       <p className="text-xs text-neutral-500 dark:text-neutral-400">{t.reorderHint}</p>
 
       <div role="list" data-testid="isolation-timeline" className="mt-2 flex flex-wrap gap-2">

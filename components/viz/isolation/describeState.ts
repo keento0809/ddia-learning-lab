@@ -1,4 +1,5 @@
 import type { A11yNarratable, Locale } from "@/lib/contracts";
+import { getMessages } from "@/lib/i18n/messages";
 import { PRESETS } from "./presets";
 import type { IsolationState, StepEvent } from "./types";
 
@@ -54,7 +55,9 @@ export const isolationNarrator: A11yNarratable<IsolationState> = {
   describeState(state: IsolationState, locale: Locale): string {
     const preset = PRESETS[state.presetId];
     const presetTitle = preset.title[locale];
-    const levelText = locale === "ja" ? `分離レベル: ${state.isolationLevel}` : `Isolation level: ${state.isolationLevel}`;
+    const t = getMessages(locale).isolationViz;
+    const levelName = t.levelNames[state.isolationLevel];
+    const levelText = locale === "ja" ? `分離レベル: ${levelName}` : `Isolation level: ${levelName}`;
     const progressText =
       locale === "ja"
         ? `${state.completed.length}/${state.operations.length} 件の操作が完了`
