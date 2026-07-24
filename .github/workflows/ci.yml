@@ -168,6 +168,11 @@ jobs:
       - run: npm run build:worker
         env:
           NEXT_PUBLIC_SITE_URL: ${{ vars.PRODUCTION_URL }}
+          # T-505(ADR-008 §2): クライアント側SentryのDSNはビルド時にバンドルへ
+          # 埋め込む必要があるためNEXT_PUBLIC_接頭辞にマッピングする(送信専用の
+          # DSN自体は非秘密情報。サーバ側(両Worker)のSENTRY_DSNは`wrangler secret
+          # put`で別途登録するbinding、07 A-8参照)。
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       - name: Deploy worker-app(公開)
         run: npx wrangler deploy --config wrangler.jsonc
         env:

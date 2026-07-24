@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import * as Sentry from "@sentry/browser";
 import { getMessages } from "@/lib/i18n/messages";
 import { routing } from "@/lib/i18n/routing";
 import "./globals.css";
@@ -10,9 +12,20 @@ import "./globals.css";
  * ロケール文脈(NextIntlClientProvider含む)が使えないため既定ロケール(en)
  * のメッセージカタログを直接参照する(rule5対応。直書き文字列は使わない)。
  * app/[locale]/layout.tsxを経由しないルートのためglobals.cssを直接importする。
+ * T-505(ADR-008 §2): Sentry(@sentry/browser)へcaptureException(no DSN時no-op)。
  */
-export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   const t = getMessages(routing.defaultLocale).error;
+
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
 
   return (
     <html lang={routing.defaultLocale}>
