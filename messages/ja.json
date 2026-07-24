@@ -75,7 +75,8 @@
   },
   "demo": {
     "pageTitle": "Walking Skeleton デモレッスン",
-    "labHeading": "演習: sum(numbers) を実装する"
+    "labHeading": "演習: sum(numbers) を実装する",
+    "sqlLabHeading": "演習: SQLでactive=0のユーザーを削除する"
   },
   "labPreview": {
     "pageTitle": "演習ページ プレビュー"
@@ -126,6 +127,19 @@
     "run": "実行",
     "loadSolution": "正解コードを読み込む",
     "loadInfiniteLoop": "無限ループコードを読み込む",
+    "running": "実行中…",
+    "testsPassed": "{passed}/{total} 件のテストに合格",
+    "resultPass": "合格",
+    "resultFail": "不合格",
+    "resultError": "エラー",
+    "resultTimeout": "タイムアウトしました(強制停止)",
+    "durationLabel": "実行時間: {ms}ms"
+  },
+  "sqlLab": {
+    "run": "SQLを実行",
+    "loadSolution": "正解SQLを読み込む",
+    "loadMismatch": "不正解SQLを読み込む",
+    "loadSyntaxError": "構文エラーSQLを読み込む",
     "running": "実行中…",
     "testsPassed": "{passed}/{total} 件のテストに合格",
     "resultPass": "合格",
@@ -288,6 +302,20 @@
         "error": "エラー",
         "timeout": "タイムアウト"
       }
+    }
+  },
+  "vizCore": {
+    "timeline": {
+      "groupLabel": "再生コントロール",
+      "playLabel": "再生",
+      "pauseLabel": "一時停止",
+      "stepLabel": "ステップ実行",
+      "resetLabel": "リセット",
+      "speedLabel": "速度 {speed}倍",
+      "speedInputAriaLabel": "再生速度(0.5〜4倍)"
+    },
+    "narrator": {
+      "ariaLabel": "可視化の状態変化"
     }
   }
 }

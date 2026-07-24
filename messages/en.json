@@ -75,7 +75,8 @@
   },
   "demo": {
     "pageTitle": "Walking Skeleton Demo Lesson",
-    "labHeading": "Exercise: implement sum(numbers)"
+    "labHeading": "Exercise: implement sum(numbers)",
+    "sqlLabHeading": "Exercise: delete users with active = 0 in SQL"
   },
   "labPreview": {
     "pageTitle": "Exercise Page Preview"
@@ -126,6 +127,19 @@
     "run": "Run",
     "loadSolution": "Load correct solution",
     "loadInfiniteLoop": "Load infinite loop",
+    "running": "Running…",
+    "testsPassed": "{passed}/{total} tests passed",
+    "resultPass": "Pass",
+    "resultFail": "Fail",
+    "resultError": "Error",
+    "resultTimeout": "Timed out (force-terminated)",
+    "durationLabel": "Duration: {ms}ms"
+  },
+  "sqlLab": {
+    "run": "Run SQL",
+    "loadSolution": "Load correct SQL",
+    "loadMismatch": "Load incorrect SQL",
+    "loadSyntaxError": "Load SQL with a syntax error",
     "running": "Running…",
     "testsPassed": "{passed}/{total} tests passed",
     "resultPass": "Pass",
@@ -288,6 +302,20 @@
         "error": "Error",
         "timeout": "Timeout"
       }
+    }
+  },
+  "vizCore": {
+    "timeline": {
+      "groupLabel": "Playback controls",
+      "playLabel": "Play",
+      "pauseLabel": "Pause",
+      "stepLabel": "Step",
+      "resetLabel": "Reset",
+      "speedLabel": "Speed {speed}x",
+      "speedInputAriaLabel": "Playback speed (0.5x to 4x)"
+    },
+    "narrator": {
+      "ariaLabel": "Visualization state changes"
     }
   }
 }
