@@ -1,8 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { Prisma } from "@/lib/generated/prisma/client";
-import { prisma } from "@/lib/db";
-import { hashPassword } from "@/lib/auth/password";
-import { SignupRequestSchema } from "@/lib/auth/schemas";
+import type { NextRequest } from "next/server";
+import { signupViaWorkerApi } from "@/lib/auth/workerApiAuth";
 import { problemResponse } from "@/lib/auth/http";
 
 /**
@@ -10,6 +7,12 @@ import { problemResponse } from "@/lib/auth/http";
  * 02§1「認証はセッションCookie」の対象外(ログイン前のためCredentialsProviderの
  * 対象外エンドポイント)。作成後のログインはクライアントがsignIn("credentials")を
  * 別途呼び出す(このエンドポイントはユーザー作成のみを担う)。
+ *
+ * ADR-008(docs/design/09) §2・§4 T-503: ユーザー作成(Prisma操作)はworker-apiの
+ * `/internal/auth/signup`へ移設した。このRoute Handlerはリクエストボディの検証・
+ * DB操作を行わず、service binding経由の応答(status・Content-Type・body)を
+ * そのまま返す薄いフォワーダ(workers/api/src/routes/internalAuth.tsが
+ * 同一のバリデーション・エラー形状を再現する)。
  */
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -19,28 +22,5 @@ export async function POST(request: NextRequest) {
     return problemResponse(400, "about:blank#invalid-json", "invalid_json");
   }
 
-  const parsed = SignupRequestSchema.safeParse(body);
-  if (!parsed.success) {
-    return problemResponse(
-      400,
-      "about:blank#validation-error",
-      "validation_error",
-      parsed.error.issues.map((issue) => issue.message).join("; "),
-    );
-  }
-
-  const { email, password, displayName } = parsed.data;
-  const passwordHash = await hashPassword(password);
-
-  try {
-    const user = await prisma.user.create({
-      data: { email, passwordHash, displayName },
-    });
-    return NextResponse.json({ id: user.id, email: user.email }, { status: 201 });
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return problemResponse(409, "about:blank#email-taken", "email_taken");
-    }
-    throw error;
-  }
+  return signupViaWorkerApi(body);
 }
