@@ -4,5 +4,9 @@
   "name": "ddia-learning-lab-api",
   "main": "src/index.ts",
   "compatibility_date": "2024-09-23",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  // T-504: workers_devの既定値はtrue(未指定でも<name>.<subdomain>.workers.devが
+  // 公開される)。routes/routeも設定しないことと合わせ、明示的にfalseにしないと
+  // 「非公開・service binding経由のみ到達可能」というADR-008の設計が崩れるため必須。
+  "workers_dev": false
 }

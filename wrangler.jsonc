@@ -11,5 +11,8 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "services": [{ "binding": "API", "service": "ddia-learning-lab-api" }]
+  "services": [{ "binding": "API", "service": "ddia-learning-lab-api" }],
+  // T-504: workers_devの既定値はtrueだが、worker-api(非公開)との対比を設定上も
+  // 明示するため公開Workerであることを明記する。
+  "workers_dev": true
 }

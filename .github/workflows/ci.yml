@@ -110,6 +110,96 @@ jobs:
       - run: npm ci
       - run: npm run validate:content
 
+  # ADR-008(09) §2・T-504: worker-apiが「service binding経由のみ到達可能な非公開Worker」
+  # であることの恒常検証。workers_devの既定値はtrue(未指定でも公開されてしまう)なので、
+  # 設定ミスの再発を防ぐガードレールとして毎回(push/PR問わず)実行する。ビルド不要の
+  # 静的チェックのため他ジョブを待たない。
+  worker-visibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run check:worker-visibility
+
+  # ADR-008(09) §4 T-504: 2 Worker構成のデプロイ。mainへのpush時のみ実行する(PRでは
+  # 実行しない)。worker-apiを先にデプロイし、worker-appが依存するservice binding先を
+  # 常に用意してからworker-appをデプロイする(逆順だとworker-appの新しいコードが
+  # まだ更新されていないworker-apiを呼ぶ窓が生まれるため)。
+  #
+  # このジョブはCloudflareへの認証情報(CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID、
+  # 07 A-8)がGitHub Actions Secretsに登録されていることを前提とする。アプリ側の
+  # シークレット(AUTH_SECRET/DATABASE_URL/OAuth系)は`wrangler secret put`で
+  # Worker側に人間が事前登録済みのものを使う(デプロイ自体はコード配信のみで、
+  # シークレット値の受け渡しは行わない)。
+  deploy-worker-api:
+    runs-on: ubuntu-latest
+    needs: [bundle-size, content-validate, worker-visibility]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run generate:curriculum && npm run validate:content
+      - name: Deploy worker-api(非公開・service binding経由のみ到達可能)
+        run: npx wrangler deploy --config workers/api/wrangler.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  deploy-worker-app:
+    runs-on: ubuntu-latest
+    needs: deploy-worker-api
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run generate:curriculum && npm run validate:content
+      - run: npm run build:worker
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ vars.PRODUCTION_URL }}
+      - name: Deploy worker-app(公開)
+        run: npx wrangler deploy --config wrangler.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  # デプロイ後スモークテスト(T-504受入基準)。health相当の疎通に加え、S-02(カリキュラム
+  # 一覧)の主要動線、およびworker-app→worker-apiのservice binding疎通(未認証401で
+  # bindingの生死のみ確認。200を期待しないのはこのエンドポイントが認証必須のため)を検証する。
+  # ${{ vars.PRODUCTION_URL }}(GitHub Actions Variables)は人間が事前設定すること
+  # (07 A-8/A-9)。カスタムドメイン未確定の間はworkers.dev URLを設定してよい。
+  smoke-test:
+    runs-on: ubuntu-latest
+    needs: deploy-worker-app
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: worker-app疎通確認(health相当)
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_URL }}/ja")
+          echo "GET /ja -> $status"
+          test "$status" = "200"
+      - name: 主要動線確認(カリキュラム一覧, S-02)
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_URL }}/ja/learn")
+          echo "GET /ja/learn -> $status"
+          test "$status" = "200"
+      - name: worker-api疎通確認(service binding経由、未認証401を期待)
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_URL }}/api/progress")
+          echo "GET /api/progress (unauthenticated) -> $status"
+          test "$status" = "401"
+
   # T-403(E2E拡充)等でPlaywright E2Eスイートが揃った後に有効化するplaceholder。
   e2e:
     if: false
