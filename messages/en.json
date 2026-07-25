@@ -1,4 +1,14 @@
 {
+  "home": {
+    "pageTitle": "DDIA Learning Lab",
+    "heroTitle": "Learn distributed data systems by building",
+    "heroSubtitle": "Work through lessons, quizzes, and runnable exercises to build a practical, systematic understanding of large-scale data system design.",
+    "ctaPrimary": "View curriculum",
+    "ctaSecondary": "Start for free",
+    "curriculumOverviewTitle": "Curriculum overview",
+    "moduleCountLabel": "{count} modules",
+    "viewAllLink": "View all"
+  },
   "nav": {
     "brand": "DDIA Learning Lab",
     "mainAriaLabel": "Main navigation",

@@ -1,4 +1,14 @@
 {
+  "home": {
+    "pageTitle": "DDIA Learning Lab",
+    "heroTitle": "分散データシステムを、手を動かして学ぶ",
+    "heroSubtitle": "レッスン・クイズ・実行できる演習を通じて、大規模データシステムの設計判断を体系的に身につけます。",
+    "ctaPrimary": "カリキュラムを見る",
+    "ctaSecondary": "無料で始める",
+    "curriculumOverviewTitle": "カリキュラム概観",
+    "moduleCountLabel": "モジュール{count}件",
+    "viewAllLink": "すべて見る"
+  },
   "nav": {
     "brand": "DDIA Learning Lab",
     "mainAriaLabel": "メインナビゲーション",
