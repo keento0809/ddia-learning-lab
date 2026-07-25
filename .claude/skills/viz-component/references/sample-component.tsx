@@ -66,7 +66,9 @@ export default function JobQueueViz() {
           engine.dispatch({ type: "enqueue" });
         }}
       >
-        Enqueue
+        {/* 実装時は messages/{ja,en}.json 経由(絶対規則5)。ここはdescribeState.ts同様、
+            メッセージファイルを新設せず読める最小サンプルとして直書きしている。 */}
+        {locale === "ja" ? "投入" : "Enqueue"}
       </button>
       <button
         type="button"
@@ -77,7 +79,7 @@ export default function JobQueueViz() {
           engine.dispatch({ type: "dequeue" });
         }}
       >
-        Dequeue
+        {locale === "ja" ? "取り出し" : "Dequeue"}
       </button>
 
       {/*
