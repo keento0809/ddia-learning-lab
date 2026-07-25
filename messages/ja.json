@@ -340,6 +340,35 @@
       "ariaLabel": "可視化の状態変化"
     }
   },
+  "vizLsmTree": {
+    "title": "LSM-Treeの内部動作",
+    "memtableLabel": "Memtable",
+    "walLabel": "WAL(先行書き込みログ)",
+    "levelLabel": "L{level}",
+    "emptyLabel": "(空)",
+    "tombstoneValueLabel": "(削除済み)",
+    "eventLogLabel": "直前の操作",
+    "form": {
+      "keyInputLabel": "キー",
+      "valueInputLabel": "値",
+      "putButton": "Put",
+      "deleteKeyInputLabel": "削除するキー",
+      "deleteButton": "Delete",
+      "flushButton": "Memtableをフラッシュ",
+      "compactButton": "L{from}→L{to}をコンパクション",
+      "resetButton": "リセット"
+    },
+    "narrator": {
+      "initial": "LSM-Treeは初期状態です。Memtableのエントリ数は{memtableCount}件です。",
+      "put": "キー「{key}」に値「{value}」をMemtableへ書き込みました。",
+      "delete": "キー「{key}」を削除しました(Memtableにトゥームストーンを記録)。",
+      "flush": "MemtableをSSTable #{id}({count}件)としてL0へフラッシュしました。",
+      "compact": "L{from}をL{to}へコンパクションしました。{merged}件を統合して{result}件になり、同一キーは最新値を優先しました(トゥームストーン{dropped}件を破棄)。",
+      "noopEmptyMemtable": "Memtableが空のためフラッシュできません。",
+      "noopEmptyLevel": "L{level}にSSTableが無いためコンパクションできません。",
+      "noopDeepestLevel": "最深レベルのためこれ以上コンパクションできません。"
+    }
+  },
   "replicationLagViz": {
     "heading": "レプリケーション遅延",
     "nodeLabel": {

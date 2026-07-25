@@ -46,6 +46,7 @@
     "@sentry/browser": "^10.68.0",
     "@tanstack/react-query": "^5.101.2",
     "@types/sql.js": "^1.4.9",
+    "framer-motion": "^11.18.2",
     "hash-wasm": "^4.12.0",
     "hono": "^4.12.31",
     "jose": "^6.2.3",

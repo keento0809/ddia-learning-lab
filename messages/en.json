@@ -340,6 +340,35 @@
       "ariaLabel": "Visualization state changes"
     }
   },
+  "vizLsmTree": {
+    "title": "LSM-Tree internals",
+    "memtableLabel": "Memtable",
+    "walLabel": "WAL (write-ahead log)",
+    "levelLabel": "L{level}",
+    "emptyLabel": "(empty)",
+    "tombstoneValueLabel": "(deleted)",
+    "eventLogLabel": "Last action",
+    "form": {
+      "keyInputLabel": "Key",
+      "valueInputLabel": "Value",
+      "putButton": "Put",
+      "deleteKeyInputLabel": "Key to delete",
+      "deleteButton": "Delete",
+      "flushButton": "Flush memtable",
+      "compactButton": "Compact L{from}→L{to}",
+      "resetButton": "Reset"
+    },
+    "narrator": {
+      "initial": "LSM-Tree is at its initial state. The memtable has {memtableCount} entries.",
+      "put": "Wrote key \"{key}\" with value \"{value}\" to the memtable.",
+      "delete": "Deleted key \"{key}\" (recorded as a tombstone in the memtable).",
+      "flush": "Flushed the memtable to SSTable #{id} ({count} entries) at L0.",
+      "compact": "Compacted L{from} into L{to}: merged {merged} entries into {result}, keeping the newest value per key ({dropped} tombstones dropped).",
+      "noopEmptyMemtable": "Cannot flush: the memtable is empty.",
+      "noopEmptyLevel": "Cannot compact: L{level} has no SSTables.",
+      "noopDeepestLevel": "Cannot compact: this is the deepest level."
+    }
+  },
   "replicationLagViz": {
     "heading": "Replication Lag",
     "nodeLabel": {
