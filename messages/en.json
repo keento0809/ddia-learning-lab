@@ -359,6 +359,47 @@
     "readLogOk": "consistent",
     "narratorSummary": "tick {tick}: leader v{leaderVersion}, follower-1 v{follower1}, follower-2 v{follower2}, mitigation={mitigation}, {inFlight} in flight, {violations} read-your-writes violations"
   },
+  "isolationViz": {
+    "heading": "Isolation level simulator",
+    "presetLabel": "Scenario",
+    "presetSelectAriaLabel": "Select a scenario",
+    "levelLabel": "Isolation level",
+    "levelSelectAriaLabel": "Select an isolation level",
+    "levelNames": {
+      "read-uncommitted": "Read Uncommitted",
+      "read-committed": "Read Committed",
+      "repeatable-read": "Repeatable Read (snapshot isolation)",
+      "serializable": "Serializable"
+    },
+    "timelineHeading": "Operation timeline",
+    "reorderHint": "Before running (0 operations completed), reorder operations with the move-earlier/move-later buttons or by dragging.",
+    "stageAriaLabel": "Transaction state diagram",
+    "moveEarlierLabel": "Move earlier",
+    "moveLaterLabel": "Move later",
+    "moveEarlierGlyph": "◀",
+    "moveLaterGlyph": "▶",
+    "chipStatus": {
+      "pending": "Pending",
+      "blocked": "Blocked",
+      "done": "Done",
+      "aborted": "Aborted"
+    },
+    "dirtyReadTag": "uncommitted value (dirty)",
+    "storeHeading": "Committed store",
+    "txnHeading": "Transaction status",
+    "txnStatus": {
+      "pending": "Not started",
+      "active": "Active",
+      "committed": "Committed",
+      "aborted": "Aborted"
+    },
+    "emptyStoreValue": "(none)"
+  },
+  "vizPreview": {
+    "pageTitle": "Viz verification page",
+    "heading": "Viz verification page",
+    "description": "A fixed page for verifying visualization components before curriculum content in content/ is authored."
+  },
   "hashRingViz": {
     "heading": "Hash Ring",
     "ringAriaLabel": "Diagram of the consistent hashing ring showing node and key placement",
