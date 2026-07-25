@@ -1,0 +1,84 @@
+---
+title: "Byzantine Faults"
+order: 4
+minutes: 11
+sourceHash: "69b722c56605e3fd45a1d9e4fa0290ffcfd2c32e75fb88fe7e8cc2cb9a9e4d3"
+---
+
+# Byzantine Faults
+
+Up to this point, we've assumed a node is either working normally or
+unresponsive (because it's unreachable or has stopped). This lesson covers
+a nastier failure model: <Term slug="byzantine-fault">Byzantine faults</Term>.
+
+## Crash faults vs. Byzantine faults
+
+The "stops and no longer responds" failures we've discussed so far are
+often called crash faults (or fail-stop faults). A node that has
+crash-failed at least doesn't lie to you — it just stops responding.
+
+A node experiencing a Byzantine fault, on the other hand, can behave in
+unpredictable ways such as:
+
+- Sending different, mutually contradictory messages to different peers
+- Sending corrupted or invalid data while presenting it as legitimate
+- Ignoring the protocol's rules altogether
+- Deliberately (or through a bug) steering the system toward an incorrect
+  outcome
+
+In short, a Byzantine fault isn't a "stopping" failure — it's a "lying or
+contradicting" failure, and it can't be handled with simple timeouts or
+retries.
+
+## Where Byzantine fault tolerance actually matters
+
+Systems run within a single organization's datacenter usually assume nodes
+can trust each other, and it's uncommon to introduce a full
+Byzantine-fault-tolerant consensus algorithm there. That's a deliberate
+tradeoff: prioritizing resilience against crash faults over resilience
+against actively malicious nodes, in exchange for lower operational
+complexity.
+
+Byzantine fault tolerance matters more in situations where you can't assume
+mutual trust among participants, such as:
+
+- Systems involving multiple organizations with no inherent trust
+  relationship (public blockchains, for example)
+- Domains like aircraft or spacecraft, where a single faulty piece of
+  hardware producing a wrong value still must not corrupt the system's
+  overall output
+- Systems that process input from outside a trust boundary, where
+  maliciously crafted data could be injected
+
+## Lightweight defenses even in "trusted" environments
+
+Even inside your own organization's datacenter, separate from full
+Byzantine fault tolerance, some lightweight defenses are common practice:
+
+<Callout type="tip">
+  - Checksums / CRCs to detect corrupted messages or data
+  - Validating and range-checking input values rather than trusting them
+    blindly (a bug or a corrupted upstream state can produce bad values
+    too)
+  - Mutual authentication between nodes (e.g. mTLS) to prevent impersonation
+  - Rate limiting to contain a peer sending abnormally frequent or large
+    volumes of requests
+</Callout>
+
+None of these amount to a Byzantine-fault-tolerant consensus algorithm, but
+the underlying instinct — don't unconditionally trust data just because it
+arrived — helps limit damage from bugs and corrupted data, regardless of
+whether malicious intent is involved.
+
+## Wrapping up this module
+
+Network partitions, unreliable clocks, unexpected process pauses, and
+Byzantine faults are all concrete illustrations of the same point: a
+distributed system runs under fundamentally different assumptions than a
+program on a single machine. None of these can be eliminated outright, so
+designing a distributed system means deciding in advance how it should
+behave when they occur. This module's exercise puts that into practice by
+having you compute a safe timeout that accounts for network delay and
+clock drift.
+
+<BookRef chapter={8} />

@@ -1,0 +1,94 @@
+---
+title: "Unreliable Clocks"
+order: 2
+minutes: 13
+sourceHash: "64eeca53ea6fd5aea398c51734b546d77a75821aa41b29d1a2f0c834c0ff96b"
+---
+
+# Unreliable Clocks
+
+Distributed systems rely on "time" constantly: deciding which of two events
+happened first, expiring a cache entry, measuring how long an operation
+took. Once these questions span multiple machines, you run into pitfalls
+that simply don't exist when everything happens on one machine.
+
+## Two kinds of clocks
+
+Most operating systems expose two clocks with different purposes:
+
+- **Wall-clock time**: the real-world calendar time, e.g. "it's currently
+  2026-07-26 10:00." It's periodically synchronized against other servers,
+  typically via NTP (Network Time Protocol)
+- <Term slug="monotonic-clock">Monotonic clock</Term>: measures elapsed
+  time from some reference point. It's unaffected by synchronization
+  adjustments or manual time changes, and is guaranteed to always move
+  forward
+
+If all you want to know is "how many milliseconds did this operation take,"
+you should use the monotonic clock. Wall-clock time can jump forward or
+backward when it's synchronized, so using it to measure elapsed time can
+produce a negative duration or an unexpectedly large one, depending on when
+the correction happens to land.
+
+```
+Measuring elapsed time with wall-clock time (risky)
+  t1 = read wall-clock time        e.g. 10:00:00.000
+  ... do work ...
+  (an NTP correction steps the clock back by 3 seconds here)
+  t2 = read wall-clock time        e.g. 10:00:02.700 (would have been 10:00:05.700)
+  elapsed = t2 - t1 = 2.7s         -> looks shorter than it really was (or even negative)
+
+Measuring elapsed time with a monotonic clock (safe)
+  t1 = read monotonic clock        e.g. 120.000s since some reference point
+  ... do work ...
+  t2 = read monotonic clock        e.g. 122.700s
+  elapsed = t2 - t1 = 2.700s       -> unaffected by any correction
+```
+
+<Callout type="tip">
+  Anything that measures elapsed time — timeout logic, retry interval
+  calculations — should use the monotonic clock API your language provides.
+  Reserve wall-clock time for displaying or recording "what time it was."
+</Callout>
+
+## Clock drift: an error you can't avoid
+
+<Term slug="clock-drift">Clock drift</Term> is the gradual mismatch between
+a machine's clock and true elapsed time, caused by manufacturing variation
+in its quartz oscillator plus environmental factors like temperature and
+aging. Even looking at a single machine in isolation, its clock is always
+running slightly fast or slightly slow, and that error accumulates over
+time until the next correction (e.g. from NTP) is applied.
+
+How much a clock drifts depends on the hardware and environment, and it's
+not always negligible — in environments where corrections happen
+infrequently, or where correction itself is silently failing, drift can
+grow into a discrepancy of seconds or more.
+
+## The danger of comparing timestamps across machines
+
+It's tempting to compare "the timestamp node A recorded" against "the
+timestamp node B recorded" to decide which event happened first. But
+because both A's and B's clocks are subject to drift, that comparison
+already carries some amount of error baked in.
+
+- If you know an upper bound on the drift, factor that bound in as a
+  margin when comparing — if the difference between two timestamps is
+  smaller than the drift bound, don't treat the ordering as settled
+- For anything where getting the ordering right is essential (e.g.
+  deciding mutual exclusion), don't rely on wall-clock comparison alone —
+  consider the logical clocks and consensus algorithms covered in a later
+  module instead
+
+<Callout type="warn">
+  "We use NTP, so clocks across nodes are basically aligned" tends to hold
+  under normal conditions, but it breaks down during a network partition
+  that prevents reaching the NTP server, or if an NTP client was ever
+  misconfigured. It's safer to treat clock reliability as "usually true"
+  rather than "always guaranteed."
+</Callout>
+
+This module's exercise builds on this idea directly: you'll compute a
+safe timeout value that accounts for an upper bound on clock drift.
+
+<BookRef chapter={8} />

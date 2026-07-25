@@ -1,0 +1,86 @@
+---
+title: "Process Pauses: A Hidden Trap"
+order: 3
+minutes: 13
+sourceHash: "876ec5470318531c602cbca5f948c932891f39680d9c477dfa775c1ba2d502a"
+---
+
+# Process Pauses: A Hidden Trap
+
+Failure detection in distributed systems leans heavily on a simple idea: if
+no heartbeat has arrived in a while, that node must be down. In reality,
+though, a process can be alive and well while the OS or runtime it's
+running on leaves it unable to respond for a surprisingly long stretch of
+time. This lesson covers the common causes of unexpected process pauses,
+and what they mean for the correctness of your distributed system.
+
+## Common causes of a process pausing
+
+- **<Term slug="gc-pause">GC pauses</Term>**: many runtimes stop all
+  application threads while the garbage collector runs (a "stop-the-world"
+  pause). Depending on heap size, the number of live objects, and the GC
+  algorithm in use, this can range from a few hundred milliseconds to
+  several seconds, or worse
+- **OS-level scheduling delays**: contention for CPU with other processes,
+  or with other virtual machines on the same hypervisor, can push a
+  process's execution back for a long time
+- **Page faults and swapping**: on memory-constrained hosts, a page fault
+  that triggers disk I/O can stall execution for tens of milliseconds or
+  more
+- **Laptop sleep or VM live migration**: in development environments, and
+  some production ones, the entire process can be frozen for seconds to
+  minutes at a time
+
+None of these mean the process crashed — it resumes afterward as if
+nothing happened. But the paused process has no way of knowing, while it's
+paused, how much time has actually gone by. To every other node watching
+for heartbeats, that same stretch of silence can easily look
+indistinguishable from a real failure.
+
+```
+Timeline (a problem caused by a GC pause on node N)
+
+t=0    Node N acquires a lease. It expires at t=10
+t=1    A long GC pause begins on node N (N itself is unaware)
+t=11   Another node decides "the lease has expired," acquires a new one, and starts working
+t=13   N's GC pause ends. N resumes exactly where it left off at t=1
+       -> N and the new lease holder can now write to the same resource concurrently
+```
+
+## Impact on distributed locks and leases
+
+This kind of timeline is especially dangerous for systems built on
+distributed locks or leases (time-limited grants of exclusive access). A
+node coming back from a pause may have no idea it lost its lease, and keep
+operating as if it still holds it — if it then writes to a resource that
+conflicts with the new lease holder, you can end up with corrupted or
+inconsistent data.
+
+<Callout type="warn">
+  "Check whether the lease has expired in application code right before
+  writing" doesn't fully solve this — if the exact same kind of pause hits
+  right after the check, the check is worthless. As long as there's any gap
+  between the check and the actual write, this race can't be eliminated
+  entirely.
+</Callout>
+
+## How to mitigate the risk
+
+Since preventing pauses outright isn't realistic, production systems
+typically reduce the blast radius instead:
+
+- **Fencing tokens**: issue a monotonically increasing token every time a
+  lease is granted, and have the resource (e.g. storage) verify the token
+  and reject writes carrying an older one. This way, even if a stale lease
+  holder wakes up from a pause and tries to write, the resource itself can
+  reject it
+- **Sizing timeouts and lease durations deliberately**: build in a safety
+  margin on lease periods and heartbeat timeouts based on the worst-case
+  pause duration you expect (e.g. typical GC pause lengths)
+- **Monitoring pauses**: track GC pause duration and frequency, and alert
+  when they cross a threshold
+
+None of this guarantees pauses never happen — the point is to design so
+that when they do happen, they don't lead to catastrophic inconsistency.
+
+<BookRef chapter={8} />

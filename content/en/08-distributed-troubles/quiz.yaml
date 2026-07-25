@@ -1,0 +1,120 @@
+questions:
+  - id: q1-ambiguous-timeout
+    type: single
+    prompt: "On an asynchronous network, if no response arrives within some time after sending a request, which statement is correct?"
+    options:
+      - id: a
+        label: "The other node must be down"
+      - id: b
+        label: "Whether it's packet loss, processing delay, response loss, or a down node cannot be distinguished from the sender's information alone"
+      - id: c
+        label: "It always means the request itself never arrived"
+      - id: d
+        label: "This cannot happen if you use TCP"
+    correctOptionIds: ["b"]
+    explanation: "There are multiple possible causes for a missing response, and the sender cannot determine which one occurred from its own information alone. This asymmetry is what makes failure detection hard."
+
+  - id: q2-short-timeout-tradeoff
+    type: single
+    prompt: "Which tradeoff typically arises from setting a shorter timeout value?"
+    options:
+      - id: a
+        label: "False positives increase — nodes that are actually still running get incorrectly classified as down"
+      - id: b
+        label: "False positives always decrease"
+      - id: c
+        label: "Network bandwidth consumption increases"
+      - id: d
+        label: "The system becomes immune to clock drift"
+    correctOptionIds: ["a"]
+    explanation: "A shorter timeout detects failures faster, but raises the chance of incorrectly marking a genuinely healthy node as down."
+
+  - id: q3-network-partition
+    type: multiple
+    prompt: "Select all statements that are correct about network partitions."
+    options:
+      - id: a
+        label: "Communication can continue to work normally within each group during a partition"
+      - id: b
+        label: "All nodes involved crash immediately when a partition occurs"
+      - id: c
+        label: "Both sides may end up believing they are fine and the other side is down"
+      - id: d
+        label: "A partition can be caused by something as ordinary as temporary congestion or a misconfiguration"
+    correctOptionIds: ["a", "c", "d"]
+    explanation: "A network partition is a communication failure, not a process crash, so each group's internal communication often continues to work. Fairly ordinary causes like congestion or misconfiguration are enough to trigger one."
+
+  - id: q4-monotonic-clock-usage
+    type: single
+    prompt: "Which clock should you use to measure how long an operation took?"
+    options:
+      - id: a
+        label: "Wall-clock time"
+      - id: b
+        label: "Monotonic clock"
+      - id: c
+        label: "The time returned by an NTP server"
+      - id: d
+        label: "Calendar time with a timezone attached"
+    correctOptionIds: ["b"]
+    explanation: "Wall-clock time can jump forward or backward due to synchronization, making it unsuitable for measuring elapsed time; a monotonic clock is guaranteed to always move forward."
+
+  - id: q5-clock-drift-definition
+    type: single
+    prompt: "Which description best matches clock drift?"
+    options:
+      - id: a
+        label: "Variation in how long packets take to arrive due to network delay"
+      - id: b
+        label: "A gradual mismatch between a clock and true elapsed time caused by oscillator variation and environmental factors, accumulating over time"
+      - id: c
+        label: "A bug where an NTP server always returns an inaccurate time"
+      - id: d
+        label: "A phenomenon where a monotonic clock runs backward"
+    correctOptionIds: ["b"]
+    explanation: "Clock drift is the error in a clock's rate caused by hardware and environmental factors, and it accumulates over time until the next correction."
+
+  - id: q6-gc-pause-risk
+    type: single
+    prompt: "What risk does a process pause (e.g. caused by a GC pause) pose to a distributed lock or lease mechanism?"
+    options:
+      - id: a
+        label: "A node resuming from a pause may not realize it lost its lease, and may keep operating in a way that conflicts with the new lease holder"
+      - id: b
+        label: "Heartbeats keep being sent normally during the pause, so no problem occurs"
+      - id: c
+        label: "GC pauses always finish within a few microseconds, so they can be ignored in practice"
+      - id: d
+        label: "Using a lease mechanism completely eliminates the impact of process pauses"
+    correctOptionIds: ["a"]
+    explanation: "A node has no way of knowing how long it was paused, so it may resume without realizing its lease has already expired and end up conflicting with the new lease holder."
+
+  - id: q7-byzantine-fault-definition
+    type: single
+    prompt: "Which description correctly characterizes a Byzantine fault?"
+    options:
+      - id: a
+        label: "A fault where a node stops completely and no longer responds"
+      - id: b
+        label: "Unpredictable misbehavior, such as a node sending contradictory information or violating the protocol"
+      - id: c
+        label: "A temporary delay in the network"
+      - id: d
+        label: "A state where clock drift has become extremely large"
+    correctOptionIds: ["b"]
+    explanation: "A Byzantine fault isn't a 'stopping' failure — it refers to arbitrary, unpredictable misbehavior such as sending contradictory information or violating the protocol."
+
+  - id: q8-lightweight-defenses
+    type: multiple
+    prompt: "Even in a typical single-organization system that doesn't adopt Byzantine-fault-tolerant consensus, select all of the lightweight defenses against malicious or corrupted data that are commonly used."
+    options:
+      - id: a
+        label: "Attaching checksums/CRCs to messages and data"
+      - id: b
+        label: "Validating and range-checking received input values"
+      - id: c
+        label: "Always using a Byzantine-fault-tolerant consensus algorithm for every system"
+      - id: d
+        label: "Mutual authentication between nodes (e.g. mTLS)"
+    correctOptionIds: ["a", "b", "d"]
+    explanation: "Checksums for corruption detection, input validation, and mutual authentication are widely used lightweight defenses that don't require adopting a Byzantine-fault-tolerant consensus algorithm."

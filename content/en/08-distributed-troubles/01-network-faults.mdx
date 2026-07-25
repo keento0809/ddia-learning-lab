@@ -1,0 +1,109 @@
+---
+title: "Network Partitions and the Reality of Asynchronous Networks"
+order: 1
+minutes: 13
+sourceHash: "92369080cc4294f998c7841d764cbfc4056f3e0b30a7b3b16feca49b63315a6"
+---
+
+# Network Partitions and the Reality of Asynchronous Networks
+
+A function call within a single process either succeeds or throws an
+exception — the outcome is never truly "unknown." Distributed systems, where
+multiple machines coordinate over a network, are a different story entirely.
+When you send a request and get no response, the sender alone cannot tell
+for certain what actually happened.
+
+## The asynchronous network assumption
+
+Both typical datacenter networks and the public internet behave as an
+<Term slug="asynchronous-network">asynchronous network</Term>: there is no
+mechanism that guarantees an upper bound on how long a message takes to
+arrive, or even whether it arrives at all. In practice, this means the
+following are routine occurrences:
+
+- Packets sit in a switch's or router's queue and get delayed
+- Packets are dropped due to congestion or hardware failure and never
+  retransmitted
+- Packets arrive out of order relative to how they were sent
+- A cable is unplugged or a config is wrong, and a route disappears
+  temporarily
+
+None of these are rare exceptions you can design around as edge cases —
+run a large system long enough and they become part of normal operation
+that your design has to account for.
+
+## When no response comes back, what actually happened?
+
+Suppose a client sends a request to a server and no response arrives within
+some window of time. Based on what the client alone knows at that point,
+it cannot distinguish between the following cases.
+
+```
+Case A: the request itself never arrived
+  Client                     Server
+    |--- request -----X      |   (packet lost)
+    |  (still waiting)        |
+
+Case B: the server processed it and replied, but the reply was lost
+  Client                     Server
+    |--- request ----------->|
+    |         X<------ response|  (response packet lost)
+
+Case C: the server is just taking a very long time
+  Client                     Server
+    |--- request ----------->| (still processing)
+    |      (still waiting)    |
+
+Case D: the server is down
+  Client                     Server
+    |--- request ----------->| (process crashed / unresponsive)
+```
+
+In cases A and D, "the other side isn't working" happens to be the right
+conclusion. But in cases B and C the other side is (or was) working
+perfectly fine, and the client has no way to tell the difference. This
+asymmetry is what makes failure detection in distributed systems
+fundamentally hard.
+
+<Callout type="info">
+  Even networks inside a single datacenter aren't fully exempt from this
+  asynchronous-network assumption. Congestion and hardware failures are
+  rarer there, but they do happen, so any design that assumes "the network
+  is reliable" will eventually break in production somewhere.
+</Callout>
+
+## Network partitions and their effects
+
+A <Term slug="network-partition">network partition</Term> occurs when a
+switch failure, a misconfiguration, or extreme congestion splits a set of
+nodes into groups that can no longer reach each other. Communication often
+continues to work fine within each group, which means each side may end up
+concluding "we're fine, it's the other side that's down."
+
+<Callout type="warn">
+  If both sides keep accepting writes independently while partitioned,
+  reconciling the conflicting data once the partition heals becomes a
+  problem of its own (split brain). Concrete techniques for handling this
+  — quorums, leader election, and the like — belong to the consensus
+  algorithms covered in a later module.
+</Callout>
+
+## Timeouts: an uncomfortable compromise
+
+Because message delivery carries no guarantees, in practice we fall back on
+a heuristic: assume the other side is down if no response arrives within
+some timeout. This comes with a tradeoff:
+
+- **Shorter timeout**: failures are detected faster, but you also get more
+  <Term slug="false-positive-detection">false positives</Term> — nodes that
+  are actually still running get incorrectly marked as down
+- **Longer timeout**: fewer false positives, but detecting a genuinely
+  failed node takes longer, and users wait longer as a result
+
+There is no universally "correct" timeout value. It's a deliberate design
+choice, made by weighing the expected distribution of network delay against
+how much false-positive risk you're willing to tolerate. This module's
+exercise lets you work through that tradeoff directly by computing a safe
+timeout value.
+
+<BookRef chapter={8} />

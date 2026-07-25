@@ -1,0 +1,44 @@
+slug: "08-distributed-troubles/retry-backoff-lab"
+language: js
+entry: worstCaseBackoffWaitMs
+template: |
+  // retryCount: リトライ回数(初回リクエストを含まない再送の回数)
+  // baseDelayMs: 指数バックオフの基準遅延(ミリ秒)
+  // maxDelayMs: 1回あたりの遅延の上限(ミリ秒)
+  //
+  // n回目(0始まり)の待機時間を min(baseDelayMs * 2^n, maxDelayMs) として、
+  // retryCount回分の待機時間を合計した「最悪ケースの合計待機時間(ミリ秒)」を返す。
+  export function worstCaseBackoffWaitMs(retryCount, baseDelayMs, maxDelayMs) {
+    // TODO: 実装
+  }
+tests:
+  - id: t1-no-cap-hit
+    name:
+      ja: "上限に達しない場合は指数バックオフどおりに合計される"
+      en: "sums plain exponential backoff when the cap is never hit"
+    call: { fn: "worstCaseBackoffWaitMs", args: [3, 100, 10000] }
+    assert: { type: "equals", value: 700 }
+  - id: t2-cap-hit-partway
+    name:
+      ja: "途中から上限にかかる場合を正しく計算できる"
+      en: "correctly handles the delay cap kicking in partway through"
+    call: { fn: "worstCaseBackoffWaitMs", args: [5, 50, 300] }
+    assert: { type: "equals", value: 950 }
+  - id: t3-zero-retries
+    name:
+      ja: "リトライ回数が0なら合計待機時間も0"
+      en: "total wait is 0 when retryCount is 0"
+    call: { fn: "worstCaseBackoffWaitMs", args: [0, 100, 1000] }
+    assert: { type: "equals", value: 0 }
+  - id: t4-first-retry-already-capped
+    name:
+      ja: "初回のリトライから上限にかかる場合"
+      en: "handles the cap already applying on the very first retry"
+    call: { fn: "worstCaseBackoffWaitMs", args: [1, 1000, 500] }
+    assert: { type: "equals", value: 500 }
+timeoutMs: 3000
+hints:
+  - ja: "n回目(0始まり)の待機時間は baseDelayMs * 2^n を maxDelayMs で頭打ちにした値です"
+    en: "The nth (0-indexed) wait time is baseDelayMs * 2^n, capped at maxDelayMs"
+  - ja: "retryCount回分の待機時間を合計します(0回なら合計は0です)"
+    en: "Sum the wait time across retryCount retries (0 retries means a total of 0)"
