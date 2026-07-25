@@ -1,0 +1,77 @@
+- slug: leader-based-replication
+  term:
+    ja: リーダーベースレプリケーション
+    en: leader-based replication
+  definition:
+    ja: 複製先のノードのうち1台をリーダーに指定し、書き込みは必ずリーダーを経由してから他のフォロワーへ伝搬する構成。
+    en: A replication setup where one node is designated the leader; writes always go through it and are then propagated to the other follower nodes.
+- slug: synchronous-replication
+  term:
+    ja: 同期レプリケーション
+    en: synchronous replication
+  definition:
+    ja: リーダーが少なくとも1台のフォロワーへの反映を確認してから、クライアントへ書き込み成功を返すレプリケーション方式。
+    en: A replication mode where the leader waits for at least one follower to confirm applying a write before reporting success to the client.
+- slug: asynchronous-replication
+  term:
+    ja: 非同期レプリケーション
+    en: asynchronous replication
+  definition:
+    ja: リーダーがフォロワーへの反映を待たずにクライアントへ書き込み成功を返すレプリケーション方式。低レイテンシだが、直後の障害で未反映の変更が失われる可能性がある。
+    en: A replication mode where the leader reports success to the client without waiting for followers to apply the write. Low latency, but an immediate leader failure can lose unpropagated writes.
+- slug: replication-lag
+  term:
+    ja: レプリケーションラグ
+    en: replication lag
+  definition:
+    ja: 非同期レプリケーションにおいて、リーダーに書き込まれた変更があるフォロワーにまだ反映されていない時間差のこと。
+    en: In asynchronous replication, the time delay between a change being written on the leader and that change being applied on a given follower.
+- slug: read-your-writes
+  term:
+    ja: read-your-writes一貫性
+    en: read-your-writes consistency
+  definition:
+    ja: 利用者が自分自身で行った書き込みの直後に自分で読み取ったとき、その書き込みが必ず反映されているという期待のこと。
+    en: The expectation that a user who just made a write will always see that write reflected when they read immediately afterward.
+- slug: monotonic-reads
+  term:
+    ja: monotonic reads(単調読み取り)一貫性
+    en: monotonic reads consistency
+  definition:
+    ja: 一度読み取った内容より古い状態を、あとから読み取ることはないという期待のこと。読み取りごとに接続先レプリカが変わる構成で崩れやすい。
+    en: The expectation that, once a user has seen data at some point in time, they never later see an older state. Easily broken when consecutive reads land on different replicas.
+- slug: consistent-prefix-reads
+  term:
+    ja: consistent prefix reads(一貫した前方読み取り)一貫性
+    en: consistent prefix reads consistency
+  definition:
+    ja: 因果的に関連した書き込みの並びが、読み取り側にもその順序どおりに見えるという期待のこと。
+    en: The expectation that a sequence of causally related writes is seen by readers in the same order they were written.
+- slug: multi-leader-replication
+  term:
+    ja: マルチリーダーレプリケーション
+    en: multi-leader replication
+  definition:
+    ja: 複数の拠点・ノードそれぞれがリーダーとして書き込みを受け付け、互いに変更を伝搬し合うレプリケーション構成。
+    en: A replication setup where multiple nodes each act as a leader accepting writes, propagating changes to one another.
+- slug: write-conflict
+  term:
+    ja: 書き込みコンフリクト
+    en: write conflict
+  definition:
+    ja: 異なるリーダーが同じデータへほぼ同時に別々の書き込みを受け付けてしまい、伝搬後に矛盾が発覚する状態のこと。
+    en: A situation where different leaders accept conflicting writes to the same data at roughly the same time, with the contradiction surfacing only after propagation.
+- slug: leaderless-replication
+  term:
+    ja: リーダーレスレプリケーション
+    en: leaderless replication
+  definition:
+    ja: 特定のリーダーを置かず、クライアントが複数のレプリカへ直接並行に読み書きするレプリケーション構成。
+    en: A replication setup with no designated leader, where clients read from and write to multiple replicas directly and in parallel.
+- slug: quorum-consistency
+  term:
+    ja: クォーラム
+    en: quorum
+  definition:
+    ja: レプリカ総数N・書き込み確認数W・読み取り問い合わせ数Rについて、W + R > N を満たすことで、書き込み集合と読み取り集合が必ず1台以上重なることを保証する考え方。
+    en: A scheme where, given N total replicas, a write quorum W, and a read quorum R satisfying W + R > N, the set of replicas written to and the set read from are guaranteed to overlap by at least one node.

@@ -1,0 +1,87 @@
+slug: 05-replication/read-your-writes-lab
+language: js
+entry: chooseReadTarget
+template: |
+  // Given a list of followers (each { id, replicatedAt }, where replicatedAt is
+  // the latest version that follower has applied) and the version number of the
+  // client's most recent write (null if it hasn't written yet), return the id of
+  // a read target that satisfies read-your-writes.
+  // - If clientLastWriteAt is null, any follower is fine: return the id of the
+  //   first candidate (or "leader" if there are no followers at all).
+  // - Otherwise, scan followers in order and return the id of the first one
+  //   whose replicatedAt >= clientLastWriteAt.
+  // - If no follower qualifies, return "leader" (read from the leader / retry).
+  export function chooseReadTarget(followers, clientLastWriteAt) {
+    // TODO: implement
+  }
+tests:
+  - id: t1
+    name:
+      ja: "書き込み前なら先頭のフォロワーでよい"
+      en: "Before any write, the first follower is fine"
+    call:
+      fn: "chooseReadTarget"
+      args:
+        - - { id: "follower-1", replicatedAt: 5 }
+          - { id: "follower-2", replicatedAt: 2 }
+        - null
+    assert: { type: "equals", value: "follower-1" }
+  - id: t2
+    name:
+      ja: "先頭のフォロワーが追いついていればそれを選ぶ"
+      en: "Pick the first follower when it has caught up"
+    call:
+      fn: "chooseReadTarget"
+      args:
+        - - { id: "follower-1", replicatedAt: 10 }
+          - { id: "follower-2", replicatedAt: 3 }
+        - 8
+    assert: { type: "equals", value: "follower-1" }
+  - id: t3
+    name:
+      ja: "誰も追いついていなければリーダーへ"
+      en: "Fall back to the leader when nobody has caught up"
+    call:
+      fn: "chooseReadTarget"
+      args:
+        - - { id: "follower-1", replicatedAt: 3 }
+          - { id: "follower-2", replicatedAt: 2 }
+        - 8
+    assert: { type: "equals", value: "leader" }
+  - id: t4
+    name:
+      ja: "先頭が遅れていても後続が追いついていればそれを選ぶ"
+      en: "Skip a lagging follower and pick a later one that has caught up"
+    call:
+      fn: "chooseReadTarget"
+      args:
+        - - { id: "follower-1", replicatedAt: 3 }
+          - { id: "follower-2", replicatedAt: 9 }
+        - 8
+    assert: { type: "equals", value: "follower-2" }
+  - id: t5
+    name:
+      ja: "フォロワーが1件も無く書き込み前ならリーダーへ"
+      en: "No followers and no prior write falls back to the leader"
+    call:
+      fn: "chooseReadTarget"
+      args:
+        - []
+        - null
+    assert: { type: "equals", value: "leader" }
+  - id: t6
+    name:
+      ja: "境界値: replicatedAtが書き込みバージョンと同値なら満たす"
+      en: "Boundary: replicatedAt equal to the write version still counts as caught up"
+    call:
+      fn: "chooseReadTarget"
+      args:
+        - - { id: "follower-1", replicatedAt: 8 }
+        - 8
+    assert: { type: "equals", value: "follower-1" }
+timeoutMs: 3000
+hints:
+  - ja: "clientLastWriteAtがnullかどうかをまず分岐します"
+    en: "First branch on whether clientLastWriteAt is null"
+  - ja: "Array.prototype.findを使うとreplicatedAt >= clientLastWriteAtを満たす最初の要素を素直に探せます"
+    en: "Array.prototype.find lets you look for the first element satisfying replicatedAt >= clientLastWriteAt"

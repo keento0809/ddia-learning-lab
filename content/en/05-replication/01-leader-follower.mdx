@@ -1,0 +1,87 @@
+---
+title: Leader/Follower Replication Basics
+order: 1
+minutes: 12
+sourceHash: 22a72b9a31053538fc5ad714af176561e2e4eadb1aac13c404230f4ba15f95c7
+---
+
+# Leader/Follower Replication Basics
+
+Keeping copies of the same data on multiple machines is called replication. This lesson
+focuses on the most widely used setup in practice — leader/follower replication — and looks
+at why we replicate data in the first place, and at what point a copy gets treated as
+"confirmed."
+
+## Why replicate data at all
+
+There are three main motivations for replicating data.
+
+1. **Availability**: if one machine fails or goes offline, another machine holding a copy
+   can keep serving requests.
+2. **Lower latency across regions**: placing a replica closer to users avoids round trips to
+   a distant data center.
+3. **Scaling out read throughput**: spreading read requests across several replicas lets a
+   system handle more reads than a single machine could serve alone.
+
+Wanting writes concentrated on one place while wanting reads spread out is exactly the tension
+that makes the leader-based setup described next so common.
+
+## How leader-based replication works
+
+In <Term slug="leader-based-replication">leader-based replication</Term>, one of the replica
+nodes is designated the leader. Write requests always go through this leader, which applies
+the change locally and then ships the change (an update log or stream of events) to the other
+replicas, called followers. Followers apply what they receive and stay in step with the
+leader.
+
+Reads are typically allowed against either the leader or any follower, which is what makes the
+"scale out read throughput" motivation above possible. Writes, on the other hand, stay funneled
+through a single leader, so this setup alone does not solve write scaling (spreading writes
+across multiple leaders is covered in a later lesson).
+
+<Callout type="info">
+More followers means more read capacity, but the leader also has to keep streaming its change
+log to every one of them, so the leader's distribution cost grows along with the follower
+count.
+</Callout>
+
+## The synchronous vs. asynchronous trade-off
+
+How long the leader waits before responding to the client — after sending a change to its
+followers — changes the system's behavior significantly.
+
+With <Term slug="synchronous-replication">synchronous replication</Term>, the leader waits
+until at least one follower confirms it has applied the change before responding to the
+client. Because the confirmation is in hand, a write is unlikely to be lost even if the leader
+fails right afterward — that follower already has it. The downside is that a slow or
+unresponsive follower can block the write entirely.
+
+With <Term slug="asynchronous-replication">asynchronous replication</Term>, the leader responds
+to the client without waiting for followers. Write latency stays low and predictable regardless
+of follower state, but if the leader fails right after responding, any changes that had not yet
+reached a follower can be lost.
+
+<Callout type="warn">
+Requiring synchronous confirmation from every follower sounds safe, but a single slow or
+unavailable follower then stalls all writes. In practice, teams often use a middle ground —
+synchronous confirmation from just one follower with the rest asynchronous — or lean on
+asynchronous replication while being explicit about how much data loss is acceptable.
+</Callout>
+
+Neither approach is universally correct; the choice is a trade-off, specific to each system,
+between the risk of losing a write and the latency/availability cost of avoiding that risk.
+
+<QuizInline
+  id="lf-sync-vs-async"
+  prompt="For a payment write where losing data must be avoided, versus a social feed update where some delay or loss is tolerable, which replication pairing fits best?"
+  options={[
+    { id: "a", label: "Payment = asynchronous, feed update = synchronous" },
+    { id: "b", label: "Payment = synchronous (or semi-synchronous), feed update = asynchronous" },
+    { id: "c", label: "Everything should always be synchronous; there is no place for asynchronous" },
+    { id: "d", label: "The replication mode has no effect on availability, so it does not matter" }
+  ]}
+  correctOptionId="b"
+  explanation="A payment path with low tolerance for lost writes benefits from waiting for confirmation (synchronous, or semi-synchronous). A feed update that prefers low latency over occasional loss fits asynchronous replication."
+/>
+
+<BookRef chapter={5} />
