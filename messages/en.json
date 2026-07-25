@@ -358,5 +358,36 @@
     "readLogViolation": "read-your-writes violation",
     "readLogOk": "consistent",
     "narratorSummary": "tick {tick}: leader v{leaderVersion}, follower-1 v{follower1}, follower-2 v{follower2}, mitigation={mitigation}, {inFlight} in flight, {violations} read-your-writes violations"
+  },
+  "hashRingViz": {
+    "heading": "Hash Ring",
+    "ringAriaLabel": "Diagram of the consistent hashing ring showing node and key placement",
+    "controls": {
+      "addNodeButton": "Add node",
+      "removeNodeLabel": "Node to remove",
+      "removeNodeButton": "Remove node",
+      "removeNodeEmptyOption": "(no nodes)",
+      "vnodesSliderLabel": "Virtual nodes per node: {count}",
+      "vnodesSliderAriaLabel": "Virtual nodes per node (1 to 300)",
+      "addKeysButton": "Add {count} keys"
+    },
+    "stats": {
+      "heading": "Metrics",
+      "nodeCountLabel": "Nodes: {count}",
+      "keyCountLabel": "Keys: {count}",
+      "stdDevLabel": "Std. dev. of keys per node: {value}",
+      "movedRatioLabel": "Moved-key ratio for last operation: {value}%",
+      "noNodesNote": "No nodes yet. Start by clicking \"Add node\"."
+    },
+    "narrator": {
+      "summary": "Nodes: {nodeCount}, keys: {keyCount}, virtual nodes per node: {vnodesPerNode}. Last operation: {operation}. Moved-key ratio {movedRatio}%, standard deviation {stdDev}.",
+      "operationLabels": {
+        "init": "Initialized",
+        "addNode": "Node added",
+        "removeNode": "Node removed",
+        "setVnodes": "Virtual node count changed",
+        "addKeys": "Keys bulk-inserted"
+      }
+    }
   }
 }
