@@ -38,6 +38,13 @@ test-results/
 # === Playwright MCP(実ブラウザ検証時の一時スナップショット/ログ) ===
 .playwright-mcp/
 
+# === Playwright MCPのスクリーンショットが共有チェックアウト直下(cwd基準)に
+#     誤って書き出されるケースの恒久対策。コミット対象の画像資産はpublic/や
+#     content/配下に置く運用のため、リポジトリ直下の画像は常に生成物とみなす ===
+/*.png
+/*.jpg
+/*.jpeg
+
 # === Claude Code ===
 .claude/worktrees/
 .claude/settings.local.json
