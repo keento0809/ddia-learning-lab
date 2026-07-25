@@ -1,0 +1,76 @@
+---
+title: "Key-Range Partitioning and Hash Partitioning"
+order: 1
+minutes: 12
+sourceHash: b518519e39db322b35f93a6346ed1624fc935ca3962cd81955c499a672553fb9
+---
+
+# Key-Range Partitioning and Hash Partitioning
+
+Every single node has a ceiling on how much data it can hold and how much
+request traffic it can serve. <Term slug="partitioning">Partitioning</Term>
+splits one large dataset into chunks (partitions) placed on separate nodes,
+so that ceiling can be pushed past. Each partitioned node only has to handle
+reads and writes for the slice of data it owns.
+
+There are two broad ways to decide how keys map to partitions, and the
+choice shapes everything downstream: how easy range scans are, how evenly
+load spreads, and how prone the system is to hotspots. This lesson compares
+the two.
+
+## Key-range partitioning
+
+<Term slug="key-range-partitioning">Key-range partitioning</Term> divides
+the space of possible key values into contiguous ranges and assigns each
+range to one partition. Think of "usernames starting with A through F" or
+"events timestamped in January 2024" — an ordered key space gets sliced
+into segments.
+
+Its strength is that range scans stay efficient. A query like "fetch events
+since a given timestamp, in order" tends to touch only a handful of
+partitions, because adjacent keys land in the same (or a neighboring)
+partition.
+
+The weakness is that where you draw the range boundaries needs continuous
+tuning against the actual data distribution. Even a boundary split that
+looks even on paper — "A–M" and "N–Z" — can concentrate load on one
+partition if the real key frequencies are skewed (say, usernames clustering
+around a few initial letters).
+
+<Callout type="warn">
+  With key-range partitioning, naively using a monotonically increasing key
+  such as a timestamp or a sequence number tends to funnel all writes into
+  whichever partition owns the "latest" range. We cover this problem in a
+  later lesson.
+</Callout>
+
+## Hash partitioning
+
+<Term slug="hash-partitioning">Hash partitioning</Term> runs each key
+through a hash function and decides the partition from the output. Because
+a hash function's output changes drastically even for a tiny change in the
+input (the avalanche property), keys that are adjacent in sort order no
+longer cluster on the same partition.
+
+The strength here is that even a skewed key distribution tends to spread
+fairly evenly once hashed, which balances load across partitions. The
+weakness is that range scans become expensive: hashing destroys the
+ordering information in the key, so "read all keys in this range" now has
+to fan out to multiple partitions and merge the results.
+
+## Which one to choose
+
+Rather than treating this as one scheme being strictly better, it's more
+useful to think of it as a tradeoff against your expected access pattern.
+Workloads that lean on range scans (fetching a time-series slice by date
+range, for example) tend to favor key-range partitioning, while workloads
+dominated by random lookups on individual keys (a plain lookup by user ID)
+tend to favor hash partitioning for load-balancing reasons.
+
+Both schemes share a common problem: when the number of partitions or
+nodes changes, which keys need to move? Among hash-partitioning
+implementations, the one designed to keep that movement small is
+<Term slug="consistent-hashing">consistent hashing</Term>, which the next
+lesson covers.
+
+<BookRef chapter={6} />
