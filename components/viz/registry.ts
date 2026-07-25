@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { IsolationViz } from "./isolation/IsolationViz";
+import { HashRingViz } from "@/components/viz/HashRingViz";
 
 export interface VizComponentProps {
   preset?: string;
@@ -7,14 +8,14 @@ export interface VizComponentProps {
 
 /**
  * 可視化コンポーネントレジストリ(T-103, 02§4.1「Vizは遅延ロード枠のみ」)。
- * 個別可視化(LsmTreeViz/HashRingViz等、T-204以降)はこのレジストリへ追加登録する。
- * T-103時点では未着手のため空だったが、T-208でIsolationViz(Ch7, 02§8.2)を
- * 追加登録する。<Viz name>で未登録のnameを指定した場合は
+ * 個別可視化(LsmTreeViz/HashRingViz等、T-204以降)はこのレジストリへ追加登録する
+ * (T-205でhash-ring、T-208でisolationを登録)。<Viz name>で未登録のnameを指定した場合は
  * components/mdx/Viz.tsxがErrorをthrowし、VizErrorBoundaryがフォールバック
  * 表示する(受入基準)。
  */
 export const VIZ_REGISTRY: Record<string, ComponentType<VizComponentProps>> = {
   isolation: IsolationViz,
+  "hash-ring": HashRingViz,
 };
 
 /**

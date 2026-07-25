@@ -358,5 +358,36 @@
     "pageTitle": "Viz検証ページ",
     "heading": "Viz検証ページ",
     "description": "各可視化コンポーネントを content/ のカリキュラム教材投入前に検証するための固定ページ。"
+  },
+  "hashRingViz": {
+    "heading": "ハッシュリング",
+    "ringAriaLabel": "コンシステントハッシュリングの図。ノードとキーの配置を示す",
+    "controls": {
+      "addNodeButton": "ノードを追加",
+      "removeNodeLabel": "削除するノード",
+      "removeNodeButton": "ノードを削除",
+      "removeNodeEmptyOption": "(ノードなし)",
+      "vnodesSliderLabel": "ノードあたりの仮想ノード数: {count}",
+      "vnodesSliderAriaLabel": "ノードあたりの仮想ノード数(1〜300)",
+      "addKeysButton": "キーを{count}個追加"
+    },
+    "stats": {
+      "heading": "指標",
+      "nodeCountLabel": "ノード数: {count}",
+      "keyCountLabel": "キー数: {count}",
+      "stdDevLabel": "ノードあたりキー数の標準偏差: {value}",
+      "movedRatioLabel": "直近操作での移動キー率: {value}%",
+      "noNodesNote": "ノードがありません。「ノードを追加」から開始してください。"
+    },
+    "narrator": {
+      "summary": "ノード数{nodeCount}、キー数{keyCount}、ノードあたり仮想ノード数{vnodesPerNode}。直近の操作: {operation}。移動キー率{movedRatio}%、標準偏差{stdDev}。",
+      "operationLabels": {
+        "init": "初期化",
+        "addNode": "ノード追加",
+        "removeNode": "ノード削除",
+        "setVnodes": "仮想ノード数変更",
+        "addKeys": "キー一括投入"
+      }
+    }
   }
 }
