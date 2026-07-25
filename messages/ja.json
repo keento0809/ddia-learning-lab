@@ -318,6 +318,47 @@
       "ariaLabel": "可視化の状態変化"
     }
   },
+  "replicationLagViz": {
+    "heading": "レプリケーション遅延",
+    "nodeLabel": {
+      "leader": "リーダー",
+      "follower-1": "フォロワー1",
+      "follower-2": "フォロワー2"
+    },
+    "versionLabel": "v{version}",
+    "clientLabel": "あなた",
+    "networkDelayLabel": "ネットワーク遅延: {ticks}ティック",
+    "networkDelayInputAriaLabel": "ネットワーク遅延(0〜6ティック)",
+    "mitigationGroupLabel": "対策",
+    "mitigationOption": {
+      "none": "対策なし",
+      "read-from-leader": "リーダー読み取り固定",
+      "wait-for-version": "バージョン待ち"
+    },
+    "writeButtonLabel": "書き込む(あなた)",
+    "readTargetSelectLabel": "読み取り先",
+    "readButtonLabel": "読み取る",
+    "scenarioButtonLabel": "「自分の書込みが読めない」シナリオを実行",
+    "violationsLabel": "read-your-writes違反: {count}件",
+    "droppedLabel": "ドロップ済み: {count}件",
+    "inFlightHeading": "転送中のリクエスト",
+    "inFlightEmpty": "転送中のリクエストはありません",
+    "messageKindLabel": {
+      "write-request": "書き込みリクエスト",
+      "replication": "レプリケーション",
+      "read-request": "読み取りリクエスト"
+    },
+    "messageRouteLabel": "{from} → {to}",
+    "messageTicksLabel": "残り{ticks}ティック",
+    "messageHeldLabel": "バージョン待機中",
+    "dropButtonLabel": "ドロップ({description})",
+    "readLogHeading": "読み取り結果ログ",
+    "readLogEmpty": "まだ読み取りは行われていません",
+    "readLogEntry": "tick{tick}: {clientId}が{target}から読み取り → v{resultVersion}(要求v{requiredVersion})",
+    "readLogViolation": "read-your-writes違反",
+    "readLogOk": "一貫性OK",
+    "narratorSummary": "tick{tick}: リーダーv{leaderVersion}、フォロワー1 v{follower1}、フォロワー2 v{follower2}、対策={mitigation}、転送中{inFlight}件、read-your-writes違反{violations}件"
+  },
   "isolationViz": {
     "heading": "分離レベルシミュレータ",
     "presetLabel": "シナリオ",
