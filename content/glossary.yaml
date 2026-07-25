@@ -1,0 +1,79 @@
+- slug: transaction
+  term:
+    ja: トランザクション
+    en: transaction
+  definition:
+    ja: アプリケーションが行う複数の読み書きを1つの単位としてまとめ、途中経過を隠したままデータベースに実行させる仕組み。
+    en: A mechanism that lets an application group several reads and writes into a single unit, hiding any intermediate state from the outside.
+
+- slug: acid
+  term:
+    ja: ACID
+    en: ACID
+  definition:
+    ja: トランザクションが満たすべき4つの性質(原子性・一貫性・分離性・永続性)の頭文字をまとめた呼び方。実装によってどこまで厳密に満たすかは幅がある。
+    en: An acronym for the four properties a transaction is expected to provide (atomicity, consistency, isolation, durability). How strictly each is provided varies by implementation.
+
+- slug: isolation-level
+  term:
+    ja: 分離レベル
+    en: isolation level
+  definition:
+    ja: 複数のトランザクションを同時に実行したときに、どの種類の異常(ダーティリードやスキューなど)を防ぐかの強さを表す段階。強いほど異常は減るが同時実行の自由度は下がる。
+    en: A setting that determines how strongly a database prevents anomalies (such as dirty reads or skew) when transactions run concurrently. Stronger levels prevent more anomalies at the cost of concurrency.
+
+- slug: dirty-read
+  term:
+    ja: ダーティリード
+    en: dirty read
+  definition:
+    ja: あるトランザクションがまだコミットしていない書き込みを、別のトランザクションが読み取ってしまう異常。
+    en: An anomaly where a transaction reads a write made by another transaction that has not committed yet.
+
+- slug: dirty-write
+  term:
+    ja: ダーティライト
+    en: dirty write
+  definition:
+    ja: 2つのトランザクションが同じデータへ同時に書き込み、片方のコミット前の書き込みがもう片方に上書きされて失われてしまう異常。
+    en: An anomaly where two transactions write to the same data concurrently and one transaction's uncommitted write is overwritten and lost.
+
+- slug: read-skew
+  term:
+    ja: 読み取りスキュー
+    en: read skew
+  definition:
+    ja: 1つのトランザクションが複数の値を読む間に別のトランザクションがその一部だけを更新・コミットしてしまい、矛盾した組み合わせの値が観測される異常。
+    en: An anomaly where, while one transaction reads multiple values, another transaction commits an update to only some of them, causing an inconsistent combination to be observed.
+
+- slug: write-skew
+  term:
+    ja: 書き込みスキュー
+    en: write skew
+  definition:
+    ja: 複数のトランザクションがそれぞれ関連する値を読み取り、その内容に基づいて別々のオブジェクトへ書き込んだ結果、個々の書き込みは問題なくてもアプリケーションの不変条件を破ってしまう異常。
+    en: An anomaly where multiple transactions each read related data and write to different objects based on it, so that each write looks fine alone but the combination violates an application invariant.
+
+- slug: serializability
+  term:
+    ja: 直列化可能性
+    en: serializability
+  definition:
+    ja: 複数のトランザクションを同時に実行した結果が、それらを何らかの順番で1つずつ実行した場合と同じになるという性質。
+    en: The property that the result of running multiple transactions concurrently matches the result of running them one at a time in some order.
+
+- slug: two-phase-locking
+  term:
+    ja: 2相ロック
+    en: two-phase locking
+  definition:
+    ja: トランザクションがデータを読み書きする前にロックを取得し、コミットまで保持してから一括で解放する悲観的な直列化可能性の実現方式。ロックを解放した後は新たなロックを獲得しない。
+    en: A pessimistic approach to serializability where a transaction acquires locks before accessing data, holds them until commit, and releases them all together; no new lock may be acquired after releasing has begun.
+
+- slug: snapshot-isolation
+  term:
+    ja: スナップショット分離
+    en: snapshot isolation
+  definition:
+    ja: トランザクション開始時点のデータベース全体の一貫したスナップショットを見せる分離レベル。読み取りスキューを防ぐが、書き込みスキューまでは防がない。
+    en: An isolation level that gives each transaction a consistent snapshot of the whole database as of when it started. It prevents read skew, but not write skew.

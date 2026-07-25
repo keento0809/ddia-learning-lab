@@ -1,0 +1,72 @@
+---
+title: How Serializability Is Achieved
+order: 4
+minutes: 10
+sourceHash: 446514dbeae256416758e84c3b32065fc214d4e1230c96afc1a7e51853c58e1e
+---
+
+# How Serializability Is Achieved
+
+The previous lesson explained that the Serializable isolation level guarantees that
+running multiple transactions concurrently gives the same result as running them one
+at a time in some order. This lesson introduces, at a conceptual level, two common
+approaches databases use to provide that guarantee (the actual implementation details
+vary from database to database).
+
+## Two-phase locking (2PL)
+
+<Term slug="two-phase-locking">Two-phase locking</Term> (2PL) is a pessimistic
+approach. A transaction acquires a lock on data before reading or writing it, and if
+another transaction wants a conflicting lock, it has to wait until the lock is
+released. The "two phases" the name refers to are:
+
+1. **Growing phase**: the period during which the transaction acquires locks one after
+   another
+2. **Shrinking phase**: the period during which locks are released (typically all held
+   until commit, then released together)
+
+By enforcing the rule that no new lock may be acquired once the transaction has
+started releasing locks, 2PL guarantees a serializable execution order.
+
+Two-phase locking is simple to implement and has a long track record, but under
+workloads with heavy contention, the amount of waiting can pile up and reduce
+concurrency.
+
+<Callout type="warn">
+Because transactions can end up waiting on each other's locks, a "deadlock" can occur.
+Implementations built on two-phase locking therefore need deadlock detection alongside
+a way to abort and retry one of the deadlocked transactions.
+</Callout>
+
+## Serializable snapshot isolation (SSI)
+
+Serializable Snapshot Isolation (SSI) is an optimistic approach. Transactions run much
+like they would under ordinary snapshot isolation, with no locks taken up front. At
+commit time, though, the database checks whether the transaction's outcome would be
+inconsistent with any serial (one-at-a-time) execution order, and if a conflict is
+detected, it aborts one of the transactions and asks it to retry.
+
+Under workloads where conflicts are rare, this tends to achieve higher concurrency
+than pessimistic locking. Under workloads where conflicts are frequent, though, the
+extra aborts and retries can make it less efficient. Which approach fits better
+depends on how often concurrent writes actually collide.
+
+<Callout type="tip">
+Two-phase locking and SSI both aim for the same outcome — matching a serial
+execution — but take opposite approaches: preventing conflicts up front
+(pessimistic) versus detecting them after the fact (optimistic). This
+pessimistic-versus-optimistic axis shows up repeatedly across distributed systems
+design, so it's worth remembering.
+</Callout>
+
+## Module summary
+
+This module covered the ACID properties transactions provide, the anomalies that can
+occur when isolation is weak (dirty reads, dirty writes, read skew, and write skew),
+the common isolation levels that prevent them (Read Committed, Snapshot Isolation, and
+Serializable), and two common approaches to achieving Serializable (two-phase locking
+and SSI). When working with a database in practice, it's worth always knowing what its
+default isolation level is, and whether that is actually strong enough for your
+workload.
+
+<BookRef chapter={7} />

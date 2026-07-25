@@ -1,0 +1,120 @@
+questions:
+  - id: q1
+    type: single
+    prompt: "ACIDのうち、複数の操作が「全部実行される」か「1つも実行されない」かのどちらかになることを保証する性質はどれか。"
+    options:
+      - id: a
+        label: "Atomicity(原子性)"
+      - id: b
+        label: "Consistency(一貫性)"
+      - id: c
+        label: "Isolation(分離性)"
+      - id: d
+        label: "Durability(永続性)"
+    correctOptionIds: ["a"]
+    explanation: "トランザクション内の操作をすべて反映するか、まったく反映しないかのどちらかにする性質はAtomicity(原子性)である。"
+
+  - id: q2
+    type: single
+    prompt: "コミット前の書き込みを別のトランザクションが読み取ってしまう異常の名前はどれか。"
+    options:
+      - id: a
+        label: "読み取りスキュー"
+      - id: b
+        label: "書き込みスキュー"
+      - id: c
+        label: "ダーティリード"
+      - id: d
+        label: "ダーティライト"
+    correctOptionIds: ["c"]
+    explanation: "コミット前(まだ確定していない)の書き込みを別のトランザクションが読み取ってしまう異常はダーティリードと呼ばれる。"
+
+  - id: q3
+    type: single
+    prompt: "1つのトランザクションが複数の値を読む間に、別のトランザクションがその一部だけを更新・コミットしてしまい、矛盾した組み合わせが観測される異常はどれか。"
+    options:
+      - id: a
+        label: "読み取りスキュー"
+      - id: b
+        label: "書き込みスキュー"
+      - id: c
+        label: "ダーティリード"
+      - id: d
+        label: "ダーティライト"
+    correctOptionIds: ["a"]
+    explanation: "1つのトランザクション内の複数回の読み取りの間に他のトランザクションのコミットが割り込み、矛盾した値の組み合わせが見えてしまうのは読み取りスキューである。"
+
+  - id: q4
+    type: multiple
+    prompt: "Read Committedという分離レベルが防ぐ異常はどれか(該当するものをすべて選べ)。"
+    options:
+      - id: a
+        label: "ダーティリード"
+      - id: b
+        label: "ダーティライト"
+      - id: c
+        label: "読み取りスキュー"
+      - id: d
+        label: "書き込みスキュー"
+    correctOptionIds: ["a", "b"]
+    explanation: "Read Committedはコミット済みのデータしか読ませないためダーティリード・ダーティライトを防ぐが、同一トランザクション内の複数回の読み取りが異なる時点のスナップショットを見ることは許容するため、読み取りスキューや書き込みスキューは防がない。"
+
+  - id: q5
+    type: single
+    prompt: "Snapshot Isolationについて正しい説明はどれか。"
+    options:
+      - id: a
+        label: "読み取りスキューと書き込みスキューの両方を防ぐ"
+      - id: b
+        label: "読み取りスキューは防ぐが、書き込みスキューは防がない場合がある"
+      - id: c
+        label: "ダーティリードを防がない"
+      - id: d
+        label: "複数のトランザクションを常に順番に1つずつ実行する"
+    correctOptionIds: ["b"]
+    explanation: "Snapshot Isolationはトランザクション開始時点の一貫したスナップショットを見せるため読み取りスキューは防ぐが、それぞれが自分のスナップショット内で判断して別々の場所に書き込む書き込みスキューまでは防げない。"
+
+  - id: q6
+    type: single
+    prompt: "Serializableという分離レベルが保証する性質を最もよく表しているのはどれか。"
+    options:
+      - id: a
+        label: "常に最も高速にトランザクションを処理できる"
+      - id: b
+        label: "複数のトランザクションを同時実行しても、何らかの順番で1つずつ実行したのと同じ結果になる"
+      - id: c
+        label: "ロックを一切使わずに実現できる"
+      - id: d
+        label: "ダーティリードだけを防ぐ"
+    correctOptionIds: ["b"]
+    explanation: "Serializableは、複数のトランザクションを並行実行した結果が、それらを何らかの順序で1つずつ実行した場合と一致することを保証する分離レベルである。"
+
+  - id: q7
+    type: single
+    prompt: "2相ロック(2PL)の「成長期」と「縮退期」の説明として正しいものはどれか。"
+    options:
+      - id: a
+        label: "成長期はロックを解放していく期間、縮退期はロックを獲得していく期間である"
+      - id: b
+        label: "成長期はロックを獲得していく期間、縮退期はロックを解放していく期間であり、縮退期に入った後は新たなロックを獲得しない"
+      - id: c
+        label: "成長期・縮退期のどちらでもロックの獲得と解放を自由に行き来できる"
+      - id: d
+        label: "成長期と縮退期は同時に並行して進む"
+    correctOptionIds: ["b"]
+    explanation: "2相ロックは、ロックを獲得していく成長期と、解放していく縮退期に分かれており、縮退期に入った後は新たなロックを獲得しないというルールによって直列化可能性を保証する。"
+
+  - id: q8
+    type: single
+    prompt: "SSI(直列化可能スナップショット分離)の基本的な考え方として正しいものはどれか。"
+    options:
+      - id: a
+        label: "事前にすべての競合しうるデータをロックしてから処理を始める"
+      - id: b
+        label: "Snapshot Isolationと同様に実行させておき、コミット時に矛盾を検出したらアボートさせる楽観的な方式である"
+      - id: c
+        label: "2相ロックとまったく同じ実装である"
+      - id: d
+        label: "分離レベルをRead Committedまで下げることで実現する"
+    correctOptionIds: ["b"]
+    explanation: "SSIは事前にロックで待たせるのではなく、Snapshot Isolationと同様に実行させておき、コミット時に直列実行との矛盾を検出した場合にトランザクションをアボートさせる楽観的な方式である。"
