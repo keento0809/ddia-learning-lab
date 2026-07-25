@@ -327,5 +327,77 @@
     "narrator": {
       "ariaLabel": "Visualization state changes"
     }
+  },
+  "isolationViz": {
+    "heading": "Isolation level simulator",
+    "presetLabel": "Scenario",
+    "presetSelectAriaLabel": "Select a scenario",
+    "levelLabel": "Isolation level",
+    "levelSelectAriaLabel": "Select an isolation level",
+    "levelNames": {
+      "read-uncommitted": "Read Uncommitted",
+      "read-committed": "Read Committed",
+      "repeatable-read": "Repeatable Read (snapshot isolation)",
+      "serializable": "Serializable"
+    },
+    "timelineHeading": "Operation timeline",
+    "reorderHint": "Before running (0 operations completed), reorder operations with the move-earlier/move-later buttons or by dragging.",
+    "stageAriaLabel": "Transaction state diagram",
+    "moveEarlierLabel": "Move earlier",
+    "moveLaterLabel": "Move later",
+    "moveEarlierGlyph": "◀",
+    "moveLaterGlyph": "▶",
+    "chipStatus": {
+      "pending": "Pending",
+      "blocked": "Blocked",
+      "done": "Done",
+      "aborted": "Aborted"
+    },
+    "dirtyReadTag": "uncommitted value (dirty)",
+    "storeHeading": "Committed store",
+    "txnHeading": "Transaction status",
+    "txnStatus": {
+      "pending": "Not started",
+      "active": "Active",
+      "committed": "Committed",
+      "aborted": "Aborted"
+    },
+    "emptyStoreValue": "(none)"
+  },
+  "vizPreview": {
+    "pageTitle": "Viz verification page",
+    "heading": "Viz verification page",
+    "description": "A fixed page for verifying visualization components before curriculum content in content/ is authored."
+  },
+  "hashRingViz": {
+    "heading": "Hash Ring",
+    "ringAriaLabel": "Diagram of the consistent hashing ring showing node and key placement",
+    "controls": {
+      "addNodeButton": "Add node",
+      "removeNodeLabel": "Node to remove",
+      "removeNodeButton": "Remove node",
+      "removeNodeEmptyOption": "(no nodes)",
+      "vnodesSliderLabel": "Virtual nodes per node: {count}",
+      "vnodesSliderAriaLabel": "Virtual nodes per node (1 to 300)",
+      "addKeysButton": "Add {count} keys"
+    },
+    "stats": {
+      "heading": "Metrics",
+      "nodeCountLabel": "Nodes: {count}",
+      "keyCountLabel": "Keys: {count}",
+      "stdDevLabel": "Std. dev. of keys per node: {value}",
+      "movedRatioLabel": "Moved-key ratio for last operation: {value}%",
+      "noNodesNote": "No nodes yet. Start by clicking \"Add node\"."
+    },
+    "narrator": {
+      "summary": "Nodes: {nodeCount}, keys: {keyCount}, virtual nodes per node: {vnodesPerNode}. Last operation: {operation}. Moved-key ratio {movedRatio}%, standard deviation {stdDev}.",
+      "operationLabels": {
+        "init": "Initialized",
+        "addNode": "Node added",
+        "removeNode": "Node removed",
+        "setVnodes": "Virtual node count changed",
+        "addKeys": "Keys bulk-inserted"
+      }
+    }
   }
 }

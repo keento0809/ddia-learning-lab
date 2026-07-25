@@ -11,6 +11,7 @@ import { dashboardRoute } from "./routes/dashboard";
 import { guestProgressImportRoute } from "./routes/guestProgressImport";
 import { notesRoute } from "./routes/notes";
 import { internalAuthRoute } from "./routes/internalAuth";
+import { captureWorkerError } from "@/lib/sentry/toucan";
 
 /**
  * worker-api。ADR-008(docs/design/09) §2・§4。T-501で骨格(health・JWT検証
@@ -49,8 +50,14 @@ app.use("*", async (c, next) => {
  * 401ボディは移設元のNext.js側Route Handler(lib/auth/http.tsのproblemResponse呼び出し
  * 「about:blank#unauthorized」/「unauthorized」)と同一にし、既存の認可挙動を維持する。
  */
-async function requireSession(c: Context<{ Bindings: Bindings; Variables: Variables }>, next: Next) {
-  const session = await verifySessionCookie(c.req.header("cookie") ?? null, c.env.AUTH_SECRET);
+async function requireSession(
+  c: Context<{ Bindings: Bindings; Variables: Variables }>,
+  next: Next,
+) {
+  const session = await verifySessionCookie(
+    c.req.header("cookie") ?? null,
+    c.env.AUTH_SECRET,
+  );
   if (!session) {
     const problem: ProblemDetails = {
       type: "about:blank#unauthorized",
@@ -63,7 +70,9 @@ async function requireSession(c: Context<{ Bindings: Bindings; Variables: Variab
   await next();
 }
 
-app.get("/internal/session", requireSession, (c) => c.json({ userId: c.get("userId") }));
+app.get("/internal/session", requireSession, (c) =>
+  c.json({ userId: c.get("userId") }),
+);
 
 /**
  * ADR-008 §2・§4 T-503: 認証のDB操作(pre-auth、requireSession対象外)。
@@ -96,6 +105,36 @@ app.notFound((c) => {
     status: 404,
   };
   return c.json(problem, 404, { "Content-Type": "application/problem+json" });
+});
+
+/**
+ * ADR-008 §2・§4(T-505): 未捕捉例外(各ルートのcatch漏れ・再throw分)をtoucan-js
+ * 経由でSentryへ送る。executionCtxはHonoの規約上、実Workers環境外(想定していない
+ * 呼び出し方)ではアクセス時に例外を投げ得るため、エラー捕捉自体が失敗して元の
+ * エラーレスポンスをマスクしないようtry/catchで防御する。
+ */
+app.onError((err, c) => {
+  let waitUntil: ((promise: Promise<unknown>) => void) | undefined;
+  try {
+    waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  } catch {
+    waitUntil = undefined;
+  }
+  const userId = c.get("userId");
+  captureWorkerError(err, {
+    dsn: c.env.SENTRY_DSN,
+    request: c.req.raw,
+    waitUntil,
+    userId: typeof userId === "string" ? userId : undefined,
+    tags: { routePath: c.req.path, method: c.req.method },
+  });
+
+  const problem: ProblemDetails = {
+    type: "about:blank#internal-error",
+    title: "internal_error",
+    status: 500,
+  };
+  return c.json(problem, 500, { "Content-Type": "application/problem+json" });
 });
 
 export default app;

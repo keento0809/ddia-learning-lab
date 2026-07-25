@@ -14,6 +14,8 @@ interface WorkerApiFetcher {
 declare global {
   interface CloudflareEnv {
     API: WorkerApiFetcher;
+    // T-505(ADR-008 §4): 未設定時はlib/sentry/toucan.tsがno-opする。
+    SENTRY_DSN?: string;
   }
 }
 
