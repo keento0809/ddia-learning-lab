@@ -1,0 +1,26 @@
+[
+  {
+    "query": "content/ja/06-partitioning/にコンシステントハッシュの演習を1本追加したい。ja/en両方のYAMLと模範解答、graderでpassするテストまで一式作って。",
+    "should_trigger": true
+  },
+  {
+    "query": "01-reliability の percentile-lab、テストケースが1件しかなくて心もとないので追加のテストケースを足してください。model solutionもgraderで通ることを確認してほしいです。",
+    "should_trigger": true
+  },
+  {
+    "query": "ラボの模範解答をlabs/__solutions__/に置く運用になってると思うんだけど、新しい演習の分もその通りに用意してもらえますか。テストのハッシュがja/enでズレてないかも見てほしい。",
+    "should_trigger": true
+  },
+  {
+    "query": "content/ja/01-reliability/lessons/durability.mdx の説明が分かりにくいので書き直してください。演習YAMLはいじらなくて大丈夫です。",
+    "should_trigger": false
+  },
+  {
+    "query": "HashRingViz(components/viz以下)のコンポーネント、vnodesスライダーの範囲を1-300から1-500に広げたいです。",
+    "should_trigger": false
+  },
+  {
+    "query": "lib/runner/grader.ts のstructuralEquals、NaN同士を等価にしてるロジックにテストケースを1個足したいんだけど、どう書けばいい?",
+    "should_trigger": false
+  }
+]
