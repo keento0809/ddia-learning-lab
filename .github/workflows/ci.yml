@@ -184,6 +184,11 @@ jobs:
   # bindingの生死のみ確認。200を期待しないのはこのエンドポイントが認証必須のため)を検証する。
   # ${{ vars.PRODUCTION_URL }}(GitHub Actions Variables)は人間が事前設定すること
   # (07 A-8/A-9)。カスタムドメイン未確定の間はworkers.dev URLを設定してよい。
+  #
+  # `wrangler deploy`(deploy-worker-app)はAPIが新バージョンを受理した時点で成功を返すが、
+  # Cloudflareのエッジ全体への伝播は数秒単位で遅延しうる(2026-07-25、deploy完了3秒後の
+  # 疎通確認が404を返した実例で確認済み。数分後の再確認では200)。各チェックを単発の
+  # curlではなく最大30秒(3秒間隔×10回)のリトライにし、伝播待ちによる偽陰性を防ぐ。
   smoke-test:
     runs-on: ubuntu-latest
     needs: deploy-worker-app
@@ -191,18 +196,30 @@ jobs:
     steps:
       - name: worker-app疎通確認(health相当)
         run: |
-          status=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_URL }}/ja")
-          echo "GET /ja -> $status"
+          for i in $(seq 1 10); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_URL }}/ja")
+            echo "GET /ja -> $status (attempt $i/10)"
+            if [ "$status" = "200" ]; then break; fi
+            sleep 3
+          done
           test "$status" = "200"
       - name: 主要動線確認(カリキュラム一覧, S-02)
         run: |
-          status=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_URL }}/ja/learn")
-          echo "GET /ja/learn -> $status"
+          for i in $(seq 1 10); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_URL }}/ja/learn")
+            echo "GET /ja/learn -> $status (attempt $i/10)"
+            if [ "$status" = "200" ]; then break; fi
+            sleep 3
+          done
           test "$status" = "200"
       - name: worker-api疎通確認(service binding経由、未認証401を期待)
         run: |
-          status=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_URL }}/api/progress")
-          echo "GET /api/progress (unauthenticated) -> $status"
+          for i in $(seq 1 10); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_URL }}/api/progress")
+            echo "GET /api/progress (unauthenticated) -> $status (attempt $i/10)"
+            if [ "$status" = "401" ]; then break; fi
+            sleep 3
+          done
           test "$status" = "401"
 
   # T-403(E2E拡充)等でPlaywright E2Eスイートが揃った後に有効化するplaceholder。
