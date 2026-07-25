@@ -215,9 +215,19 @@ export function LabWorkspace({
         className="hidden w-1.5 shrink-0 cursor-col-resize bg-neutral-200 hover:bg-neutral-300 focus:outline-2 focus:outline-offset-2 focus:outline-neutral-500 md:block dark:bg-neutral-800 dark:hover:bg-neutral-700"
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
         <LabToolbar status={status} onRun={handleRun} onReset={handleReset} autosaving={autosaving} locale={locale} />
-        <div className="min-h-[220px] flex-1 border-b border-neutral-200 dark:border-neutral-800">
+        {/*
+          失敗→恒久対策(T-202): このラッパーのmin-heightは、内側のCodeEditor自身が
+          持つmin-h-[280px](components/lab/CodeEditor.tsx)より小さい値(220px)に
+          設定されていた。SchemaViewer追加前は後続要素がResultPanel(h-[240px])のみ
+          だったため症状が目立たなかったが、CodeEditorの実高さ(280px)がこのラッパー
+          の許容高さ(220px)を超えてoverflowし、その60px分がすぐ下のSchemaViewerの
+          見出し・テーブル名を覆い隠す(qa-evaluatorがelementFromPointで実証)。
+          ラッパー側のmin-heightをCodeEditor自身の最小値と一致させることで、この
+          ミスマッチによる兄弟要素への重なりを解消する。
+        */}
+        <div className="min-h-[280px] flex-1 border-b border-neutral-200 dark:border-neutral-800">
           <CodeEditor
             value={code}
             onChange={handleCodeChange}
