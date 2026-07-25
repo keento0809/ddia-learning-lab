@@ -17,6 +17,10 @@ const eslintConfig = [
       "**/.tmp-worker-api-dryrun-*/**",
       "content/generated/**",
       "next-env.d.ts",
+      // 並列バックグラウンドセッション用のgit worktree(各自が独立したチェック
+      // アウト)。除外しないと `npm run lint` が全worktreeを誤スキャンし、
+      // 他タスクの一時ファイルでENOENT等が発生する(T5統合検証で発覚)。
+      ".claude/worktrees/**",
     ],
   },
   {
