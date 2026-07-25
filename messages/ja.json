@@ -1,4 +1,14 @@
 {
+  "home": {
+    "pageTitle": "DDIA Learning Lab",
+    "heroTitle": "分散データシステムを、手を動かして学ぶ",
+    "heroSubtitle": "レッスン・クイズ・実行できる演習を通じて、大規模データシステムの設計判断を体系的に身につけます。",
+    "ctaPrimary": "カリキュラムを見る",
+    "ctaSecondary": "無料で始める",
+    "curriculumOverviewTitle": "カリキュラム概観",
+    "moduleCountLabel": "モジュール{count}件",
+    "viewAllLink": "すべて見る"
+  },
   "nav": {
     "brand": "DDIA Learning Lab",
     "mainAriaLabel": "メインナビゲーション",
@@ -345,6 +355,119 @@
       "noopEmptyMemtable": "Memtableが空のためフラッシュできません。",
       "noopEmptyLevel": "L{level}にSSTableが無いためコンパクションできません。",
       "noopDeepestLevel": "最深レベルのためこれ以上コンパクションできません。"
+    }
+  },
+  "replicationLagViz": {
+    "heading": "レプリケーション遅延",
+    "nodeLabel": {
+      "leader": "リーダー",
+      "follower-1": "フォロワー1",
+      "follower-2": "フォロワー2"
+    },
+    "versionLabel": "v{version}",
+    "clientLabel": "あなた",
+    "networkDelayLabel": "ネットワーク遅延: {ticks}ティック",
+    "networkDelayInputAriaLabel": "ネットワーク遅延(0〜6ティック)",
+    "mitigationGroupLabel": "対策",
+    "mitigationOption": {
+      "none": "対策なし",
+      "read-from-leader": "リーダー読み取り固定",
+      "wait-for-version": "バージョン待ち"
+    },
+    "writeButtonLabel": "書き込む(あなた)",
+    "readTargetSelectLabel": "読み取り先",
+    "readButtonLabel": "読み取る",
+    "scenarioButtonLabel": "「自分の書込みが読めない」シナリオを実行",
+    "violationsLabel": "read-your-writes違反: {count}件",
+    "droppedLabel": "ドロップ済み: {count}件",
+    "inFlightHeading": "転送中のリクエスト",
+    "inFlightEmpty": "転送中のリクエストはありません",
+    "messageKindLabel": {
+      "write-request": "書き込みリクエスト",
+      "replication": "レプリケーション",
+      "read-request": "読み取りリクエスト"
+    },
+    "messageRouteLabel": "{from} → {to}",
+    "messageTicksLabel": "残り{ticks}ティック",
+    "messageHeldLabel": "バージョン待機中",
+    "dropButtonLabel": "ドロップ({description})",
+    "readLogHeading": "読み取り結果ログ",
+    "readLogEmpty": "まだ読み取りは行われていません",
+    "readLogEntry": "tick{tick}: {clientId}が{target}から読み取り → v{resultVersion}(要求v{requiredVersion})",
+    "readLogViolation": "read-your-writes違反",
+    "readLogOk": "一貫性OK",
+    "narratorSummary": "tick{tick}: リーダーv{leaderVersion}、フォロワー1 v{follower1}、フォロワー2 v{follower2}、対策={mitigation}、転送中{inFlight}件、read-your-writes違反{violations}件"
+  },
+  "isolationViz": {
+    "heading": "分離レベルシミュレータ",
+    "presetLabel": "シナリオ",
+    "presetSelectAriaLabel": "シナリオを選択",
+    "levelLabel": "分離レベル",
+    "levelSelectAriaLabel": "分離レベルを選択",
+    "levelNames": {
+      "read-uncommitted": "Read Uncommitted",
+      "read-committed": "Read Committed",
+      "repeatable-read": "Repeatable Read(スナップショット分離)",
+      "serializable": "Serializable"
+    },
+    "timelineHeading": "操作のタイムライン",
+    "reorderHint": "実行前(0件完了時)のみ、各操作の左右移動ボタンまたはドラッグで並べ替えられます。",
+    "stageAriaLabel": "トランザクションの状態図",
+    "moveEarlierLabel": "1つ前に移動",
+    "moveLaterLabel": "1つ後ろに移動",
+    "moveEarlierGlyph": "◀",
+    "moveLaterGlyph": "▶",
+    "chipStatus": {
+      "pending": "未実行",
+      "blocked": "ブロック中",
+      "done": "完了",
+      "aborted": "アボート"
+    },
+    "dirtyReadTag": "未コミット値(ダーティ)",
+    "storeHeading": "コミット済みストア",
+    "txnHeading": "トランザクション状態",
+    "txnStatus": {
+      "pending": "未開始",
+      "active": "実行中",
+      "committed": "コミット済み",
+      "aborted": "アボート"
+    },
+    "emptyStoreValue": "(なし)"
+  },
+  "vizPreview": {
+    "pageTitle": "Viz検証ページ",
+    "heading": "Viz検証ページ",
+    "description": "各可視化コンポーネントを content/ のカリキュラム教材投入前に検証するための固定ページ。"
+  },
+  "hashRingViz": {
+    "heading": "ハッシュリング",
+    "ringAriaLabel": "コンシステントハッシュリングの図。ノードとキーの配置を示す",
+    "controls": {
+      "addNodeButton": "ノードを追加",
+      "removeNodeLabel": "削除するノード",
+      "removeNodeButton": "ノードを削除",
+      "removeNodeEmptyOption": "(ノードなし)",
+      "vnodesSliderLabel": "ノードあたりの仮想ノード数: {count}",
+      "vnodesSliderAriaLabel": "ノードあたりの仮想ノード数(1〜300)",
+      "addKeysButton": "キーを{count}個追加"
+    },
+    "stats": {
+      "heading": "指標",
+      "nodeCountLabel": "ノード数: {count}",
+      "keyCountLabel": "キー数: {count}",
+      "stdDevLabel": "ノードあたりキー数の標準偏差: {value}",
+      "movedRatioLabel": "直近操作での移動キー率: {value}%",
+      "noNodesNote": "ノードがありません。「ノードを追加」から開始してください。"
+    },
+    "narrator": {
+      "summary": "ノード数{nodeCount}、キー数{keyCount}、ノードあたり仮想ノード数{vnodesPerNode}。直近の操作: {operation}。移動キー率{movedRatio}%、標準偏差{stdDev}。",
+      "operationLabels": {
+        "init": "初期化",
+        "addNode": "ノード追加",
+        "removeNode": "ノード削除",
+        "setVnodes": "仮想ノード数変更",
+        "addKeys": "キー一括投入"
+      }
     }
   }
 }

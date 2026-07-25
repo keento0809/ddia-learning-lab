@@ -1,4 +1,14 @@
 {
+  "home": {
+    "pageTitle": "DDIA Learning Lab",
+    "heroTitle": "Learn distributed data systems by building",
+    "heroSubtitle": "Work through lessons, quizzes, and runnable exercises to build a practical, systematic understanding of large-scale data system design.",
+    "ctaPrimary": "View curriculum",
+    "ctaSecondary": "Start for free",
+    "curriculumOverviewTitle": "Curriculum overview",
+    "moduleCountLabel": "{count} modules",
+    "viewAllLink": "View all"
+  },
   "nav": {
     "brand": "DDIA Learning Lab",
     "mainAriaLabel": "Main navigation",
@@ -345,6 +355,119 @@
       "noopEmptyMemtable": "Cannot flush: the memtable is empty.",
       "noopEmptyLevel": "Cannot compact: L{level} has no SSTables.",
       "noopDeepestLevel": "Cannot compact: this is the deepest level."
+    }
+  },
+  "replicationLagViz": {
+    "heading": "Replication Lag",
+    "nodeLabel": {
+      "leader": "Leader",
+      "follower-1": "Follower 1",
+      "follower-2": "Follower 2"
+    },
+    "versionLabel": "v{version}",
+    "clientLabel": "You",
+    "networkDelayLabel": "Network delay: {ticks} ticks",
+    "networkDelayInputAriaLabel": "Network delay (0 to 6 ticks)",
+    "mitigationGroupLabel": "Mitigation",
+    "mitigationOption": {
+      "none": "No mitigation",
+      "read-from-leader": "Pin reads to leader",
+      "wait-for-version": "Wait for version"
+    },
+    "writeButtonLabel": "Write (you)",
+    "readTargetSelectLabel": "Read from",
+    "readButtonLabel": "Read",
+    "scenarioButtonLabel": "Run the \"can't read my own write\" scenario",
+    "violationsLabel": "Read-your-writes violations: {count}",
+    "droppedLabel": "Dropped: {count}",
+    "inFlightHeading": "Requests in flight",
+    "inFlightEmpty": "No requests are in flight",
+    "messageKindLabel": {
+      "write-request": "Write request",
+      "replication": "Replication",
+      "read-request": "Read request"
+    },
+    "messageRouteLabel": "{from} → {to}",
+    "messageTicksLabel": "{ticks} ticks remaining",
+    "messageHeldLabel": "waiting for version",
+    "dropButtonLabel": "Drop ({description})",
+    "readLogHeading": "Read result log",
+    "readLogEmpty": "No reads yet",
+    "readLogEntry": "tick {tick}: {clientId} read from {target} → v{resultVersion} (required v{requiredVersion})",
+    "readLogViolation": "read-your-writes violation",
+    "readLogOk": "consistent",
+    "narratorSummary": "tick {tick}: leader v{leaderVersion}, follower-1 v{follower1}, follower-2 v{follower2}, mitigation={mitigation}, {inFlight} in flight, {violations} read-your-writes violations"
+  },
+  "isolationViz": {
+    "heading": "Isolation level simulator",
+    "presetLabel": "Scenario",
+    "presetSelectAriaLabel": "Select a scenario",
+    "levelLabel": "Isolation level",
+    "levelSelectAriaLabel": "Select an isolation level",
+    "levelNames": {
+      "read-uncommitted": "Read Uncommitted",
+      "read-committed": "Read Committed",
+      "repeatable-read": "Repeatable Read (snapshot isolation)",
+      "serializable": "Serializable"
+    },
+    "timelineHeading": "Operation timeline",
+    "reorderHint": "Before running (0 operations completed), reorder operations with the move-earlier/move-later buttons or by dragging.",
+    "stageAriaLabel": "Transaction state diagram",
+    "moveEarlierLabel": "Move earlier",
+    "moveLaterLabel": "Move later",
+    "moveEarlierGlyph": "◀",
+    "moveLaterGlyph": "▶",
+    "chipStatus": {
+      "pending": "Pending",
+      "blocked": "Blocked",
+      "done": "Done",
+      "aborted": "Aborted"
+    },
+    "dirtyReadTag": "uncommitted value (dirty)",
+    "storeHeading": "Committed store",
+    "txnHeading": "Transaction status",
+    "txnStatus": {
+      "pending": "Not started",
+      "active": "Active",
+      "committed": "Committed",
+      "aborted": "Aborted"
+    },
+    "emptyStoreValue": "(none)"
+  },
+  "vizPreview": {
+    "pageTitle": "Viz verification page",
+    "heading": "Viz verification page",
+    "description": "A fixed page for verifying visualization components before curriculum content in content/ is authored."
+  },
+  "hashRingViz": {
+    "heading": "Hash Ring",
+    "ringAriaLabel": "Diagram of the consistent hashing ring showing node and key placement",
+    "controls": {
+      "addNodeButton": "Add node",
+      "removeNodeLabel": "Node to remove",
+      "removeNodeButton": "Remove node",
+      "removeNodeEmptyOption": "(no nodes)",
+      "vnodesSliderLabel": "Virtual nodes per node: {count}",
+      "vnodesSliderAriaLabel": "Virtual nodes per node (1 to 300)",
+      "addKeysButton": "Add {count} keys"
+    },
+    "stats": {
+      "heading": "Metrics",
+      "nodeCountLabel": "Nodes: {count}",
+      "keyCountLabel": "Keys: {count}",
+      "stdDevLabel": "Std. dev. of keys per node: {value}",
+      "movedRatioLabel": "Moved-key ratio for last operation: {value}%",
+      "noNodesNote": "No nodes yet. Start by clicking \"Add node\"."
+    },
+    "narrator": {
+      "summary": "Nodes: {nodeCount}, keys: {keyCount}, virtual nodes per node: {vnodesPerNode}. Last operation: {operation}. Moved-key ratio {movedRatio}%, standard deviation {stdDev}.",
+      "operationLabels": {
+        "init": "Initialized",
+        "addNode": "Node added",
+        "removeNode": "Node removed",
+        "setVnodes": "Virtual node count changed",
+        "addKeys": "Keys bulk-inserted"
+      }
     }
   }
 }

@@ -1,0 +1,219 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`HomePage > renders hero, CTAs, and a 3-part curriculum overview (locale=en) 1`] = `
+<main
+  className="mx-auto max-w-3xl px-4 py-8"
+>
+  <section
+    className="flex flex-col gap-4 py-8 text-center"
+  >
+    <h1
+      className="text-3xl font-semibold"
+    >
+      Learn distributed data systems by building
+    </h1>
+    <p
+      className="text-neutral-600 dark:text-neutral-400"
+    >
+      Work through lessons, quizzes, and runnable exercises to build a practical, systematic understanding of large-scale data system design.
+    </p>
+    <div
+      className="flex flex-wrap justify-center gap-3"
+    >
+      <ForwardRef(Link)
+        className="rounded bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+        data-testid="home-cta-primary"
+        href="/learn"
+      >
+        View curriculum
+      </ForwardRef(Link)>
+      <ForwardRef(Link)
+        className="rounded border border-neutral-300 px-4 py-2 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+        data-testid="home-cta-secondary"
+        href="/auth/signup"
+      >
+        Start for free
+      </ForwardRef(Link)>
+    </div>
+  </section>
+  <section
+    aria-labelledby="home-curriculum-overview"
+    className="py-6"
+  >
+    <div
+      className="mb-4 flex items-center justify-between"
+    >
+      <h2
+        className="text-lg font-semibold"
+        id="home-curriculum-overview"
+      >
+        Curriculum overview
+      </h2>
+      <ForwardRef(Link)
+        className="text-sm hover:underline"
+        href="/learn"
+      >
+        View all
+      </ForwardRef(Link)>
+    </div>
+    <ul
+      className="grid gap-3 sm:grid-cols-3"
+    >
+      <li
+        className="rounded border border-neutral-200 p-3 dark:border-neutral-800"
+        data-testid="home-part-I"
+      >
+        <p
+          className="font-medium"
+        >
+          Part I: Foundations of Data Systems
+        </p>
+        <p
+          className="text-sm text-neutral-600 dark:text-neutral-400"
+        >
+          4 modules
+        </p>
+      </li>
+      <li
+        className="rounded border border-neutral-200 p-3 dark:border-neutral-800"
+        data-testid="home-part-II"
+      >
+        <p
+          className="font-medium"
+        >
+          Part II: Distributed Data
+        </p>
+        <p
+          className="text-sm text-neutral-600 dark:text-neutral-400"
+        >
+          5 modules
+        </p>
+      </li>
+      <li
+        className="rounded border border-neutral-200 p-3 dark:border-neutral-800"
+        data-testid="home-part-III"
+      >
+        <p
+          className="font-medium"
+        >
+          Part III: Derived Data
+        </p>
+        <p
+          className="text-sm text-neutral-600 dark:text-neutral-400"
+        >
+          3 modules
+        </p>
+      </li>
+    </ul>
+  </section>
+</main>
+`;
+
+exports[`HomePage > renders hero, CTAs, and a 3-part curriculum overview (locale=ja) 1`] = `
+<main
+  className="mx-auto max-w-3xl px-4 py-8"
+>
+  <section
+    className="flex flex-col gap-4 py-8 text-center"
+  >
+    <h1
+      className="text-3xl font-semibold"
+    >
+      分散データシステムを、手を動かして学ぶ
+    </h1>
+    <p
+      className="text-neutral-600 dark:text-neutral-400"
+    >
+      レッスン・クイズ・実行できる演習を通じて、大規模データシステムの設計判断を体系的に身につけます。
+    </p>
+    <div
+      className="flex flex-wrap justify-center gap-3"
+    >
+      <ForwardRef(Link)
+        className="rounded bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+        data-testid="home-cta-primary"
+        href="/learn"
+      >
+        カリキュラムを見る
+      </ForwardRef(Link)>
+      <ForwardRef(Link)
+        className="rounded border border-neutral-300 px-4 py-2 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+        data-testid="home-cta-secondary"
+        href="/auth/signup"
+      >
+        無料で始める
+      </ForwardRef(Link)>
+    </div>
+  </section>
+  <section
+    aria-labelledby="home-curriculum-overview"
+    className="py-6"
+  >
+    <div
+      className="mb-4 flex items-center justify-between"
+    >
+      <h2
+        className="text-lg font-semibold"
+        id="home-curriculum-overview"
+      >
+        カリキュラム概観
+      </h2>
+      <ForwardRef(Link)
+        className="text-sm hover:underline"
+        href="/learn"
+      >
+        すべて見る
+      </ForwardRef(Link)>
+    </div>
+    <ul
+      className="grid gap-3 sm:grid-cols-3"
+    >
+      <li
+        className="rounded border border-neutral-200 p-3 dark:border-neutral-800"
+        data-testid="home-part-I"
+      >
+        <p
+          className="font-medium"
+        >
+          Part I: データシステムの基礎
+        </p>
+        <p
+          className="text-sm text-neutral-600 dark:text-neutral-400"
+        >
+          モジュール4件
+        </p>
+      </li>
+      <li
+        className="rounded border border-neutral-200 p-3 dark:border-neutral-800"
+        data-testid="home-part-II"
+      >
+        <p
+          className="font-medium"
+        >
+          Part II: 分散データ
+        </p>
+        <p
+          className="text-sm text-neutral-600 dark:text-neutral-400"
+        >
+          モジュール5件
+        </p>
+      </li>
+      <li
+        className="rounded border border-neutral-200 p-3 dark:border-neutral-800"
+        data-testid="home-part-III"
+      >
+        <p
+          className="font-medium"
+        >
+          Part III: 派生データ
+        </p>
+        <p
+          className="text-sm text-neutral-600 dark:text-neutral-400"
+        >
+          モジュール3件
+        </p>
+      </li>
+    </ul>
+  </section>
+</main>
+`;
