@@ -91,6 +91,9 @@
   "labPreview": {
     "pageTitle": "Exercise Page Preview"
   },
+  "labPreviewSql": {
+    "pageTitle": "SQL Exercise Page Preview"
+  },
   "lesson": {
     "moduleTocHeading": "Module contents",
     "pageTocHeading": "On this page",
@@ -174,7 +177,16 @@
       "examplesHeading": "Input/output examples",
       "exampleInput": "Input",
       "exampleOutput": "Output",
-      "noExamplesLabel": "This exercise has no equals/deepEquals-style examples"
+      "noExamplesLabel": "This exercise has no equals/deepEquals-style examples",
+      "sqlNote": "This is a SQL exercise. Use the schema viewer below to see the table list and sample rows."
+    },
+    "schemaViewer": {
+      "heading": "Schema",
+      "loading": "Loading schema…",
+      "error": "Failed to load the schema",
+      "noTables": "No tables",
+      "sampleRowsLabel": "Sample rows:",
+      "noSampleRows": "No sample rows"
     },
     "hints": {
       "locked": "Hint {n} unlocks after {remaining} more failed attempt(s)",

@@ -2,9 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ExerciseDefinition } from "@/lib/contracts/exercise";
-import type { RunResult } from "@/lib/contracts/runner";
+import type { RunRequest, RunResult } from "@/lib/contracts/runner";
 import { runExercise } from "@/lib/runner/jsRunner";
+import { runSqlExercise } from "@/lib/runner/sqlRunner";
 import { buildRunRequest } from "@/lib/lab/buildRunRequest";
+import { buildSqlRunRequest } from "@/lib/lab/buildSqlRunRequest";
+import { adaptSqlRunResult } from "@/lib/lab/adaptSqlRunResult";
 import { labTransition, outcomeFromRunResult } from "@/lib/lab/labStateMachine";
 import { readDraft, writeDraft } from "@/lib/lab/draftStorage";
 import { createDebouncedSaver } from "@/lib/lab/debouncedSaver";
@@ -15,6 +18,7 @@ import { CodeEditor } from "./CodeEditor";
 import { ProblemPane } from "./ProblemPane";
 import { ResultPanel } from "./ResultPanel";
 import { LabToolbar } from "./LabToolbar";
+import { SchemaViewer } from "./SchemaViewer";
 
 /**
  * S-06 演習(ラボ)画面(T-108, 02§4.2)の中核コンポーネント。
@@ -115,6 +119,29 @@ export function LabWorkspace({
     setStatus(slug, labTransition(afterRun, { type: "validation_passed" }));
 
     try {
+      if (exercise.language === "sql") {
+        // SQL演習: buildSqlRunRequest→runSqlExercise(T-201の採点Worker、変更なし)→
+        // adaptSqlRunResultでRunResult形へ正規化し、以降はJS版と全く同じ状態遷移・
+        // labStore書き込みに合流させる(ResultPanel/resultDiffの再利用のため)。
+        const sqlRequest = buildSqlRunRequest(exercise, current.code);
+        const sqlResult = await runSqlExercise(sqlRequest);
+        setStatus(slug, labTransition("running", { type: "worker_result" }));
+        const result = adaptSqlRunResult(sqlResult);
+        const outcome = outcomeFromRunResult(result);
+        // requestTestsはRunRequest["tests"]の形(id/args/expected)に合わせる。
+        // argsはSQL側では未使用のため空配列固定(resultDiff.ts/ResultPanel.tsxは
+        // expectedのみ参照する)。
+        const requestTests: RunRequest["tests"] = sqlRequest.tests.map((t) => ({
+          id: t.id,
+          args: [],
+          expected: t.expected,
+        }));
+        setResult(slug, result, requestTests);
+        setStatus(slug, labTransition("grading", { type: "graded", outcome }));
+        if (outcome !== "passed") incrementFailCount(slug);
+        return;
+      }
+
       const request = buildRunRequest(exercise, current.code);
       const result = await runExercise(request);
       setStatus(slug, labTransition("running", { type: "worker_result" }));
@@ -188,11 +215,32 @@ export function LabWorkspace({
         className="hidden w-1.5 shrink-0 cursor-col-resize bg-neutral-200 hover:bg-neutral-300 focus:outline-2 focus:outline-offset-2 focus:outline-neutral-500 md:block dark:bg-neutral-800 dark:hover:bg-neutral-700"
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
         <LabToolbar status={status} onRun={handleRun} onReset={handleReset} autosaving={autosaving} locale={locale} />
-        <div className="min-h-[220px] flex-1 border-b border-neutral-200 dark:border-neutral-800">
-          <CodeEditor value={code} onChange={handleCodeChange} onRunShortcut={handleRun} locale={locale} />
+        {/*
+          失敗→恒久対策(T-202): このラッパーのmin-heightは、内側のCodeEditor自身が
+          持つmin-h-[280px](components/lab/CodeEditor.tsx)より小さい値(220px)に
+          設定されていた。SchemaViewer追加前は後続要素がResultPanel(h-[240px])のみ
+          だったため症状が目立たなかったが、CodeEditorの実高さ(280px)がこのラッパー
+          の許容高さ(220px)を超えてoverflowし、その60px分がすぐ下のSchemaViewerの
+          見出し・テーブル名を覆い隠す(qa-evaluatorがelementFromPointで実証)。
+          ラッパー側のmin-heightをCodeEditor自身の最小値と一致させることで、この
+          ミスマッチによる兄弟要素への重なりを解消する。
+        */}
+        <div className="min-h-[280px] flex-1 border-b border-neutral-200 dark:border-neutral-800">
+          <CodeEditor
+            value={code}
+            onChange={handleCodeChange}
+            onRunShortcut={handleRun}
+            locale={locale}
+            language={exercise.language === "sql" ? "sql" : "javascript"}
+          />
         </div>
+        {exercise.language === "sql" && (
+          <div className="h-[160px] shrink-0">
+            <SchemaViewer setupSql={exercise.entry} locale={locale} />
+          </div>
+        )}
         <div className="h-[240px] shrink-0">
           <ResultPanel
             status={status}

@@ -24,11 +24,14 @@ export function CodeEditor({
   onChange,
   onRunShortcut,
   locale,
+  language = "javascript",
 }: {
   value: string;
   onChange: (value: string) => void;
   onRunShortcut: () => void;
   locale: Locale;
+  /** T-202: SQL演習(language: "sql")ではMonacoの構文ハイライトもSQLへ切り替える。 */
+  language?: "javascript" | "sql";
 }) {
   const theme = useThemeStore((state) => state.theme);
   const t = getMessages(locale).labWorkspace;
@@ -37,7 +40,7 @@ export function CodeEditor({
     <div data-testid="lab-code-editor" className="h-full min-h-[280px]">
       <MonacoEditor
         height="100%"
-        language="javascript"
+        language={language}
         value={value}
         theme={theme === "dark" ? "vs-dark" : "light"}
         loading={t.editorLoading}
