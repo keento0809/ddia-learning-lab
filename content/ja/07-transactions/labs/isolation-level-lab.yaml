@@ -1,0 +1,72 @@
+slug: "07-transactions/isolation-level-lab"
+language: js
+entry: predictOutcome
+template: |
+  // isolationLevel: "read-committed" | "snapshot" | "serializable"
+  // anomaly: "dirty-read" | "dirty-write" | "read-skew" | "write-skew"
+  //
+  // 指定した分離レベルのもとで、指定した異常(anomaly)が実際に発生するなら
+  // "occurs" を、その分離レベルによって防止されるなら "prevented" を返してください。
+  //
+  // ヒント: レッスンで見た「どの分離レベルがどの異常を防ぐか」の表を
+  // そのままコードにすればよい関数です。
+  export function predictOutcome(isolationLevel, anomaly) {
+    // TODO: 実装
+  }
+tests:
+  - id: t1-dirty-read-read-committed
+    name:
+      ja: "Read Committedはダーティリードを防ぐ"
+      en: "Read Committed prevents dirty reads"
+    call: { fn: "predictOutcome", args: ["read-committed", "dirty-read"] }
+    assert: { type: "equals", value: "prevented" }
+  - id: t2-dirty-write-snapshot
+    name:
+      ja: "Snapshot Isolationはダーティライトを防ぐ"
+      en: "Snapshot isolation prevents dirty writes"
+    call: { fn: "predictOutcome", args: ["snapshot", "dirty-write"] }
+    assert: { type: "equals", value: "prevented" }
+  - id: t3-read-skew-read-committed
+    name:
+      ja: "Read Committedでは読み取りスキューが発生する"
+      en: "Read skew occurs under Read Committed"
+    call: { fn: "predictOutcome", args: ["read-committed", "read-skew"] }
+    assert: { type: "equals", value: "occurs" }
+  - id: t4-read-skew-snapshot
+    name:
+      ja: "Snapshot Isolationは読み取りスキューを防ぐ"
+      en: "Snapshot isolation prevents read skew"
+    call: { fn: "predictOutcome", args: ["snapshot", "read-skew"] }
+    assert: { type: "equals", value: "prevented" }
+  - id: t5-read-skew-serializable
+    name:
+      ja: "Serializableは読み取りスキューを防ぐ"
+      en: "Serializable prevents read skew"
+    call: { fn: "predictOutcome", args: ["serializable", "read-skew"] }
+    assert: { type: "equals", value: "prevented" }
+  - id: t6-write-skew-read-committed
+    name:
+      ja: "Read Committedでは書き込みスキューが発生する"
+      en: "Write skew occurs under Read Committed"
+    call: { fn: "predictOutcome", args: ["read-committed", "write-skew"] }
+    assert: { type: "equals", value: "occurs" }
+  - id: t7-write-skew-snapshot
+    name:
+      ja: "Snapshot Isolationでも書き込みスキューは発生しうる"
+      en: "Write skew can still occur under snapshot isolation"
+    call: { fn: "predictOutcome", args: ["snapshot", "write-skew"] }
+    assert: { type: "equals", value: "occurs" }
+  - id: t8-write-skew-serializable
+    name:
+      ja: "Serializableは書き込みスキューを防ぐ"
+      en: "Serializable prevents write skew"
+    call: { fn: "predictOutcome", args: ["serializable", "write-skew"] }
+    assert: { type: "equals", value: "prevented" }
+timeoutMs: 3000
+hints:
+  - ja: "「分離レベルごとにどの異常を防ぐか」の一覧表をオブジェクトやMapで持っておき、そこから引くだけで実装できます。"
+    en: "Keep a table of which isolation levels prevent which anomalies, and simply look it up."
+  - ja: "dirty-read と dirty-write は、この演習で扱う3つの分離レベルすべてで常に防止されます。"
+    en: "Both dirty-read and dirty-write are always prevented by all three isolation levels covered in this exercise."
+  - ja: "write-skew を防げるのは Serializable だけです。read-skew は snapshot と serializable の両方で防げます。"
+    en: "Only serializable prevents write-skew. read-skew is prevented by both snapshot and serializable."

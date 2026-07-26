@@ -1,0 +1,79 @@
+---
+title: Transactions and ACID
+order: 1
+minutes: 15
+sourceHash: 632880b0ef13e07e21801a39244c4676f4739615f94aaf909428ef4ba06d8437
+---
+
+# Transactions and ACID
+
+## What is a transaction?
+
+Applications often need to perform several reads and writes against a database as a
+single unit of work. Consider a transfer between two bank accounts: it involves two
+writes — debiting the source account and crediting the destination account — and those
+two writes must always succeed together or fail together. An observer should never be
+able to see a state where only one of them has taken effect.
+
+A <Term slug="transaction">transaction</Term> is the mechanism a database offers for
+grouping several operations into a single unit like this. From the application's point
+of view, the intermediate steps disappear: there are only two possible outcomes,
+"everything succeeded" or "nothing happened at all".
+
+<Callout type="info">
+It helps to imagine a world without transactions. If the application crashes midway
+through a transfer, the database could be left holding a debit with no matching credit.
+Transactions exist to hide this kind of half-finished state from application code.
+</Callout>
+
+## The four ACID properties
+
+The properties a transaction is expected to provide are conventionally summarized by
+the acronym <Term slug="acid">ACID</Term>. Each letter names an independent property,
+and how strictly a given database implements each one can vary.
+
+### Atomicity
+
+The operations inside a transaction either all take effect or none of them do. If an
+error occurs partway through, any writes made so far are rolled back, and from the
+outside it looks as though nothing happened. The key point is that a partially applied
+state is never allowed to leak out.
+
+### Consistency
+
+Here, consistency refers to keeping the invariants an application defines true before
+and after a transaction — for example, "an account balance can never go negative" or
+"orders and inventory counts must never contradict each other". Whether those
+invariants actually hold depends heavily on how the application is written; it is not
+something the database can guarantee automatically.
+
+<Callout type="warn">
+In distributed systems discussions, "consistency" is often used in a different sense —
+whether replicas agree on the same data. The C in ACID and the consistency models used
+when talking about replication or consensus share a word but not a meaning, so be
+careful not to conflate them.
+</Callout>
+
+### Isolation
+
+When multiple transactions run at the same time, isolation keeps each one from seeing
+another transaction's in-progress (uncommitted) writes. When isolation is weak, a
+transaction can end up reading another transaction's pre-commit data, or two
+concurrent writes can silently clobber each other. Isolation comes in degrees — called
+isolation levels — which the next lessons cover in detail.
+
+### Durability
+
+Once a transaction has successfully committed, its results must survive any later
+failure, such as a process crash or restart. In practice, how far "must survive" is
+guaranteed — beyond a single disk write, including replication and backups — is a
+design decision.
+
+## Summary
+
+A transaction is an abstraction for grouping several operations together and hiding
+the intermediate steps, and ACID is the shorthand for the properties that abstraction
+is expected to uphold. The next lesson looks concretely at what can go wrong when
+isolation is not strong enough.
+
+<BookRef chapter={7} />

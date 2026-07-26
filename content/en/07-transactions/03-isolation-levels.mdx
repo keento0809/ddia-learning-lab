@@ -1,0 +1,78 @@
+---
+title: Isolation Levels
+order: 3
+minutes: 20
+sourceHash: d2e30add124968d156f56e80a916ec07bd065c78f7a5c34488390ec75b2d3151
+---
+
+# Isolation Levels
+
+Always preventing every anomaly from the previous lesson would require essentially
+running transactions one at a time, which throws away most of the performance benefit
+of concurrency. So most databases offer a choice of
+<Term slug="isolation-level">isolation levels</Term>, each preventing a different set
+of anomalies at a different cost. This lesson walks through three common ones: Read
+Committed, Snapshot Isolation, and Serializable.
+
+## Read Committed
+
+Read Committed guarantees that a transaction only ever reads data that has been
+committed. This prevents both dirty reads and dirty writes from the previous lesson.
+However, if a transaction reads the same data twice, and another transaction commits
+in between, the two reads are allowed to return different values. As a result, Read
+Committed does not prevent read skew or write skew.
+
+<Viz name="isolation" preset="dirty-read" />
+
+Run the visualization above under "Read Committed" and you can confirm that T2's read
+is either blocked until T1 commits, or returns the last committed value — either way,
+no dirty read occurs. Try switching isolation levels to compare the outcomes.
+
+## Snapshot Isolation
+
+<Term slug="snapshot-isolation">Snapshot isolation</Term> gives each transaction a
+consistent view of the entire database as it looked at the moment the transaction
+started. Even if other transactions commit while it is running, the transaction keeps
+seeing its original snapshot — which means read skew cannot occur.
+
+<Viz name="isolation" preset="read-skew" />
+
+Run the visualization above under "Read Committed" and you'll see T1's transfer slip in
+between T2's two reads of account A and account B, producing an inconsistent total
+(read skew). Run the same schedule under "Snapshot Isolation" and T2 keeps seeing its
+original snapshot throughout, so the inconsistency disappears.
+
+Snapshot isolation is not a cure-all, though. It does not prevent write skew, where
+each transaction writes to a *different* place based on what it read in its own
+snapshot — since each transaction judges, from within its own snapshot, that the
+constraint still holds, and neither one becomes aware of the other's write at commit
+time.
+
+<Viz name="isolation" preset="write-skew" />
+
+Run the visualization above under "Snapshot Isolation" and you can confirm that
+Alice's and Bob's write skew (ending up with no one on call) is still not resolved.
+
+## Serializable
+
+Serializable is the strongest isolation level: it guarantees that the outcome of
+running multiple transactions concurrently is the same as running them one at a time
+in *some* order. This property is called
+<Term slug="serializability">serializability</Term>. Under Serializable, all four
+anomalies — dirty reads, dirty writes, read skew, and write skew — are prevented.
+
+<Viz name="isolation" preset="write-skew" />
+
+Switch the visualization above to "Serializable" and you can confirm that one of
+Alice's or Bob's transactions gets blocked or aborted, so the team never actually ends
+up with zero people on call. Exactly how this is achieved is the subject of the next
+lesson.
+
+<Callout type="info">
+The stronger the isolation level, the less an application has to worry about
+anomalies — but that safety usually comes at the cost of reduced concurrency, more
+waiting, or more retries. Choosing an isolation level is a design decision that
+depends on the nature of the data and how strict the correctness requirements are.
+</Callout>
+
+<BookRef chapter={7} />

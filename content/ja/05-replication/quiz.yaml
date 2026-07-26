@@ -1,0 +1,85 @@
+questions:
+  - id: q1
+    prompt: "非同期レプリケーションでリーダーが直後に故障した場合、最も起こりやすい問題は何か?"
+    type: single
+    options:
+      - id: a
+        label: "書き込みのレイテンシが常に高くなる"
+      - id: b
+        label: "確認応答をまだ受け取っていなかった変更がフォロワーに反映されず失われる可能性がある"
+      - id: c
+        label: "読み取りリクエストがすべて失敗するようになる"
+      - id: d
+        label: "フォロワーの台数が自動的に減る"
+    correctOptionIds: [b]
+    explanation: "非同期レプリケーションはフォロワーの確認を待たずに応答するため、直後にリーダーが故障するとまだ届いていなかった変更が失われうる。"
+  - id: q2
+    prompt: "read-your-writes一貫性を満たすための対策として適切なものはどれか?"
+    type: single
+    options:
+      - id: a
+        label: "すべての読み取りを常にランダムなフォロワーへ振り分ける"
+      - id: b
+        label: "自分の書き込み直後の一定時間は、その利用者の読み取り先をリーダー(または追いついたレプリカ)に固定する"
+      - id: c
+        label: "フォロワーの台数を増やして負荷を分散する"
+      - id: d
+        label: "書き込みをすべて非同期にして応答を早くする"
+    correctOptionIds: [b]
+    explanation: "書き込み直後の読み取りだけリーダー(または反映済みのレプリカ)へ固定することで、自分の書き込みが確実に見える状態を作れる。"
+  - id: q3
+    prompt: "monotonic reads(単調読み取り)一貫性が崩れる典型的な原因は何か?"
+    type: single
+    options:
+      - id: a
+        label: "同一ユーザーからの連続したリクエストが、進み具合の異なる複数のレプリカへランダムに振られること"
+      - id: b
+        label: "書き込みがリーダー1台に集約されていること"
+      - id: c
+        label: "レプリカの台数が1台しかないこと"
+      - id: d
+        label: "クォーラムのW値が大きすぎること"
+    correctOptionIds: [a]
+    explanation: "読み取りごとに接続先のレプリカがランダムに変わると、進んだレプリカのあとに遅れたレプリカを読んでしまい、データが古くなって見えることがある。"
+  - id: q4
+    prompt: "consistent prefix reads一貫性が崩れる例として最も適切なものはどれか?"
+    type: single
+    options:
+      - id: a
+        label: "自分の投稿を削除した直後、自分のページにまだ表示されている"
+      - id: b
+        label: "同じレプリカに続けて読み取りをしているのにデータが古くなって見える"
+      - id: c
+        label: "掲示板で『回答』の投稿が先に表示され、その元になった『質問』の投稿がまだ見えない"
+      - id: d
+        label: "書き込みのレイテンシが同期レプリケーションより短い"
+    correctOptionIds: [c]
+    explanation: "因果的に関連する書き込み(質問→回答)が別経路で伝搬され、順序が入れ替わって見えるのはconsistent prefix readsの乱れの典型例。"
+  - id: q5
+    prompt: "マルチリーダー構成でLast-Write-Wins(LWW)によるコンフリクト解決を採用したときの主なデメリットは何か?"
+    type: single
+    options:
+      - id: a
+        label: "実装が非常に複雑になる"
+      - id: b
+        label: "負けた側の書き込みが黙って破棄され、ユーザーからは変更が消えたように見えることがある"
+      - id: c
+        label: "コンフリクトが理論上発生しなくなる"
+      - id: d
+        label: "書き込みが必ずシングルリーダー構成より速くなる"
+    correctOptionIds: [b]
+    explanation: "LWWはタイムスタンプで機械的に片方を採用するため、負けた側の変更はデータとして残らず失われる。"
+  - id: q6
+    prompt: "レプリカ総数N=4のリーダーレス構成でW=3としたとき、W+R>Nを満たす最小のRはいくつか?"
+    type: single
+    options:
+      - id: a
+        label: "R=1"
+      - id: b
+        label: "R=2"
+      - id: c
+        label: "R=3"
+      - id: d
+        label: "R=4"
+    correctOptionIds: [b]
+    explanation: "3+R>4 より R>1。R=1では3+1=4となりN=4より大きくならないため条件を満たさず、条件を満たす最小の整数はR=2である。"

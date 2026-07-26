@@ -1,0 +1,68 @@
+---
+title: "Consistent Hashing and the Hash Ring"
+order: 2
+minutes: 13
+sourceHash: 7ae3dae3b728a308d158093f928ea7eabd6ad609912bd3044d11a854a5ce6104
+---
+
+# Consistent Hashing and the Hash Ring
+
+The previous lesson showed that plain hash partitioning balances load well
+but forces keys to move around whenever the node count changes. Consider a
+naive implementation that picks a partition by taking the hash value modulo
+the number of nodes: adding or removing just one node changes the divisor,
+and nearly every key's owning node changes as a result. That means a huge
+amount of data movement for a single node change — a serious operational
+cost.
+
+<Term slug="consistent-hashing">Consistent hashing</Term> is a design that
+shrinks that "how much moves when the node count changes" problem
+dramatically.
+
+## The hash ring
+
+Consistent hashing treats the range of a hash function's output as a
+circle (a ring) where the two ends wrap around and meet. Both nodes and
+keys get placed at a point on this ring using the same hash function. A
+key's owning node is determined by walking clockwise from the key's
+position and taking the first node encountered.
+
+The payoff of this layout is that adding or removing one node only affects
+the keys that fall in the segment immediately before that node on the
+ring. Ownership of keys in distant segments of the ring is untouched.
+Compared to a plain modulo-based split, the set of keys that need to move
+is confined to roughly one node's worth of the ring.
+
+## Evening things out with virtual nodes
+
+If each node only occupies a single point on the ring, even a small skew
+in the hash function's output can leave some nodes owning a much longer
+segment than others — and a longer segment means more keys. That
+translates directly into uneven load between nodes.
+
+<Term slug="virtual-node">Virtual nodes</Term> (vnodes) are the mechanism
+used to smooth this out: instead of one point per physical node, each
+physical node is represented by many points on the ring. The more virtual
+nodes per physical node, the smaller the statistical variance in segment
+length becomes, so key counts even out across nodes. It also means the
+keys that move when a node is added or removed get spread across more of
+the remaining nodes, rather than dumping the whole shift onto one or two
+neighbors.
+
+<Callout type="tip">
+  More virtual nodes improves evenness, but it also means more points to
+  track on the ring, which adds cost to node lookups and metadata
+  management. In practice you pick a vnode count that balances the two.
+</Callout>
+
+## Try it yourself
+
+The visualization below lets you add and remove nodes, change the number
+of virtual nodes, and bulk-load keys. Watch how the "standard deviation of
+keys per node" metric responds as you change the vnode count, and how the
+"moved-key ratio for the last operation" metric behaves when you add or
+remove a node.
+
+<Viz name="hash-ring" />
+
+<BookRef chapter={6} />

@@ -1,0 +1,99 @@
+questions:
+  - id: q1
+    type: single
+    prompt: "Which statement correctly describes key-range partitioning?"
+    options:
+      - id: a
+        label: "Adjacent keys tend to land in the same partition, which makes range scans efficient"
+      - id: b
+        label: "Keys must always be passed through a hash function before being placed"
+      - id: c
+        label: "Changing the number of nodes never requires any key to move"
+      - id: d
+        label: "Load is always balanced regardless of the data distribution"
+    correctOptionIds: [a]
+    explanation: "Key-range partitioning assigns a contiguous key range to one partition, so a range scan usually only has to touch a handful of partitions. Range boundaries still need ongoing tuning, and load is not automatically balanced."
+  - id: q2
+    type: single
+    prompt: "Which of the following is a real weakness of hash partitioning?"
+    options:
+      - id: a
+        label: "It destroys key ordering, so range scans need to query multiple partitions"
+      - id: b
+        label: "A skewed key distribution always produces skewed load"
+      - id: c
+        label: "It only works with exactly one partition"
+      - id: d
+        label: "The same key must be written multiple times to be stored"
+    correctOptionIds: [a]
+    explanation: "Hashing removes lexicographic ordering, so range-based queries tend to fan out across multiple partitions. In terms of load balancing, hash partitioning is usually an advantage, not a weakness."
+  - id: q3
+    type: single
+    prompt: "With a naive scheme that picks a partition as (hash value mod number of nodes), what tends to happen when one node is added?"
+    options:
+      - id: a
+        label: "The divisor changes, so the owning node changes for almost every key"
+      - id: b
+        label: "Only new keys go to the new node; existing ownership is untouched"
+      - id: c
+        label: "Nothing changes"
+      - id: d
+        label: "Only the keys previously owned by a removed node get reassigned"
+    correctOptionIds: [a]
+    explanation: "Changing the divisor (the node count) in a modulo operation changes the remainder for nearly every key, so the mapping from key to owning node breaks across most of the key space."
+  - id: q4
+    type: single
+    prompt: "What is the main advantage of consistent hashing over a plain modulo-based scheme?"
+    options:
+      - id: a
+        label: "It confines the set of keys that must move on a node change to roughly one node's worth of the ring"
+      - id: b
+        label: "It removes the need for a hash function entirely"
+      - id: c
+        label: "It mathematically guarantees perfectly even load at all times"
+      - id: d
+        label: "It makes range scans faster than key-range partitioning"
+    correctOptionIds: [a]
+    explanation: "Consistent hashing places nodes and keys on the same ring and limits the impact of a node change to the segment around that node. It does not guarantee perfect evenness or speed up range scans."
+  - id: q5
+    type: single
+    prompt: "In consistent hashing, what effect can you expect from increasing the number of virtual nodes (vnodes) per physical node?"
+    options:
+      - id: a
+        label: "The variance (standard deviation) in keys owned per node tends to shrink"
+      - id: b
+        label: "Hashing is no longer needed"
+      - id: c
+        label: "Rebalancing becomes completely unnecessary"
+      - id: d
+        label: "Range scans become possible"
+    correctOptionIds: [a]
+    explanation: "More points per physical node on the ring statistically reduces the variance in segment length, which evens out key counts across nodes. It does not eliminate the need for rebalancing."
+  - id: q6
+    type: multiple
+    prompt: "Select all of the following that are effective mitigations for a hotspot."
+    options:
+      - id: a
+        label: "Splitting a hot key across several real keys with a random suffix (salting)"
+      - id: b
+        label: "Continuing to use a raw sequence number or timestamp as the front of the partition key"
+      - id: c
+        label: "Continuously monitoring per-partition load and reacting when skew is detected"
+      - id: d
+        label: "Switching to hash partitioning, which automatically resolves concentrated access to a single key"
+    correctOptionIds: [a, c]
+    explanation: "Salting and continuous monitoring are effective mitigations. Continuing to use a raw monotonic key tends to make hotspots worse, and switching to hash partitioning does not by itself resolve concentrated access to one key."
+  - id: q7
+    type: single
+    prompt: "What is a major risk commonly cited for automated rebalancing?"
+    options:
+      - id: a
+        label: "A false detection or unlucky timing can trigger a large, unplanned data shift at an inconvenient time"
+      - id: b
+        label: "It always increases the operator's workload"
+      - id: c
+        label: "It makes adding new nodes impossible"
+      - id: d
+        label: "It makes hash functions unusable"
+    correctOptionIds: [a]
+    explanation: "Automated rebalancing reduces operator effort, but a false threshold trigger or unlucky timing can start a large data shift during a period when it hurts performance the most."

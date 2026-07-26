@@ -53,3 +53,211 @@
   definition:
     ja: "ノードが単に停止するのではなく、矛盾したメッセージを送ったりプロトコルに反する挙動をしたりするなど、任意かつ予測不能な形で誤動作する障害モデル。"
     en: "A fault model in which a node misbehaves in arbitrary and unpredictable ways, such as sending inconsistent messages or violating the protocol, rather than simply stopping."
+
+- slug: leader-based-replication
+  term:
+    ja: リーダーベースレプリケーション
+    en: leader-based replication
+  definition:
+    ja: 複製先のノードのうち1台をリーダーに指定し、書き込みは必ずリーダーを経由してから他のフォロワーへ伝搬する構成。
+    en: A replication setup where one node is designated the leader; writes always go through it and are then propagated to the other follower nodes.
+- slug: synchronous-replication
+  term:
+    ja: 同期レプリケーション
+    en: synchronous replication
+  definition:
+    ja: リーダーが少なくとも1台のフォロワーへの反映を確認してから、クライアントへ書き込み成功を返すレプリケーション方式。
+    en: A replication mode where the leader waits for at least one follower to confirm applying a write before reporting success to the client.
+- slug: asynchronous-replication
+  term:
+    ja: 非同期レプリケーション
+    en: asynchronous replication
+  definition:
+    ja: リーダーがフォロワーへの反映を待たずにクライアントへ書き込み成功を返すレプリケーション方式。低レイテンシだが、直後の障害で未反映の変更が失われる可能性がある。
+    en: A replication mode where the leader reports success to the client without waiting for followers to apply the write. Low latency, but an immediate leader failure can lose unpropagated writes.
+- slug: replication-lag
+  term:
+    ja: レプリケーションラグ
+    en: replication lag
+  definition:
+    ja: 非同期レプリケーションにおいて、リーダーに書き込まれた変更があるフォロワーにまだ反映されていない時間差のこと。
+    en: In asynchronous replication, the time delay between a change being written on the leader and that change being applied on a given follower.
+- slug: read-your-writes
+  term:
+    ja: read-your-writes一貫性
+    en: read-your-writes consistency
+  definition:
+    ja: 利用者が自分自身で行った書き込みの直後に自分で読み取ったとき、その書き込みが必ず反映されているという期待のこと。
+    en: The expectation that a user who just made a write will always see that write reflected when they read immediately afterward.
+- slug: monotonic-reads
+  term:
+    ja: monotonic reads(単調読み取り)一貫性
+    en: monotonic reads consistency
+  definition:
+    ja: 一度読み取った内容より古い状態を、あとから読み取ることはないという期待のこと。読み取りごとに接続先レプリカが変わる構成で崩れやすい。
+    en: The expectation that, once a user has seen data at some point in time, they never later see an older state. Easily broken when consecutive reads land on different replicas.
+- slug: consistent-prefix-reads
+  term:
+    ja: consistent prefix reads(一貫した前方読み取り)一貫性
+    en: consistent prefix reads consistency
+  definition:
+    ja: 因果的に関連した書き込みの並びが、読み取り側にもその順序どおりに見えるという期待のこと。
+    en: The expectation that a sequence of causally related writes is seen by readers in the same order they were written.
+- slug: multi-leader-replication
+  term:
+    ja: マルチリーダーレプリケーション
+    en: multi-leader replication
+  definition:
+    ja: 複数の拠点・ノードそれぞれがリーダーとして書き込みを受け付け、互いに変更を伝搬し合うレプリケーション構成。
+    en: A replication setup where multiple nodes each act as a leader accepting writes, propagating changes to one another.
+- slug: write-conflict
+  term:
+    ja: 書き込みコンフリクト
+    en: write conflict
+  definition:
+    ja: 異なるリーダーが同じデータへほぼ同時に別々の書き込みを受け付けてしまい、伝搬後に矛盾が発覚する状態のこと。
+    en: A situation where different leaders accept conflicting writes to the same data at roughly the same time, with the contradiction surfacing only after propagation.
+- slug: leaderless-replication
+  term:
+    ja: リーダーレスレプリケーション
+    en: leaderless replication
+  definition:
+    ja: 特定のリーダーを置かず、クライアントが複数のレプリカへ直接並行に読み書きするレプリケーション構成。
+    en: A replication setup with no designated leader, where clients read from and write to multiple replicas directly and in parallel.
+- slug: quorum-consistency
+  term:
+    ja: クォーラム
+    en: quorum
+  definition:
+    ja: レプリカ総数N・書き込み確認数W・読み取り問い合わせ数Rについて、W + R > N を満たすことで、書き込み集合と読み取り集合が必ず1台以上重なることを保証する考え方。
+    en: A scheme where, given N total replicas, a write quorum W, and a read quorum R satisfying W + R > N, the set of replicas written to and the set read from are guaranteed to overlap by at least one node.
+
+- slug: transaction
+  term:
+    ja: トランザクション
+    en: transaction
+  definition:
+    ja: アプリケーションが行う複数の読み書きを1つの単位としてまとめ、途中経過を隠したままデータベースに実行させる仕組み。
+    en: A mechanism that lets an application group several reads and writes into a single unit, hiding any intermediate state from the outside.
+
+- slug: acid
+  term:
+    ja: ACID
+    en: ACID
+  definition:
+    ja: トランザクションが満たすべき4つの性質(原子性・一貫性・分離性・永続性)の頭文字をまとめた呼び方。実装によってどこまで厳密に満たすかは幅がある。
+    en: An acronym for the four properties a transaction is expected to provide (atomicity, consistency, isolation, durability). How strictly each is provided varies by implementation.
+
+- slug: isolation-level
+  term:
+    ja: 分離レベル
+    en: isolation level
+  definition:
+    ja: 複数のトランザクションを同時に実行したときに、どの種類の異常(ダーティリードやスキューなど)を防ぐかの強さを表す段階。強いほど異常は減るが同時実行の自由度は下がる。
+    en: A setting that determines how strongly a database prevents anomalies (such as dirty reads or skew) when transactions run concurrently. Stronger levels prevent more anomalies at the cost of concurrency.
+
+- slug: dirty-read
+  term:
+    ja: ダーティリード
+    en: dirty read
+  definition:
+    ja: あるトランザクションがまだコミットしていない書き込みを、別のトランザクションが読み取ってしまう異常。
+    en: An anomaly where a transaction reads a write made by another transaction that has not committed yet.
+
+- slug: dirty-write
+  term:
+    ja: ダーティライト
+    en: dirty write
+  definition:
+    ja: 2つのトランザクションが同じデータへ同時に書き込み、片方のコミット前の書き込みがもう片方に上書きされて失われてしまう異常。
+    en: An anomaly where two transactions write to the same data concurrently and one transaction's uncommitted write is overwritten and lost.
+
+- slug: read-skew
+  term:
+    ja: 読み取りスキュー
+    en: read skew
+  definition:
+    ja: 1つのトランザクションが複数の値を読む間に別のトランザクションがその一部だけを更新・コミットしてしまい、矛盾した組み合わせの値が観測される異常。
+    en: An anomaly where, while one transaction reads multiple values, another transaction commits an update to only some of them, causing an inconsistent combination to be observed.
+
+- slug: write-skew
+  term:
+    ja: 書き込みスキュー
+    en: write skew
+  definition:
+    ja: 複数のトランザクションがそれぞれ関連する値を読み取り、その内容に基づいて別々のオブジェクトへ書き込んだ結果、個々の書き込みは問題なくてもアプリケーションの不変条件を破ってしまう異常。
+    en: An anomaly where multiple transactions each read related data and write to different objects based on it, so that each write looks fine alone but the combination violates an application invariant.
+
+- slug: serializability
+  term:
+    ja: 直列化可能性
+    en: serializability
+  definition:
+    ja: 複数のトランザクションを同時に実行した結果が、それらを何らかの順番で1つずつ実行した場合と同じになるという性質。
+    en: The property that the result of running multiple transactions concurrently matches the result of running them one at a time in some order.
+
+- slug: two-phase-locking
+  term:
+    ja: 2相ロック
+    en: two-phase locking
+  definition:
+    ja: トランザクションがデータを読み書きする前にロックを取得し、コミットまで保持してから一括で解放する悲観的な直列化可能性の実現方式。ロックを解放した後は新たなロックを獲得しない。
+    en: A pessimistic approach to serializability where a transaction acquires locks before accessing data, holds them until commit, and releases them all together; no new lock may be acquired after releasing has begun.
+
+- slug: snapshot-isolation
+  term:
+    ja: スナップショット分離
+    en: snapshot isolation
+  definition:
+    ja: トランザクション開始時点のデータベース全体の一貫したスナップショットを見せる分離レベル。読み取りスキューを防ぐが、書き込みスキューまでは防がない。
+    en: An isolation level that gives each transaction a consistent snapshot of the whole database as of when it started. It prevents read skew, but not write skew.
+
+- slug: partitioning
+  term:
+    ja: パーティショニング
+    en: partitioning
+  definition:
+    ja: 1つの大きなデータセットを複数の独立した区画(パーティション)に分割し、別々のノードに配置する設計手法。1台に載り切らない量のデータやリクエストを、複数台で分担してさばけるようにする。
+    en: A design technique that splits one large dataset into independent chunks (partitions) placed on separate nodes, so data volume and request load that would not fit on a single machine can be shared across many.
+- slug: key-range-partitioning
+  term:
+    ja: キーレンジ分割
+    en: key-range partitioning
+  definition:
+    ja: キーの取りうる値を連続した範囲に区切り、各範囲を1つのパーティションに割り当てる分割方式。範囲スキャン(「AからBまでのキーを順に読む」)が得意な一方、範囲の境界をどこに置くかを運用側で継続的に調整する必要がある。
+    en: A partitioning scheme that divides the key space into contiguous ranges and assigns each range to a partition. It is efficient for range scans (reading keys from A to B in order), but the range boundaries need ongoing operational tuning.
+- slug: hash-partitioning
+  term:
+    ja: ハッシュ分割
+    en: hash partitioning
+  definition:
+    ja: キーをハッシュ関数に通した出力値をもとにパーティションを決める分割方式。似た値のキーが同じ範囲に固まらないため負荷が均されやすいが、範囲スキャンでは複数パーティションへの問い合わせが必要になりやすい。
+    en: A partitioning scheme that assigns a partition based on the output of a hash function applied to the key. Similar keys no longer cluster together, which tends to spread load evenly, but range scans typically need to query multiple partitions.
+- slug: consistent-hashing
+  term:
+    ja: コンシステントハッシュ
+    en: consistent hashing
+  definition:
+    ja: ノードとキーの両方を同じハッシュ空間(リング)上に配置し、キーをリング上で最も近いノードに割り当てる方式。ノード数の増減時に再配置されるキーの範囲を、単純なハッシュ値のmod演算による分割よりも小さく抑えられる。
+    en: A scheme that maps both nodes and keys onto the same hash space (a ring) and assigns each key to the nearest node on the ring. It keeps the range of keys that get reassigned when nodes are added or removed much smaller than a plain modulo-based hash split.
+- slug: virtual-node
+  term:
+    ja: 仮想ノード
+    en: virtual node
+  definition:
+    ja: コンシステントハッシュのリング上で、1つの物理ノードを複数の点(仮想ノード、vnode)として配置する仕組み。物理ノードあたりの点数を増やすほどキーの割り当てが均等になりやすく、ノード追加・削除時の負荷差も小さくなる。
+    en: A mechanism in consistent hashing where a single physical node is represented by multiple points (virtual nodes, or vnodes) on the ring. Increasing the number of points per physical node tends to make key assignment more even and shrinks the load imbalance caused by adding or removing nodes.
+- slug: hotspot
+  term:
+    ja: ホットスポット
+    en: hotspot
+  definition:
+    ja: 特定のキーやパーティションにアクセスが偏り、そのノードだけ負荷が突出する状態。分割方式を変えても、著名人アカウントのような単一キーへの集中アクセスは解消できない場合がある。
+    en: A state where access concentrates on a specific key or partition, causing load on that one node to spike far above the others. Changing the partitioning scheme alone cannot always fix this — concentrated access to a single key, such as a celebrity account, can remain a hotspot regardless.
+- slug: rebalancing
+  term:
+    ja: リバランス
+    en: rebalancing
+  definition:
+    ja: ノードの追加・削除やデータ量の偏りに応じて、パーティションの担当ノードを移動し直す運用作業。自動化するとオペレーターの手間は減るが、意図しないタイミングで大量のデータ移動が走り性能に影響するリスクがある。
+    en: The operational process of moving partition ownership between nodes in response to nodes being added or removed, or to uneven data growth. Automating it reduces operator effort, but risks triggering large, unplanned data transfers that hurt performance at an inconvenient time.

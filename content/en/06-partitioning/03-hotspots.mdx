@@ -1,0 +1,67 @@
+---
+title: "The Hotspot Problem and How to Mitigate It"
+order: 3
+minutes: 10
+sourceHash: 3f55fcbb3222e1abc1f1a6b97f2195bf7d72512cd73c4ad1aac9dcce587d7b1b
+---
+
+# The Hotspot Problem and How to Mitigate It
+
+No matter which scheme you pick — key-range partitioning, hash
+partitioning, or consistent hashing — there is a kind of load skew none of
+them can fully solve on their own: the <Term slug="hotspot">hotspot</Term>
+problem.
+
+## What a hotspot is
+
+A hotspot is a state where access concentrates heavily on a specific key
+or partition, so the node owning that key ends up carrying dramatically
+more load than the rest. A partitioning scheme only decides which node
+owns which key — it has no say over the fact that one particular key is
+simply getting hammered with requests.
+
+Typical situations where this shows up:
+
+- A single record — a celebrity account, a viral product listing — gets
+  orders of magnitude more traffic than any other record
+- Many clients hit the same key (or a very narrow range of keys) at the
+  same moment, such as everyone hitting the "event start time" key at once
+- A monotonically increasing key (a sequence number or timestamp) keeps
+  funneling all writes into whichever single partition currently owns the
+  "latest" range — the key-range weakness mentioned in an earlier lesson
+
+<Callout type="warn">
+  Switching to hash partitioning or consistent hashing does not fix
+  concentrated access to a single key. What hashing mitigates is skew
+  across the whole key space; a single key becoming disproportionately
+  popular needs a different kind of countermeasure.
+</Callout>
+
+## Mitigation approaches
+
+Since the root cause — concentrated access to one key — can't be solved by
+the partitioning scheme alone, a few complementary techniques are commonly
+used.
+
+**Key splitting (salting)**
+Append a random suffix or prefix to a key that's prone to becoming hot,
+spreading it across several real keys. For example, writes to one product
+ID could be split across ten keys ("product ID + a random digit 0–9"),
+with reads aggregating across all ten. This spreads writes out, but adds
+complexity on the read side and an aggregation cost.
+
+**Avoiding monotonic keys**
+Rather than using a raw sequence number or timestamp as the front of a
+partition key, combining it with a hash value or a random prefix keeps
+writes from funneling into a single partition. As before, this trades off
+against how easy range scans stay.
+
+**Monitoring and manual intervention**
+Because hotspots aren't always fully predictable ahead of time, teams
+often combine continuous per-partition load monitoring with an
+operational response — splitting an overloaded partition further, or
+reassigning its owner — once skew is detected. The next lesson covers
+<Term slug="rebalancing">rebalancing</Term>, the mechanism at the core of
+that operational response.
+
+<BookRef chapter={6} />
