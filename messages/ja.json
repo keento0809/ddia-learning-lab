@@ -501,5 +501,22 @@
         "addKeys": "キー一括投入"
       }
     }
+  },
+  "capstone": {
+    "pageTitle": "キャップストーン: 分岐シナリオ",
+    "decisionsHeading": "設計判断",
+    "submitLabel": "結果を見る",
+    "resetLabel": "選択をやり直す",
+    "incompleteHint": "すべての設計判断を選択すると結果が表示されます。",
+    "resultHeading": "評価結果",
+    "scoreLabel": "スコア: {score}/100",
+    "feedbackHeading": "フィードバック",
+    "consequencesHeading": "想定される帰結",
+    "verdictLabels": {
+      "optimal": "最適",
+      "acceptable": "許容範囲",
+      "risky": "リスクあり",
+      "broken": "破綻"
+    }
   }
 }

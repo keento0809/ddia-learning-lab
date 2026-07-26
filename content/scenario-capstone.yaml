@@ -1,0 +1,240 @@
+slug: capstone-design-choices
+title:
+  ja: "キャップストーン: 分散データシステム設計シミュレーション"
+  en: "Capstone: Distributed Data System Design Simulation"
+brief:
+  ja: >-
+    あなたは複数のリージョンにユーザーを抱える投稿タイムラインサービスの設計を
+    任されました。要件は次の3つです。(1) どのリージョンからでも低レイテンシで
+    タイムラインを読み取れること。(2) ネットワーク分断が起きても投稿(書き込み)を
+    止めないこと。(3) データを複数ノード・複数リージョンに分散配置できること。
+    この要件を満たすために、レプリケーション方式・パーティショニング戦略・
+    整合性モデルの3つの設計判断を行ってください。
+  en: >-
+    You've been asked to design a timeline/posting service with users spread
+    across multiple regions. The requirements are: (1) timelines must be
+    readable with low latency from any region; (2) posting (writes) must not
+    stop even during a network partition; (3) data must be spreadable across
+    multiple nodes and regions. Make three design decisions -- replication
+    approach, partitioning strategy, and consistency model -- to satisfy
+    these requirements.
+decisions:
+  - id: replication
+    prompt:
+      ja: "レプリケーション方式をどれにしますか?"
+      en: "Which replication approach will you use?"
+    options:
+      - id: single-leader
+        label:
+          ja: "シングルリーダー"
+          en: "Single-leader"
+        description:
+          ja: "1台のリーダーが全ての書き込みを受け付け、フォロワーに複製する。"
+          en: "One leader accepts all writes and replicates them to followers."
+      - id: multi-leader
+        label:
+          ja: "マルチリーダー"
+          en: "Multi-leader"
+        description:
+          ja: "複数のリーダーがそれぞれ書き込みを受け付け、互いに複製し合う。"
+          en: "Multiple leaders each accept writes and replicate to one another."
+      - id: leaderless
+        label:
+          ja: "リーダーレス"
+          en: "Leaderless"
+        description:
+          ja: "どのノードも書き込みを受け付け、クォーラムで読み書きを行う。"
+          en: "Any node accepts writes; reads and writes go through quorums."
+  - id: partitioning
+    prompt:
+      ja: "パーティショニング戦略は?"
+      en: "Which partitioning strategy?"
+    options:
+      - id: key-range
+        label:
+          ja: "キーレンジ分割"
+          en: "Key-range partitioning"
+        description:
+          ja: "キーの範囲でパーティションを分割する。範囲スキャンに強いがホットスポットが起きやすい。"
+          en: "Splits partitions by contiguous key ranges. Good for range scans but prone to hotspots."
+      - id: hash
+        label:
+          ja: "ハッシュ分割"
+          en: "Hash partitioning"
+        description:
+          ja: "キーのハッシュ値でパーティションを分割する。負荷は分散しやすいが範囲スキャンは苦手。"
+          en: "Splits partitions by key hash. Spreads load evenly but is weak for range scans."
+      - id: none
+        label:
+          ja: "パーティションなし(単一ノード)"
+          en: "No partitioning (single node)"
+        description:
+          ja: "全データを1台のノードに置く。"
+          en: "All data lives on a single node."
+  - id: consistency
+    prompt:
+      ja: "整合性モデルは?"
+      en: "Which consistency model?"
+    options:
+      - id: strong
+        label:
+          ja: "線形化可能性(強整合性)"
+          en: "Linearizability (strong consistency)"
+        description:
+          ja: "全ノードが常に最新の値に同意する。"
+          en: "All nodes always agree on the most recent value."
+      - id: causal
+        label:
+          ja: "因果整合性"
+          en: "Causal consistency"
+        description:
+          ja: "因果関係のある操作の順序だけを保証する。"
+          en: "Preserves the order of causally related operations only."
+      - id: eventual
+        label:
+          ja: "結果整合性"
+          en: "Eventual consistency"
+        description:
+          ja: "一時的な不整合を許容し、時間経過とともに収束する。"
+          en: "Tolerates temporary divergence that converges over time."
+outcomes:
+  - id: broken-no-partitioning
+    match:
+      partitioning: none
+    verdict: broken
+    score: 5
+    feedback:
+      ja: >-
+        単一ノード構成では複数リージョンへデータを分散配置できず、その1台が
+        単一障害点になります。他の2つの判断に関わらず、低レイテンシと
+        可用性の要件を満たせません。
+      en: >-
+        A single-node setup can't spread data across regions and becomes a
+        single point of failure, regardless of the other two choices. It
+        cannot satisfy the low-latency and availability requirements.
+    consequences:
+      - ja: "リージョンをまたぐ全アクセスが1台のノードに集中し、レイテンシが悪化します。"
+        en: "All cross-region access converges on one node, degrading latency."
+      - ja: "そのノードが停止すると、サービス全体が停止します。"
+        en: "If that node goes down, the entire service goes down."
+  - id: optimal-leaderless-hash-eventual
+    match:
+      replication: leaderless
+      partitioning: hash
+      consistency: eventual
+    verdict: optimal
+    score: 95
+    feedback:
+      ja: >-
+        リーダーレス+ハッシュ分割+結果整合性は、書き込み可用性とリージョン分散
+        読み取りの両方を満たし、この要件に最も適合する組み合わせです。
+      en: >-
+        Leaderless replication with hash partitioning and eventual consistency
+        satisfies both write availability and low-latency distributed reads,
+        making it the best fit for these requirements.
+    consequences:
+      - ja: "一時的に古いバージョンが読まれることがあるため、UI側で許容する設計が必要です。"
+        en: "Reads can occasionally return a stale version, so the UI must tolerate it."
+  - id: acceptable-multileader-hash-causal
+    match:
+      replication: multi-leader
+      partitioning: hash
+      consistency: causal
+    verdict: acceptable
+    score: 75
+    feedback:
+      ja: >-
+        マルチリーダー+ハッシュ分割+因果整合性でも要件は満たせますが、
+        リーダー間の書き込み競合を解消するロジックが追加で必要になります。
+      en: >-
+        Multi-leader replication with hash partitioning and causal consistency
+        can also meet the requirements, but needs extra write-conflict
+        resolution logic across leaders.
+    consequences:
+      - ja: "複数リーダーが同じキーへ同時に書き込むと、競合解消(マージ)処理が必要です。"
+        en: "Concurrent writes to the same key from different leaders require conflict resolution (merging)."
+  - id: risky-singleleader-strong
+    match:
+      replication: single-leader
+      consistency: strong
+    verdict: risky
+    score: 40
+    feedback:
+      ja: >-
+        シングルリーダー+強整合性では、遠隔リージョンからの書き込みが
+        リーダーを経由するため待ち時間が増大し、リーダー障害時は書き込みが
+        止まります。
+      en: >-
+        Single-leader replication with strong consistency routes every write
+        through one leader, increasing latency for remote regions, and writes
+        stop entirely if the leader fails.
+    consequences:
+      - ja: "リーダーから離れたリージョンほど書き込みレイテンシが大きくなります。"
+        en: "Regions farther from the leader see higher write latency."
+  - id: risky-singleleader-any
+    match:
+      replication: single-leader
+    verdict: risky
+    score: 45
+    feedback:
+      ja: >-
+        整合性モデルやパーティション戦略に関わらず、シングルリーダーは
+        そのリーダーだけが書き込みを受け付けます。リーダーがいるリージョンが
+        分断で孤立すると、他のリージョンからの投稿(書き込み)が止まってしまい、
+        要件(2)「分断が起きても書き込みを止めない」を満たせません。
+      en: >-
+        Regardless of the consistency model or partitioning strategy, only the
+        single leader accepts writes. If a partition isolates the leader's
+        region, posting (writes) from other regions stops entirely, which
+        fails requirement (2) -- "writes must not stop during a partition."
+    consequences:
+      - ja: "リーダーのリージョンが分断されると、他のリージョンは書き込み不能になります。"
+        en: "If the leader's region is partitioned away, other regions cannot write at all."
+  - id: risky-leaderless-strong
+    match:
+      replication: leaderless
+      consistency: strong
+    verdict: risky
+    score: 35
+    feedback:
+      ja: >-
+        リーダーレス構成で強整合性を求めると、読み書きの双方で広いクォーラムを
+        待つ必要が生じ、リーダーレスが持つ可用性上の利点を打ち消してしまいます。
+      en: >-
+        Demanding strong consistency from a leaderless setup forces reads and
+        writes to wait on wide quorums, negating the availability benefits
+        leaderless replication was meant to provide.
+    consequences:
+      - ja: "分断が起きたリージョンでは、クォーラムが揃わず読み書きが失敗しえます。"
+        en: "A partitioned region may fail to gather a quorum, causing reads and writes to fail."
+  - id: risky-multileader-strong
+    match:
+      replication: multi-leader
+      consistency: strong
+    verdict: risky
+    score: 35
+    feedback:
+      ja: >-
+        マルチリーダー構成は複数箇所で並行して書き込みを受け付けるため、
+        強整合性(線形化可能性)を保証することは原理的に困難です。
+      en: >-
+        Because multi-leader replication accepts writes concurrently in
+        multiple places, guaranteeing strong consistency (linearizability) is
+        fundamentally difficult.
+    consequences:
+      - ja: "複数リーダーの書き込み順序を全体で線形化することはできません。"
+        en: "Writes across multiple leaders cannot be linearized into a single global order."
+defaultOutcome:
+  id: default
+  verdict: acceptable
+  score: 55
+  feedback:
+    ja: >-
+      この組み合わせは要件を大きく損なうものではありませんが、レプリケーション
+      方式・パーティション戦略・整合性モデルのトレードオフを見直し、選択の
+      根拠を明確にしておきましょう。
+    en: >-
+      This combination doesn't badly break the requirements, but revisit the
+      trade-offs among replication, partitioning, and consistency so you can
+      justify each choice.
+  consequences: []

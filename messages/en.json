@@ -501,5 +501,22 @@
         "addKeys": "Keys bulk-inserted"
       }
     }
+  },
+  "capstone": {
+    "pageTitle": "Capstone: Branching Scenario",
+    "decisionsHeading": "Design decisions",
+    "submitLabel": "See outcome",
+    "resetLabel": "Start over",
+    "incompleteHint": "Select every design decision to see the outcome.",
+    "resultHeading": "Evaluation result",
+    "scoreLabel": "Score: {score}/100",
+    "feedbackHeading": "Feedback",
+    "consequencesHeading": "Expected consequences",
+    "verdictLabels": {
+      "optimal": "Optimal",
+      "acceptable": "Acceptable",
+      "risky": "Risky",
+      "broken": "Broken"
+    }
   }
 }
