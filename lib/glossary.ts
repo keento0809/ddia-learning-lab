@@ -16,3 +16,12 @@ const GLOSSARY = glossaryData as GlossaryEntry[];
 export function getGlossaryEntry(slug: string): GlossaryEntry | undefined {
   return GLOSSARY.find((entry) => entry.slug === slug);
 }
+
+/**
+ * 用語集ページ(T-305, 02§5.4)向けの全件取得。表示順はslug(ASCIIケバブケース)の
+ * localeCompareによる安定ソートとし、ja/enどちらの言語で開いても同じ並びになる
+ * ようにする。
+ */
+export function getAllGlossaryEntries(): GlossaryEntry[] {
+  return [...GLOSSARY].sort((a, b) => a.slug.localeCompare(b.slug));
+}
