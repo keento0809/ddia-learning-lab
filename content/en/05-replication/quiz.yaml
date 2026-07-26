@@ -1,0 +1,85 @@
+questions:
+  - id: q1
+    prompt: "If the leader fails immediately after an asynchronous write, what is the most likely problem?"
+    type: single
+    options:
+      - id: a
+        label: "Write latency always becomes high"
+      - id: b
+        label: "A change that had not yet been acknowledged by a follower may fail to reach it and be lost"
+      - id: c
+        label: "All read requests start failing"
+      - id: d
+        label: "The number of followers automatically decreases"
+    correctOptionIds: [b]
+    explanation: "Asynchronous replication responds without waiting for follower confirmation, so a leader failure right afterward can lose changes that had not yet arrived."
+  - id: q2
+    prompt: "Which of the following is an appropriate mitigation for read-your-writes consistency?"
+    type: single
+    options:
+      - id: a
+        label: "Always route every read to a randomly chosen follower"
+      - id: b
+        label: "For a short window right after that user's write, pin their reads to the leader (or a replica known to have caught up)"
+      - id: c
+        label: "Add more followers to spread out load"
+      - id: d
+        label: "Make all writes asynchronous to speed up responses"
+    correctOptionIds: [b]
+    explanation: "Pinning reads to the leader (or an already-caught-up replica) right after a write ensures that user reliably sees their own write."
+  - id: q3
+    prompt: "What is the typical root cause of a broken monotonic reads guarantee?"
+    type: single
+    options:
+      - id: a
+        label: "Consecutive requests from the same user land on different replicas at random, each at a different point of catch-up"
+      - id: b
+        label: "Writes are funneled through a single leader"
+      - id: c
+        label: "There is only one replica"
+      - id: d
+        label: "The quorum's W value is too large"
+    correctOptionIds: [a]
+    explanation: "When each read can land on a randomly chosen replica, reading an ahead replica followed by a behind one makes the data appear to move backward in time."
+  - id: q4
+    prompt: "Which of the following best illustrates a consistent prefix reads violation?"
+    type: single
+    options:
+      - id: a
+        label: "A user's own post still shows immediately after they delete it"
+      - id: b
+        label: "Reading the same replica repeatedly still shows data getting older"
+      - id: c
+        label: "On a forum, an 'answer' post appears before the 'question' post it responds to"
+      - id: d
+        label: "Write latency is lower than with synchronous replication"
+    correctOptionIds: [c]
+    explanation: "Causally related writes (question then answer) propagating along different paths and arriving out of order is the classic consistent prefix reads violation."
+  - id: q5
+    prompt: "What is the main downside of using last-write-wins (LWW) for conflict resolution in a multi-leader setup?"
+    type: single
+    options:
+      - id: a
+        label: "The implementation becomes extremely complex"
+      - id: b
+        label: "The losing write is silently discarded, which can look to the user like their change vanished"
+      - id: c
+        label: "Conflicts theoretically stop happening"
+      - id: d
+        label: "Writes always become faster than in a single-leader setup"
+    correctOptionIds: [b]
+    explanation: "LWW mechanically keeps one write based on its timestamp, so the other write's data is discarded and effectively lost."
+  - id: q6
+    prompt: "In a leaderless setup with N=4 total replicas and W=3, what is the smallest R satisfying W+R>N?"
+    type: single
+    options:
+      - id: a
+        label: "R=1"
+      - id: b
+        label: "R=2"
+      - id: c
+        label: "R=3"
+      - id: d
+        label: "R=4"
+    correctOptionIds: [b]
+    explanation: "From 3+R>4 we get R>1. R=1 gives 3+1=4, which is not greater than N=4, so it fails the condition; the smallest integer that satisfies it is R=2."

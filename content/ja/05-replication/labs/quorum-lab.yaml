@@ -1,0 +1,51 @@
+slug: 05-replication/quorum-lab
+language: js
+entry: hasQuorumOverlap
+template: |
+  // レプリカ総数n、書き込みクォーラムw、読み取りクォーラムrを受け取り、
+  // W + R > N を満たすかどうか(=どのw台への書き込みとどのr台への読み取りも
+  // 必ず1台以上重なるかどうか)をboolean で返す。
+  export function hasQuorumOverlap(n, w, r) {
+    // TODO: 実装
+  }
+tests:
+  - id: t1
+    name:
+      ja: "N=3, W=2, R=2は重なりを満たす"
+      en: "N=3, W=2, R=2 guarantees overlap"
+    call: { fn: "hasQuorumOverlap", args: [3, 2, 2] }
+    assert: { type: "equals", value: true }
+  - id: t2
+    name:
+      ja: "N=5, W=2, R=2は重なりを満たさない"
+      en: "N=5, W=2, R=2 does not guarantee overlap"
+    call: { fn: "hasQuorumOverlap", args: [5, 2, 2] }
+    assert: { type: "equals", value: false }
+  - id: t3
+    name:
+      ja: "N=4, W=3, R=2は重なりを満たす"
+      en: "N=4, W=3, R=2 guarantees overlap"
+    call: { fn: "hasQuorumOverlap", args: [4, 3, 2] }
+    assert: { type: "equals", value: true }
+  - id: t4
+    name:
+      ja: "N=4, W=1, R=1は重なりを満たさない"
+      en: "N=4, W=1, R=1 does not guarantee overlap"
+    call: { fn: "hasQuorumOverlap", args: [4, 1, 1] }
+    assert: { type: "equals", value: false }
+  - id: t5
+    name:
+      ja: "境界値: W+R=Nはちょうど重なりを満たさない"
+      en: "Boundary: W + R = N does not strictly guarantee overlap"
+    call: { fn: "hasQuorumOverlap", args: [6, 3, 3] }
+    assert: { type: "equals", value: false }
+  - id: t6
+    name:
+      ja: "N=6, W=4, R=3は重なりを満たす"
+      en: "N=6, W=4, R=3 guarantees overlap"
+    call: { fn: "hasQuorumOverlap", args: [6, 4, 3] }
+    assert: { type: "equals", value: true }
+timeoutMs: 3000
+hints:
+  - ja: "不等号は「以上」ではなく「より大きい」であることに注意します(w + r > n)"
+    en: "Remember the inequality is strict (w + r > n), not w + r >= n"

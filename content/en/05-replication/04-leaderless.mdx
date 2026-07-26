@@ -1,0 +1,77 @@
+---
+title: Leaderless Replication and Quorums
+order: 4
+minutes: 9
+sourceHash: b53e5225087bf377273ec8c05a1089ac880b1efc69f736eb2f67a63d64224803
+---
+
+# Leaderless Replication and Quorums
+
+So far we've looked at setups with one leader, or several. This lesson covers setups that skip
+the leader role entirely: clients read and write directly to multiple replicas. Without a
+leader, the system needs its own rule for deciding how many responses count as "enough" to
+consider a read or write successful.
+
+## A setup with no leader
+
+In <Term slug="leaderless-replication">leaderless replication</Term>, write requests are not
+funneled through one node — they go out in parallel to multiple replicas (or a coordinator that
+fans them out). Reads similarly go out to multiple replicas in parallel, and the responses are
+reconciled to determine the final value. Because the system can keep serving reads and writes as
+long as enough replicas respond, even if some are temporarily down, this setup is often chosen
+when availability is the priority.
+
+## Guaranteeing consistency with a quorum
+
+The <Term slug="quorum-consistency">quorum</Term> approach sets the total number of replicas as
+`N`, the number of acknowledgments required for a write to count as successful as `W`, and the
+number of replicas queried on a read as `R`, and requires `W + R > N`.
+
+If that inequality holds, any set of `W` replicas written to and any set of `R` replicas read
+from are guaranteed to share at least one replica. In other words, at least one of the replicas
+that received the most recent write is guaranteed to be among the replicas consulted on the next
+read. For example, with `N=3`, setting `W=2, R=2` gives `2+2=4 > 3`, which satisfies the
+condition.
+
+<Callout type="info">
+Lowering `W` or `R` means fewer replicas need to respond, improving latency and availability,
+but it makes the overlap guarantee (`W + R > N`) easier to violate. Raising them strengthens
+consistency, but latency increases since more replicas must respond, and reads or writes are
+more likely to fail outright if some replicas are unreachable.
+</Callout>
+
+## Read repair and anti-entropy
+
+Even when the quorum condition holds, some of the `R` responses can still carry an older
+version (the guarantee is only that "at least one" overlaps — not that every replica is
+current). So when a read detects responses at different versions, it's common to write the
+latest value back to the stale replica right then — "read repair." Systems often pair this with
+"anti-entropy," a background process that continuously syncs differences between replicas
+without waiting for a read to trigger it.
+
+## What a quorum alone cannot fix
+
+`W + R > N` only guarantees that an overlap exists — it does not by itself resolve every
+consistency issue covered in the earlier lesson on replication lag. For instance, during a
+network partition, a system might prioritize availability and allow writes or reads against a
+set of replicas that doesn't actually satisfy `W` or `R` — a "sloppy quorum," often paired with
+"hinted handoff" (a node outside the usual set temporarily holds a write and later hands it off
+to the correct replica). Using that trades away the overlap that `W + R > N` was guaranteeing,
+at least temporarily, in exchange for availability. A quorum is a design parameter for how much
+consistency you're aiming for under normal conditions — not an unconditional consistency
+guarantee.
+
+<QuizInline
+  id="leaderless-quorum-formula"
+  prompt="In a leaderless setup with N=5 total replicas and a write quorum W=2, what is the minimum R needed to guarantee a read always includes at least one replica with the latest write?"
+  options={[
+    { id: "a", label: "R=1" },
+    { id: "b", label: "R=2" },
+    { id: "c", label: "R=4" },
+    { id: "d", label: "R=5" }
+  ]}
+  correctOptionId="c"
+  explanation="The smallest R satisfying W+R>N is found from 2+R>5, i.e. R>3, so R=4."
+/>
+
+<BookRef chapter={5} />

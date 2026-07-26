@@ -1,0 +1,93 @@
+---
+title: Replication Lag and Broken Read Consistency
+order: 2
+minutes: 16
+sourceHash: 17d830baa9f0e746de1f474cbf6447bca146dbcee5e1affebcd3edbf060381b1
+---
+
+# Replication Lag and Broken Read Consistency
+
+As long as asynchronous replication is in play, there is always going to be some time
+difference between the leader's data and a follower's data. That lag is simply an inherent
+property of the asynchronous setup, but depending on how an application is built, it can
+surface as behavior that looks flat-out broken to a user. This lesson breaks that down into
+three patterns and looks at how each can be addressed.
+
+## What replication lag actually is
+
+<Term slug="replication-lag">Replication lag</Term> is the time gap between a change being
+written on the leader and that change being applied on a particular follower. Causes vary:
+network delay or congestion, a follower that cannot keep up with the incoming stream and falls
+behind, or a follower recovering from an outage and catching up on a backlog all at once. Lag
+is not constant — depending on load and network conditions it can range from a few milliseconds
+to minutes or even hours.
+
+## When read-your-writes breaks
+
+<Term slug="read-your-writes">Read-your-writes consistency</Term> is the expectation that,
+immediately after making a write, reading your own data will reflect that write. Editing your
+profile and then finding the old version still showing when you open your page is a classic
+example of this breaking.
+
+The cause is simple: the write goes to the leader, but the read right afterward happens to land
+on a follower that has not caught up yet. Common mitigations include:
+
+- For data the user might have just changed, route that user's reads to the leader (or to a
+  replica known to have caught up) for a short window right after the write.
+- Record the version number the leader returned at write time, and before reading from a
+  candidate follower, check that the follower's applied version is at least that high — if not,
+  wait or fall back to another follower or the leader.
+
+## When monotonic reads breaks
+
+<Term slug="monotonic-reads">Monotonic reads consistency</Term> is the expectation that once
+you have read some state, you will never later read something older. In a setup where each
+request happens to land on a randomly chosen follower, a user can read from a replica that is
+ahead and then, on the very next request, land on one that is behind — making the data appear
+to move backward in time.
+
+A common mitigation is routing all requests from the same user (or session) to the same
+replica consistently — for example, by hashing a user ID to pick the replica. That at least
+guarantees a single user always sees progress moving in one direction.
+
+## When consistent prefix reads breaks
+
+<Term slug="consistent-prefix-reads">Consistent prefix reads consistency</Term> is the
+expectation that causally related writes appear to a reader in the same order they were
+written. For instance, if a "question" write and its "answer" write propagate along different
+paths (say, different partitions each handled by their own node), the answer can become visible
+before the question does — an ordering that makes no sense to a reader.
+
+Mitigations include grouping causally related writes into the same partition (so they travel
+the same propagation path), or attaching causal metadata to writes so a reader can reconstruct
+the correct order.
+
+<Callout type="tip">
+Notice that none of these three consistency expectations eliminate replication lag itself —
+they're ways to keep application-visible behavior from breaking even while lag exists.
+Eliminating lag entirely requires synchronous replication, which brings back the
+availability/latency trade-off from the previous lesson.
+</Callout>
+
+## Try it in the simulator: replication lag and mitigations
+
+The visualization below models an asynchronous setup with one leader and two followers. Adjust
+the network delay, issue writes and reads, and switch mitigation modes to see, hands-on, how a
+read-your-writes violation gets reproduced — and resolved.
+
+<Viz name="replication-lag" />
+
+<QuizInline
+  id="lag-anomaly-match"
+  prompt="A user deletes a post, but reloading the page right afterward still shows the deleted post. Which consistency expectation was broken here?"
+  options={[
+    { id: "a", label: "read-your-writes" },
+    { id: "b", label: "monotonic reads" },
+    { id: "c", label: "consistent prefix reads" },
+    { id: "d", label: "None of the above" }
+  ]}
+  correctOptionId="a"
+  explanation="The user's own write (a deletion) had not yet reached the follower that served the very next read, which is a read-your-writes violation."
+/>
+
+<BookRef chapter={5} />

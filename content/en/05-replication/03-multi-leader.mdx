@@ -1,0 +1,87 @@
+---
+title: Multi-Leader Replication and Conflict Resolution
+order: 3
+minutes: 13
+sourceHash: dff62dfd1a2633bdf074c002e7fb9fc58d6f21ffac101e4a0c2e5bba7b9c3c60
+---
+
+# Multi-Leader Replication and Conflict Resolution
+
+The leader/follower setups covered so far kept things simple by funneling every write through
+a single leader. But sometimes it's the write path itself that needs to be spread out. This
+lesson covers setups where more than one leader accepts writes at the same time, and the
+conflicts that inevitably come with that.
+
+## When a multi-leader setup makes sense
+
+<Term slug="multi-leader-replication">Multi-leader replication</Term> is a setup where several
+locations (or nodes) each act as a leader accepting writes, propagating their changes to one
+another. It tends to come up in situations like:
+
+- **A service spanning multiple data centers**: letting users write to their nearest leader
+  avoids sending every write to a leader on the other side of the world, cutting write latency
+  geographically.
+- **Clients that need to work offline**: a mobile device or local app that keeps accepting
+  writes locally while disconnected, then syncs with the server on reconnect, can be thought of
+  as treating its local store as a temporary, independent leader — a variant of multi-leader.
+- **Collaborative editing tools**: apps where multiple users edit the same document at once
+  sometimes accept each client's changes locally first, then propagate and merge them.
+
+## Why write conflicts happen
+
+A <Term slug="write-conflict">write conflict</Term> occurs when different leaders accept
+different writes to the same piece of data at roughly the same time. Neither leader knows about
+the other's write at the moment it accepts its own, so both report success to their clients.
+The contradiction only becomes visible once the changes propagate and end up in the same place.
+
+This cannot happen in a single-leader setup: because writes always pass through one place, a
+later write can always be ordered relative to an earlier one right there and then. With multiple
+leaders, that "ordering on the spot" is impossible, since writes are being accepted in more than
+one place at once.
+
+<Callout type="warn">
+Conflicts could be prevented by requiring leaders to confirm with each other synchronously
+before responding — but doing that defeats the point of choosing multi-leader in the first
+place (low-latency writes accepted locally at each site). Once you choose multi-leader, you
+have to accept that conflicts will happen and design how to resolve them after the fact.
+</Callout>
+
+## Strategies for resolving conflicts
+
+Once a conflict is detected, the system has to decide which write wins — or how to merge both.
+Common strategies include:
+
+1. **Last-write-wins (LWW)**: attach a timestamp to each write and mechanically keep the newest
+   one. Simple to implement, but the losing write is silently discarded, which can look to a
+   user like their change just vanished. Clock skew across machines also makes "newest" an
+   unreliable judgment.
+2. **Application-level merging**: use domain-aware logic — e.g., "subtract both changes from
+   inventory" or "union both sets of tags" — to combine the two writes. More work than LWW, but
+   often avoids losing data outright.
+3. **Convergent data structures**: adopt a data structure designed so that merging changes in
+   any order still converges to the same result (CRDTs, for example), leaving conflict
+   resolution to the structure's own properties. This lesson only names the idea; the design
+   details are out of scope here.
+
+## Choosing a topology
+
+Once there are three or more leaders, there's also a choice of how changes propagate between
+them (topology). An "all-to-all" layout where every leader talks directly to every other
+propagates changes fast but needs more connections; a "circular" layout uses fewer connections
+but means a single node failure can cut the propagation path. It helps to treat topology choice
+as its own trade-off between propagation speed, fault tolerance, and operational complexity.
+
+<QuizInline
+  id="ml-conflict-detection"
+  prompt="What is the fundamental reason write conflicts are more likely in a multi-leader setup than in a single-leader one?"
+  options={[
+    { id: "a", label: "Multi-leader setups always have slower networks" },
+    { id: "b", label: "Writes are accepted in more than one place, and each leader responds without knowing about the other's write" },
+    { id: "c", label: "In multi-leader setups, all reads must go through a leader" },
+    { id: "d", label: "There are no followers in this setup" }
+  ]}
+  correctOptionId="b"
+  explanation="Each leader accepts writes independently and does not learn about another leader's write until it propagates, which is the root cause of conflicts."
+/>
+
+<BookRef chapter={5} />
