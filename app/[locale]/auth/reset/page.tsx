@@ -41,11 +41,13 @@ export default async function ResetRequestPage({
   const t = getMessages(locale).auth.reset;
 
   return (
-    <main style={{ maxWidth: "420px", margin: "0 auto", padding: "1rem" }}>
-      <h1>{t.requestTitle}</h1>
+    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-12">
+      <h1 className="text-2xl font-semibold">{t.requestTitle}</h1>
       <ResetRequestForm locale={locale} />
-      <p>
-        <Link href="/auth/signin">{t.backToSignin}</Link>
+      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <Link href="/auth/signin" className="underline underline-offset-2 hover:no-underline">
+          {t.backToSignin}
+        </Link>
       </p>
     </main>
   );

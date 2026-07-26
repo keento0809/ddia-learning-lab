@@ -26,13 +26,14 @@ export function OAuthButtons({
   }
 
   return (
-    <div data-testid="auth-oauth-buttons">
+    <div data-testid="auth-oauth-buttons" className="flex flex-col gap-2">
       {providers.map((provider) => (
         <button
           key={provider}
           type="button"
           data-testid={`auth-oauth-${provider}`}
           onClick={() => signIn(provider, { callbackUrl })}
+          className="rounded border border-neutral-300 px-4 py-2 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
         >
           {formatMessage(t.continueWith, { provider: t[provider] })}
         </button>

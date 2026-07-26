@@ -47,13 +47,19 @@ export function SignInForm({ locale }: { locale: Locale }) {
   }
 
   if (status === "success") {
-    return <p data-testid="auth-signin-success">{t.success}</p>;
+    return (
+      <p data-testid="auth-signin-success" className="text-sm text-emerald-700 dark:text-emerald-400">
+        {t.success}
+      </p>
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit} data-testid="auth-signin-form">
-      <div>
-        <label htmlFor="signin-email">{t.emailLabel}</label>
+    <form onSubmit={handleSubmit} data-testid="auth-signin-form" className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <label htmlFor="signin-email" className="text-sm font-medium">
+          {t.emailLabel}
+        </label>
         <input
           id="signin-email"
           type="email"
@@ -62,10 +68,13 @@ export function SignInForm({ locale }: { locale: Locale }) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           data-testid="auth-signin-email"
+          className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-50"
         />
       </div>
-      <div>
-        <label htmlFor="signin-password">{t.passwordLabel}</label>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="signin-password" className="text-sm font-medium">
+          {t.passwordLabel}
+        </label>
         <input
           id="signin-password"
           type="password"
@@ -74,14 +83,20 @@ export function SignInForm({ locale }: { locale: Locale }) {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           data-testid="auth-signin-password"
+          className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-50"
         />
       </div>
       {status === "error" && (
-        <p role="alert" data-testid="auth-signin-error">
+        <p role="alert" data-testid="auth-signin-error" className="text-sm text-red-600 dark:text-red-400">
           {errorMessage}
         </p>
       )}
-      <button type="submit" disabled={status === "submitting"} data-testid="auth-signin-submit">
+      <button
+        type="submit"
+        disabled={status === "submitting"}
+        data-testid="auth-signin-submit"
+        className="rounded bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+      >
         {status === "submitting" ? t.submitting : t.submit}
       </button>
     </form>

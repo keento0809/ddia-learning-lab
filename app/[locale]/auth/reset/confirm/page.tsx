@@ -43,8 +43,8 @@ export default async function ResetConfirmPage({
   const t = getMessages(locale).auth.reset;
 
   return (
-    <main style={{ maxWidth: "420px", margin: "0 auto", padding: "1rem" }}>
-      <h1>{t.confirmTitle}</h1>
+    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-12">
+      <h1 className="text-2xl font-semibold">{t.confirmTitle}</h1>
       <ResetConfirmForm locale={locale} token={token ?? null} />
     </main>
   );
