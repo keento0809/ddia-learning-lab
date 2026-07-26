@@ -1,0 +1,83 @@
+---
+title: Anomalies Caused by Concurrent Execution
+order: 2
+minutes: 15
+sourceHash: 41427dc73832b0b376b3254e690fa1d6224ae2e8e11931a17aa1877dc362d94b
+---
+
+# Anomalies Caused by Concurrent Execution
+
+When a database's isolation is not strong enough, running several transactions at the
+same time can produce results that defy intuition. These kinds of problems are called
+"anomalies", and each recurring pattern has its own name. This lesson walks through
+four common ones, each with a concrete example.
+
+## Dirty writes
+
+A <Term slug="dirty-write">dirty write</Term> happens when two transactions write to
+the same data at the same time, and one transaction's not-yet-committed write gets
+overwritten by the other.
+
+For example, imagine two customers simultaneously placing an order that decrements the
+same inventory count by one. Without protection, only one of the two decrements might
+end up reflected, and the other write disappears entirely. Most databases prevent
+dirty writes by default, but understanding why they are prevented is a useful
+foundation for understanding the isolation levels covered later.
+
+## Dirty reads
+
+A <Term slug="dirty-read">dirty read</Term> happens when one transaction reads a write
+made by another transaction that has not committed yet. Because an uncommitted value
+might still be rolled back, reading it means continuing to work based on data that,
+strictly speaking, was never supposed to exist.
+
+<Viz name="isolation" preset="dirty-read" />
+
+The visualization above lets you replay a schedule where T2 tries to read a balance
+right after T1 writes it, but before T1 commits. The operation order can be reordered
+by dragging or with the keyboard, so try moving T1's commit earlier or later and watch
+how the value T2 reads changes.
+
+## Read skew
+
+If a transaction reads several values, and another transaction commits an update to
+only some of them while the first transaction is still running, the first transaction
+can end up seeing a mix of pre-update and post-update values — an inconsistent
+combination that never actually existed at any single point in time. This is called
+<Term slug="read-skew">read skew</Term>.
+
+The classic example is checking the total across two bank accounts. A transaction that
+sums account A and account B might read A, then have a separate "transfer from A to B"
+transaction commit in between, and then read B — adding the pre-transfer value of A to
+the post-transfer value of B, and observing money that never actually appeared or
+disappeared.
+
+## Write skew
+
+If two transactions each read related data and then, based on what they read, write to
+different objects, each individual write can look fine in isolation while the
+combination violates an invariant the application cares about. This is called
+<Term slug="write-skew">write skew</Term>.
+
+For example, suppose a team has a rule that at least one person must always be on
+call. Alice and Bob each check, at the same time, whether they are allowed to go
+off-call. Both see that the other person is currently on call, so both conclude it is
+safe and each writes themselves off-call. If both writes commit, the team ends up with
+no one on call at all. Because each write targets a different row (Alice's record and
+Bob's record), a mechanism that only prevents concurrent writes to the *same* row
+cannot catch this — which is what makes write skew tricky to detect.
+
+<Callout type="tip">
+It helps to keep the distinction in mind: read skew is an inconsistency between
+multiple reads *within one transaction*, while write skew is an invariant violation
+that arises from *multiple transactions* each writing to a different place based on
+what they read.
+</Callout>
+
+## Summary
+
+These anomalies vary in severity, and a database with stronger isolation prevents more
+of them. The next lesson looks at the isolation levels real databases offer, and which
+of these anomalies each one does — and does not — prevent.
+
+<BookRef chapter={7} />

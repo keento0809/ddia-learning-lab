@@ -1,0 +1,120 @@
+questions:
+  - id: q1
+    type: single
+    prompt: "Which ACID property guarantees that the operations in a transaction either all take effect or none of them do?"
+    options:
+      - id: a
+        label: "Atomicity"
+      - id: b
+        label: "Consistency"
+      - id: c
+        label: "Isolation"
+      - id: d
+        label: "Durability"
+    correctOptionIds: ["a"]
+    explanation: "Atomicity is the property that makes all of a transaction's writes take effect, or none of them at all."
+
+  - id: q2
+    type: single
+    prompt: "What is the name for the anomaly where a transaction reads a write made by another transaction before that write has committed?"
+    options:
+      - id: a
+        label: "Read skew"
+      - id: b
+        label: "Write skew"
+      - id: c
+        label: "Dirty read"
+      - id: d
+        label: "Dirty write"
+    correctOptionIds: ["c"]
+    explanation: "Reading a write that has not yet committed (not yet confirmed) is called a dirty read."
+
+  - id: q3
+    type: single
+    prompt: "What is the name for the anomaly where a transaction reads multiple values, another transaction commits an update to only some of them in between, and an inconsistent combination of values is observed?"
+    options:
+      - id: a
+        label: "Read skew"
+      - id: b
+        label: "Write skew"
+      - id: c
+        label: "Dirty read"
+      - id: d
+        label: "Dirty write"
+    correctOptionIds: ["a"]
+    explanation: "When another transaction's commit slips in between multiple reads within one transaction, producing an inconsistent combination of values, that is read skew."
+
+  - id: q4
+    type: multiple
+    prompt: "Which anomalies does the Read Committed isolation level prevent? (Select all that apply.)"
+    options:
+      - id: a
+        label: "Dirty read"
+      - id: b
+        label: "Dirty write"
+      - id: c
+        label: "Read skew"
+      - id: d
+        label: "Write skew"
+    correctOptionIds: ["a", "b"]
+    explanation: "Read Committed only lets a transaction read committed data, so it prevents dirty reads and dirty writes. It still allows two reads within the same transaction to see different points in time, so it does not prevent read skew or write skew."
+
+  - id: q5
+    type: single
+    prompt: "Which statement about snapshot isolation is correct?"
+    options:
+      - id: a
+        label: "It prevents both read skew and write skew"
+      - id: b
+        label: "It prevents read skew, but may not prevent write skew"
+      - id: c
+        label: "It does not prevent dirty reads"
+      - id: d
+        label: "It always runs transactions one at a time, in order"
+    correctOptionIds: ["b"]
+    explanation: "Snapshot isolation gives each transaction a consistent snapshot as of its start time, which prevents read skew, but it cannot prevent write skew, where each transaction writes to a different place based on what it saw in its own snapshot."
+
+  - id: q6
+    type: single
+    prompt: "Which statement best describes what the Serializable isolation level guarantees?"
+    options:
+      - id: a
+        label: "It always processes transactions the fastest"
+      - id: b
+        label: "Running multiple transactions concurrently produces the same result as running them one at a time in some order"
+      - id: c
+        label: "It can be implemented entirely without locks"
+      - id: d
+        label: "It only prevents dirty reads"
+    correctOptionIds: ["b"]
+    explanation: "Serializable guarantees that the result of running multiple transactions concurrently matches the result of running them one at a time in some serial order."
+
+  - id: q7
+    type: single
+    prompt: "Which description of two-phase locking's \"growing phase\" and \"shrinking phase\" is correct?"
+    options:
+      - id: a
+        label: "The growing phase releases locks, and the shrinking phase acquires locks"
+      - id: b
+        label: "The growing phase acquires locks, the shrinking phase releases them, and no new lock may be acquired once the shrinking phase has begun"
+      - id: c
+        label: "Locks can be freely acquired and released in either phase"
+      - id: d
+        label: "The growing phase and shrinking phase happen at the same time"
+    correctOptionIds: ["b"]
+    explanation: "Two-phase locking has a growing phase that acquires locks and a shrinking phase that releases them, and it guarantees serializability by never acquiring a new lock once the shrinking phase has begun."
+
+  - id: q8
+    type: single
+    prompt: "Which statement best describes the basic idea behind SSI (serializable snapshot isolation)?"
+    options:
+      - id: a
+        label: "It locks all potentially conflicting data up front before starting"
+      - id: b
+        label: "It runs transactions much like ordinary snapshot isolation, then aborts on conflicts detected at commit time — an optimistic approach"
+      - id: c
+        label: "It is implemented in exactly the same way as two-phase locking"
+      - id: d
+        label: "It is achieved by lowering the isolation level to Read Committed"
+    correctOptionIds: ["b"]
+    explanation: "SSI runs transactions like ordinary snapshot isolation without up-front locking, then detects conflicts with serial execution at commit time and aborts a transaction if needed — an optimistic approach."
