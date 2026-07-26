@@ -57,6 +57,15 @@
     "lessonCountLabel": "レッスン{count}件",
     "progressAriaLabel": "進捗 {percent}%"
   },
+  "glossary": {
+    "pageTitle": "用語集",
+    "searchLabel": "用語を検索",
+    "searchPlaceholder": "用語や説明の一部を入力",
+    "resultCount": "{count}件表示",
+    "resultCountOne": "{count}件表示",
+    "noResults": "一致する用語が見つかりませんでした。",
+    "otherLocaleTermLabel": "英語表記: {term}"
+  },
   "moduleDetail": {
     "totalMinutesLabel": "所要時間合計 {minutes}分",
     "tocHeading": "目次",

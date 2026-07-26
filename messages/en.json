@@ -57,6 +57,15 @@
     "lessonCountLabel": "{count} lessons",
     "progressAriaLabel": "{percent}% complete"
   },
+  "glossary": {
+    "pageTitle": "Glossary",
+    "searchLabel": "Search terms",
+    "searchPlaceholder": "Type part of a term or definition",
+    "resultCount": "{count} results",
+    "resultCountOne": "{count} result",
+    "noResults": "No matching terms found.",
+    "otherLocaleTermLabel": "Japanese: {term}"
+  },
   "moduleDetail": {
     "totalMinutesLabel": "Total time: {minutes} min",
     "tocHeading": "Contents",
