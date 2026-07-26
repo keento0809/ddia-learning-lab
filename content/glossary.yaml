@@ -77,3 +77,53 @@
   definition:
     ja: トランザクション開始時点のデータベース全体の一貫したスナップショットを見せる分離レベル。読み取りスキューを防ぐが、書き込みスキューまでは防がない。
     en: An isolation level that gives each transaction a consistent snapshot of the whole database as of when it started. It prevents read skew, but not write skew.
+
+- slug: partitioning
+  term:
+    ja: パーティショニング
+    en: partitioning
+  definition:
+    ja: 1つの大きなデータセットを複数の独立した区画(パーティション)に分割し、別々のノードに配置する設計手法。1台に載り切らない量のデータやリクエストを、複数台で分担してさばけるようにする。
+    en: A design technique that splits one large dataset into independent chunks (partitions) placed on separate nodes, so data volume and request load that would not fit on a single machine can be shared across many.
+- slug: key-range-partitioning
+  term:
+    ja: キーレンジ分割
+    en: key-range partitioning
+  definition:
+    ja: キーの取りうる値を連続した範囲に区切り、各範囲を1つのパーティションに割り当てる分割方式。範囲スキャン(「AからBまでのキーを順に読む」)が得意な一方、範囲の境界をどこに置くかを運用側で継続的に調整する必要がある。
+    en: A partitioning scheme that divides the key space into contiguous ranges and assigns each range to a partition. It is efficient for range scans (reading keys from A to B in order), but the range boundaries need ongoing operational tuning.
+- slug: hash-partitioning
+  term:
+    ja: ハッシュ分割
+    en: hash partitioning
+  definition:
+    ja: キーをハッシュ関数に通した出力値をもとにパーティションを決める分割方式。似た値のキーが同じ範囲に固まらないため負荷が均されやすいが、範囲スキャンでは複数パーティションへの問い合わせが必要になりやすい。
+    en: A partitioning scheme that assigns a partition based on the output of a hash function applied to the key. Similar keys no longer cluster together, which tends to spread load evenly, but range scans typically need to query multiple partitions.
+- slug: consistent-hashing
+  term:
+    ja: コンシステントハッシュ
+    en: consistent hashing
+  definition:
+    ja: ノードとキーの両方を同じハッシュ空間(リング)上に配置し、キーをリング上で最も近いノードに割り当てる方式。ノード数の増減時に再配置されるキーの範囲を、単純なハッシュ値のmod演算による分割よりも小さく抑えられる。
+    en: A scheme that maps both nodes and keys onto the same hash space (a ring) and assigns each key to the nearest node on the ring. It keeps the range of keys that get reassigned when nodes are added or removed much smaller than a plain modulo-based hash split.
+- slug: virtual-node
+  term:
+    ja: 仮想ノード
+    en: virtual node
+  definition:
+    ja: コンシステントハッシュのリング上で、1つの物理ノードを複数の点(仮想ノード、vnode)として配置する仕組み。物理ノードあたりの点数を増やすほどキーの割り当てが均等になりやすく、ノード追加・削除時の負荷差も小さくなる。
+    en: A mechanism in consistent hashing where a single physical node is represented by multiple points (virtual nodes, or vnodes) on the ring. Increasing the number of points per physical node tends to make key assignment more even and shrinks the load imbalance caused by adding or removing nodes.
+- slug: hotspot
+  term:
+    ja: ホットスポット
+    en: hotspot
+  definition:
+    ja: 特定のキーやパーティションにアクセスが偏り、そのノードだけ負荷が突出する状態。分割方式を変えても、著名人アカウントのような単一キーへの集中アクセスは解消できない場合がある。
+    en: A state where access concentrates on a specific key or partition, causing load on that one node to spike far above the others. Changing the partitioning scheme alone cannot always fix this — concentrated access to a single key, such as a celebrity account, can remain a hotspot regardless.
+- slug: rebalancing
+  term:
+    ja: リバランス
+    en: rebalancing
+  definition:
+    ja: ノードの追加・削除やデータ量の偏りに応じて、パーティションの担当ノードを移動し直す運用作業。自動化するとオペレーターの手間は減るが、意図しないタイミングで大量のデータ移動が走り性能に影響するリスクがある。
+    en: The operational process of moving partition ownership between nodes in response to nodes being added or removed, or to uneven data growth. Automating it reduces operator effort, but risks triggering large, unplanned data transfers that hurt performance at an inconvenient time.

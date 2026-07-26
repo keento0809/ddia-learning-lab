@@ -1,0 +1,111 @@
+slug: 06-partitioning/consistent-hash-ring
+language: js
+entry: assignKey
+template: |
+  // Implement a consistent hashing ring with virtual nodes (vnodes).
+  //
+  // hashToAngle(value) converts a string into an angle in degrees (0-360)
+  // and is already implemented for you (do not change it). Use this angle
+  // as the position on the ring.
+  export function hashToAngle(value) {
+    let hash = 2166136261;
+    for (let i = 0; i < value.length; i++) {
+      hash ^= value.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    const unsigned = hash >>> 0;
+    return (unsigned / 4294967296) * 360;
+  }
+
+  // Implement buildRing(nodeIds, vnodesPerNode).
+  // For each node ID, run the vnodesPerNode labels
+  // `${nodeId}#0`, `${nodeId}#1`, ... , `${nodeId}#(vnodesPerNode-1)`
+  // through hashToAngle to get their angle, and return a list of
+  // { nodeId, angle } sorted in ascending order by angle.
+  export function buildRing(nodeIds, vnodesPerNode) {
+    // TODO: implement
+  }
+
+  // Implement assignKey(nodeIds, key, vnodesPerNode).
+  // Using the result of buildRing(nodeIds, vnodesPerNode) and the key's own
+  // angle from hashToAngle(key), walk the ring clockwise (increasing angle)
+  // and return the nodeId of the first virtual node encountered.
+  // If no such virtual node is found (the key's angle is larger than every
+  // angle on the ring), return the nodeId of the first element of the ring
+  // (the ring wraps around). If nodeIds is empty, return null.
+  export function assignKey(nodeIds, key, vnodesPerNode) {
+    // TODO: implement
+  }
+
+  // Implement countMovedKeys(oldNodeIds, newNodeIds, keys, vnodesPerNode).
+  // For each element of keys, compute its owning node on the oldNodeIds
+  // ring and on the newNodeIds ring using assignKey, and return the count
+  // of keys where the two owners differ (i.e. the key moved).
+  export function countMovedKeys(oldNodeIds, newNodeIds, keys, vnodesPerNode) {
+    // TODO: implement
+  }
+tests:
+  - id: t1
+    name:
+      ja: "3ノード構成でキーが正しいノードに割り当てられる(1)"
+      en: "a key is assigned to the correct node in a 3-node ring (1)"
+    call:
+      fn: assignKey
+      args: [["nodeA", "nodeB", "nodeC"], "user-1000", 8]
+    assert: { type: equals, value: "nodeB" }
+  - id: t2
+    name:
+      ja: "3ノード構成でキーが正しいノードに割り当てられる(2)"
+      en: "a key is assigned to the correct node in a 3-node ring (2)"
+    call:
+      fn: assignKey
+      args: [["nodeA", "nodeB", "nodeC"], "order-1037", 8]
+    assert: { type: equals, value: "nodeC" }
+  - id: t3
+    name:
+      ja: "ノードが1つも無い場合はnullを返す"
+      en: "returns null when there are no nodes"
+    call:
+      fn: assignKey
+      args: [[], "key-1", 4]
+    assert: { type: equals, value: null }
+  - id: t4
+    name:
+      ja: "ノード追加後も無関係なキーの担当ノードは変わらない"
+      en: "an unrelated key keeps its owning node after a node is added"
+    call:
+      fn: assignKey
+      args: [["nodeA", "nodeB", "nodeC", "nodeD"], "user-1000", 8]
+    assert: { type: equals, value: "nodeB" }
+  - id: t5
+    name:
+      ja: "ノード追加時に移動するキー数が期待値と一致する"
+      en: "the number of keys moved when a node is added matches the expected value"
+    call:
+      fn: countMovedKeys
+      args:
+        - ["nodeA", "nodeB", "nodeC"]
+        - ["nodeA", "nodeB", "nodeC", "nodeD"]
+        - ["user-1000", "order-1037", "session-1074", "cart-1111", "invoice-1148", "device-1185", "event-1222", "payment-1259", "ticket-1296", "review-1333", "user-1370", "order-1407", "session-1444", "cart-1481", "invoice-1518", "device-1555", "event-1592", "payment-1629", "ticket-1666", "review-1703", "user-1740", "order-1777", "session-1814", "cart-1851", "invoice-1888", "device-1925", "event-1962", "payment-1999", "ticket-2036", "review-2073"]
+        - 8
+    assert: { type: equals, value: 7 }
+  - id: t6
+    name:
+      ja: "ノード削除時に移動するキー数が期待値と一致する"
+      en: "the number of keys moved when a node is removed matches the expected value"
+    call:
+      fn: countMovedKeys
+      args:
+        - ["nodeA", "nodeB", "nodeC"]
+        - ["nodeA", "nodeB"]
+        - ["user-1000", "order-1037", "session-1074", "cart-1111", "invoice-1148", "device-1185", "event-1222", "payment-1259", "ticket-1296", "review-1333", "user-1370", "order-1407", "session-1444", "cart-1481", "invoice-1518", "device-1555", "event-1592", "payment-1629", "ticket-1666", "review-1703", "user-1740", "order-1777", "session-1814", "cart-1851", "invoice-1888", "device-1925", "event-1962", "payment-1999", "ticket-2036", "review-2073"]
+        - 8
+    assert: { type: equals, value: 13 }
+timeoutMs: 3000
+hints:
+  - ja: "buildRingは各ノードごとにvnodesPerNode個の点(`${nodeId}#i`)を作り、angleで昇順ソートするだけです"
+    en: "buildRing just creates vnodesPerNode points per node (`${nodeId}#i`) and sorts them by angle"
+  - ja: "assignKeyは、buildRingの結果を順に見て「角度がキーの角度以上になる最初の要素」を探します。見つからなければ先頭の要素を返します(ラップアラウンド)"
+    en: "assignKey scans the buildRing result for the first element whose angle is >= the key's angle; if none is found, return the first element (wrap-around)"
+  - ja: "countMovedKeysは、keysの各要素についてoldNodeIdsとnewNodeIdsそれぞれでassignKeyを呼び、結果が異なる件数を数えるだけです"
+    en: "countMovedKeys just calls assignKey once with oldNodeIds and once with newNodeIds for each key, and counts how many results differ"

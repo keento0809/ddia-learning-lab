@@ -1,0 +1,79 @@
+---
+title: "Rebalancing: Automated and Manual Operations"
+order: 4
+minutes: 10
+sourceHash: 02d59ffc6ef9ad0ab1ace40194c4c9cf130c4cfd4ac748ba33e0e3cc243f105d
+---
+
+# Rebalancing: Automated and Manual Operations
+
+<Term slug="rebalancing">Rebalancing</Term> is the operational work of
+moving partition ownership between nodes in response to nodes being added
+or removed, or to data volume and access frequency drifting out of
+balance. No matter how carefully a partitioning scheme is designed, any
+system that runs long enough will eventually need rebalancing.
+
+## Why rebalancing becomes necessary
+
+Three triggers show up most often:
+
+- **Adding a node**: to grow processing capacity or storage, a new node
+  gets added, and some of the partitions previously owned by existing
+  nodes need to move to it
+- **Removing a node**: whether due to a failure or a planned scale-down,
+  the partitions that node owned need to be reassigned to the remaining
+  nodes
+- **Skew in data or load**: a split that started out even can drift as
+  data grows or access patterns shift — the hotspot problem from the
+  previous lesson is one flavor of this
+
+## Keeping the number of moved keys small
+
+The thing to avoid above all in rebalancing is having nearly the entire
+dataset move every time a single node is added or removed — which is
+exactly what happens with a naive modulo-based hash split.
+
+Consistent hashing (two lessons back) was designed precisely to confine
+that movement to roughly one node's worth of the ring. Ideally, going from
+n nodes to n+1 nodes should move on the order of 1/(n+1) of all keys.
+Increasing the number of virtual nodes helps spread that movement across
+many nodes rather than concentrating it on a small handful — the same
+behavior you could observe in the visualization in lesson 2.
+
+## Automated vs. manual rebalancing
+
+Who decides when and how much to rebalance splits operational styles into
+two broad categories.
+
+**Automated rebalancing**
+The system detects a change in node count or a load imbalance and
+triggers partition reassignment on its own once a threshold is crossed.
+This reduces operator effort, but a false detection or unlucky timing can
+trigger a large, unplanned data shift during a period when it hurts
+performance the most.
+
+**Manual rebalancing**
+An operator explicitly triggers reassignment. The system's role is limited
+to surfacing how skewed things currently are; a human decides whether and
+when to act. This avoids surprise movement at inconvenient times, but adds
+a human cost to the decision and the work itself, and response can lag.
+
+<Callout type="tip">
+  In practice, many teams land on something in between: monitoring runs
+  automatically, but the actual reassignment trigger requires operator
+  approval before it executes. Rather than an all-automatic-or-all-manual
+  choice, it's better framed as a question of how much you hand off to the
+  system.
+</Callout>
+
+## Summary
+
+This module covered two foundational schemes — key-range partitioning and
+hash partitioning — their evolution into consistent hashing with virtual
+nodes, the hotspot problem that no partitioning scheme alone can solve,
+and the rebalancing operations needed as nodes come and go. These aren't
+independent techniques; they're a toolkit for one underlying question: how
+do you split data and load across many nodes, and keep that split healthy
+over time?
+
+<BookRef chapter={6} />
