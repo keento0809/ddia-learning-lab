@@ -14,6 +14,7 @@ import type { ModuleTocItem } from "@/lib/moduleDetail";
 import { LessonToc } from "./LessonToc";
 import { PageToc } from "./PageToc";
 import { CompleteAndNextButton } from "./CompleteAndNextButton";
+import { LessonNotes } from "./LessonNotes";
 
 /**
  * S-04 レッスン画面(T-103, 02§4.1)。3カラムレイアウト(左=モジュール内目次、
@@ -207,6 +208,9 @@ export function LessonLayout({
           </button>
         ) : null}
         <PageToc articleRef={articleRef} locale={locale} />
+        <div className="mt-6 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+          <LessonNotes locale={locale} lessonSlug={itemSlug} isAuthenticated={isAuthenticated} />
+        </div>
       </aside>
     </div>
   );

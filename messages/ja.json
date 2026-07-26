@@ -134,7 +134,16 @@
       "title": "Designing Data-Intensive Applications",
       "author": "Martin Kleppmann",
       "label": "原著 第{chapter}章を参照"
-    }
+    },
+    "notesHeading": "ノート",
+    "notesPlaceholder": "このレッスンについてMarkdownでメモを書けます…",
+    "notesEditTabLabel": "編集",
+    "notesPreviewTabLabel": "プレビュー",
+    "notesSavingLabel": "保存中…",
+    "notesSavedLabel": "保存済み",
+    "notesErrorLabel": "ノートの保存に失敗しました。もう一度お試しください。",
+    "notesSignInPrompt": "ノートを保存するにはログインしてください。",
+    "notesSignInLinkLabel": "ログイン"
   },
   "lab": {
     "run": "実行",
