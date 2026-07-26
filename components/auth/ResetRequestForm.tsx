@@ -51,9 +51,11 @@ export function ResetRequestForm({ locale }: { locale: Locale }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} data-testid="auth-reset-request-form">
-      <div>
-        <label htmlFor="reset-email">{t.emailLabel}</label>
+    <form onSubmit={handleSubmit} data-testid="auth-reset-request-form" className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <label htmlFor="reset-email" className="text-sm font-medium">
+          {t.emailLabel}
+        </label>
         <input
           id="reset-email"
           type="email"
@@ -62,23 +64,40 @@ export function ResetRequestForm({ locale }: { locale: Locale }) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           data-testid="auth-reset-email"
+          className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-50"
         />
       </div>
-      <button type="submit" disabled={status === "submitting"} data-testid="auth-reset-request-submit">
+      <button
+        type="submit"
+        disabled={status === "submitting"}
+        data-testid="auth-reset-request-submit"
+        className="rounded bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+      >
         {status === "submitting" ? t.requestSubmitting : t.requestSubmit}
       </button>
       {status === "error" && (
-        <p role="alert" data-testid="auth-reset-request-error">
+        <p role="alert" data-testid="auth-reset-request-error" className="text-sm text-red-600 dark:text-red-400">
           {errorMessage}
         </p>
       )}
       {status === "done" && (
-        <div data-testid="auth-reset-request-result">
-          <p>{t.requestNotice}</p>
+        <div
+          data-testid="auth-reset-request-result"
+          className="flex flex-col gap-2 rounded border border-neutral-200 p-4 dark:border-neutral-800"
+        >
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">{t.requestNotice}</p>
           {resetLink && (
-            <div>
-              <label htmlFor="reset-link-output">{t.linkGeneratedLabel}</label>
-              <input id="reset-link-output" readOnly value={resetLink} data-testid="auth-reset-link" />
+            <div className="flex flex-col gap-1">
+              <label htmlFor="reset-link-output" className="text-sm font-medium">
+                {t.linkGeneratedLabel}
+              </label>
+              <input
+                id="reset-link-output"
+                readOnly
+                value={resetLink}
+                data-testid="auth-reset-link"
+                className="w-full rounded border border-neutral-300 bg-neutral-100 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-50"
+              />
             </div>
           )}
         </div>

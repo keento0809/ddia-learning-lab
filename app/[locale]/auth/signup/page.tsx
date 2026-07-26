@@ -43,8 +43,8 @@ export default async function SignUpPage({
   const t = getMessages(locale).auth.signup;
 
   return (
-    <main style={{ maxWidth: "420px", margin: "0 auto", padding: "1rem" }}>
-      <h1>{t.title}</h1>
+    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-12">
+      <h1 className="text-2xl font-semibold">{t.title}</h1>
       <SignUpForm locale={locale} />
       {/* T-007/T-101/T-112が未実装で遷移先のホーム画面がまだ存在しないため、
           現時点で実在する/demo(Walking Skeleton)を暫定の遷移先とする。 */}
@@ -53,10 +53,12 @@ export default async function SignUpPage({
         providers={getEnabledOAuthProviders()}
         callbackUrl={`/${locale}/demo`}
       />
-      <p>
+      <p className="text-sm text-neutral-600 dark:text-neutral-400">
         {t.signinPrompt}
         {" "}
-        <Link href="/auth/signin">{t.signinLink}</Link>
+        <Link href="/auth/signin" className="underline underline-offset-2 hover:no-underline">
+          {t.signinLink}
+        </Link>
       </p>
     </main>
   );

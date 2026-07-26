@@ -33,20 +33,30 @@ export function ResetConfirmForm({ locale, token }: { locale: Locale; token: str
 
   if (!token) {
     return (
-      <p role="alert" data-testid="auth-reset-confirm-missing-token">
+      <p
+        role="alert"
+        data-testid="auth-reset-confirm-missing-token"
+        className="text-sm text-red-600 dark:text-red-400"
+      >
         {t.missingToken}
       </p>
     );
   }
 
   if (status === "success") {
-    return <p data-testid="auth-reset-confirm-success">{t.confirmSuccess}</p>;
+    return (
+      <p data-testid="auth-reset-confirm-success" className="text-sm text-emerald-700 dark:text-emerald-400">
+        {t.confirmSuccess}
+      </p>
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit} data-testid="auth-reset-confirm-form">
-      <div>
-        <label htmlFor="reset-confirm-password">{t.newPasswordLabel}</label>
+    <form onSubmit={handleSubmit} data-testid="auth-reset-confirm-form" className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <label htmlFor="reset-confirm-password" className="text-sm font-medium">
+          {t.newPasswordLabel}
+        </label>
         <input
           id="reset-confirm-password"
           type="password"
@@ -56,10 +66,11 @@ export function ResetConfirmForm({ locale, token }: { locale: Locale; token: str
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           data-testid="auth-reset-confirm-password"
+          className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-50"
         />
       </div>
       {status === "error" && (
-        <p role="alert" data-testid="auth-reset-confirm-error">
+        <p role="alert" data-testid="auth-reset-confirm-error" className="text-sm text-red-600 dark:text-red-400">
           {errorMessage}
         </p>
       )}
@@ -67,6 +78,7 @@ export function ResetConfirmForm({ locale, token }: { locale: Locale; token: str
         type="submit"
         disabled={status === "submitting"}
         data-testid="auth-reset-confirm-submit"
+        className="rounded bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
       >
         {status === "submitting" ? t.confirmSubmitting : t.confirmSubmit}
       </button>

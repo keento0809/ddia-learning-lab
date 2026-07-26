@@ -59,13 +59,19 @@ export function SignUpForm({ locale }: { locale: Locale }) {
   }
 
   if (status === "success") {
-    return <p data-testid="auth-signup-success">{t.success}</p>;
+    return (
+      <p data-testid="auth-signup-success" className="text-sm text-emerald-700 dark:text-emerald-400">
+        {t.success}
+      </p>
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit} data-testid="auth-signup-form">
-      <div>
-        <label htmlFor="signup-display-name">{t.displayNameLabel}</label>
+    <form onSubmit={handleSubmit} data-testid="auth-signup-form" className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <label htmlFor="signup-display-name" className="text-sm font-medium">
+          {t.displayNameLabel}
+        </label>
         <input
           id="signup-display-name"
           type="text"
@@ -74,10 +80,13 @@ export function SignUpForm({ locale }: { locale: Locale }) {
           value={displayName}
           onChange={(event) => setDisplayName(event.target.value)}
           data-testid="auth-signup-display-name"
+          className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-50"
         />
       </div>
-      <div>
-        <label htmlFor="signup-email">{t.emailLabel}</label>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="signup-email" className="text-sm font-medium">
+          {t.emailLabel}
+        </label>
         <input
           id="signup-email"
           type="email"
@@ -86,10 +95,13 @@ export function SignUpForm({ locale }: { locale: Locale }) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           data-testid="auth-signup-email"
+          className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-50"
         />
       </div>
-      <div>
-        <label htmlFor="signup-password">{t.passwordLabel}</label>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="signup-password" className="text-sm font-medium">
+          {t.passwordLabel}
+        </label>
         <input
           id="signup-password"
           type="password"
@@ -99,14 +111,20 @@ export function SignUpForm({ locale }: { locale: Locale }) {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           data-testid="auth-signup-password"
+          className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-50"
         />
       </div>
       {status === "error" && (
-        <p role="alert" data-testid="auth-signup-error">
+        <p role="alert" data-testid="auth-signup-error" className="text-sm text-red-600 dark:text-red-400">
           {errorMessage}
         </p>
       )}
-      <button type="submit" disabled={status === "submitting"} data-testid="auth-signup-submit">
+      <button
+        type="submit"
+        disabled={status === "submitting"}
+        data-testid="auth-signup-submit"
+        className="rounded bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+      >
         {status === "submitting" ? t.submitting : t.submit}
       </button>
     </form>
