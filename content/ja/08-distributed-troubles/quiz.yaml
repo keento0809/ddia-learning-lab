@@ -1,0 +1,120 @@
+questions:
+  - id: q1-ambiguous-timeout
+    type: single
+    prompt: "非同期ネットワークで、リクエスト送信後に一定時間応答がない場合について、正しい説明はどれか。"
+    options:
+      - id: a
+        label: "相手ノードは必ず停止している"
+      - id: b
+        label: "パケット喪失・処理遅延・応答喪失・ノード停止のいずれが起きているか、送信側だけでは区別できない"
+      - id: c
+        label: "必ずリクエスト自体が届いていないことを意味する"
+      - id: d
+        label: "TCPを使っていればこの現象は発生しない"
+    correctOptionIds: ["b"]
+    explanation: "応答が来ない原因は複数あり得るが、送信側が持つ情報だけではどれが起きているか確定できない。この非対称性が障害検知を難しくしている。"
+
+  - id: q2-short-timeout-tradeoff
+    type: single
+    prompt: "タイムアウト値を短く設定した場合に生じやすいトレードオフはどれか。"
+    options:
+      - id: a
+        label: "実際には動いているノードを停止と誤判定する誤検知(フォールスポジティブ)が増える"
+      - id: b
+        label: "誤検知が必ず減る"
+      - id: c
+        label: "ネットワーク帯域の消費量が増える"
+      - id: d
+        label: "クロックドリフトの影響を受けなくなる"
+    correctOptionIds: ["a"]
+    explanation: "タイムアウトを短くすると障害検知は速くなるが、実際には正常に動作しているノードを誤って停止と判定する確率が上がる。"
+
+  - id: q3-network-partition
+    type: multiple
+    prompt: "ネットワーク分断について正しい記述をすべて選べ。"
+    options:
+      - id: a
+        label: "分断中も各グループの内部では通信が正常に行えることがある"
+      - id: b
+        label: "分断が起きると関与する全ノードが即座にクラッシュする"
+      - id: c
+        label: "両側のグループが「自分は正常で相手側が落ちている」と誤認することがある"
+      - id: d
+        label: "分断は一時的な輻輳や設定ミスでも発生し得る"
+    correctOptionIds: ["a", "c", "d"]
+    explanation: "ネットワーク分断はプロセスのクラッシュではなく通信経路の途絶であり、各グループ内部は正常に動作し続けることが多い。輻輳や設定ミスなど比較的ありふれた原因でも発生する。"
+
+  - id: q4-monotonic-clock-usage
+    type: single
+    prompt: "処理にかかった経過時間を計測する際に使うべきクロックはどれか。"
+    options:
+      - id: a
+        label: "壁時計時刻(wall-clock time)"
+      - id: b
+        label: "単調クロック(monotonic clock)"
+      - id: c
+        label: "NTPサーバーから取得した時刻"
+      - id: d
+        label: "タイムゾーンつきのカレンダー時刻"
+    correctOptionIds: ["b"]
+    explanation: "壁時計時刻は同期補正で前後に飛ぶことがあるため経過時間の計測には不向きで、常に前進し続けることが保証された単調クロックを使うのが安全である。"
+
+  - id: q5-clock-drift-definition
+    type: single
+    prompt: "クロックドリフトの説明として最も適切なものはどれか。"
+    options:
+      - id: a
+        label: "ネットワーク遅延によってパケットの到着時間がばらつくこと"
+      - id: b
+        label: "水晶発振器の個体差や環境要因により、実時間に対して時計の進み方にずれが生じ、時間とともに誤差が蓄積すること"
+      - id: c
+        label: "NTPサーバーが常に正確な時刻を返さないバグ"
+      - id: d
+        label: "単調クロックが逆行する現象"
+    correctOptionIds: ["b"]
+    explanation: "クロックドリフトはハードウェアや環境要因による時計の進み方の誤差であり、補正されるまでの間、時間とともに蓄積する。"
+
+  - id: q6-gc-pause-risk
+    type: single
+    prompt: "GCポーズなどによるプロセスの一時停止が、分散ロックやリースの仕組みに与えるリスクとして適切なものはどれか。"
+    options:
+      - id: a
+        label: "一時停止から復帰したノードが、自分がリースを失ったことに気づかないまま処理を続け、新しいリース保持者と競合する可能性がある"
+      - id: b
+        label: "一時停止中もハートビートは正常に送信され続けるため、問題は起きない"
+      - id: c
+        label: "GCポーズは必ず数マイクロ秒以内に収まるため実務上は無視してよい"
+      - id: d
+        label: "リースの仕組みを使えば一時停止の影響を完全に排除できる"
+    correctOptionIds: ["a"]
+    explanation: "一時停止していたノードは自分がどれだけ停止していたかを知る術がなく、リースの有効期限切れに気づかないまま処理を続けてしまう可能性がある。"
+
+  - id: q7-byzantine-fault-definition
+    type: single
+    prompt: "ビザンチン障害の説明として正しいものはどれか。"
+    options:
+      - id: a
+        label: "ノードが完全に停止し応答しなくなる障害"
+      - id: b
+        label: "ノードが矛盾した情報を送ったりプロトコルに反する挙動をしたりする、予測不能な誤動作"
+      - id: c
+        label: "ネットワークが一時的に遅延する現象"
+      - id: d
+        label: "クロックドリフトが極端に大きくなった状態"
+    correctOptionIds: ["b"]
+    explanation: "ビザンチン障害は「止まる」障害ではなく、矛盾した情報の送信やプロトコル違反など任意かつ予測不能な誤動作を指す。"
+
+  - id: q8-lightweight-defenses
+    type: multiple
+    prompt: "ビザンチン耐性の合意アルゴリズムを採用しない一般的な単一組織のシステムでも、悪意や破損データへの軽量な備えとしてよく行われているものをすべて選べ。"
+    options:
+      - id: a
+        label: "メッセージやデータへのチェックサム/CRCの付与"
+      - id: b
+        label: "受信した入力値のバリデーション・範囲チェック"
+      - id: c
+        label: "全てのシステムで必ずビザンチン耐性の合意アルゴリズムを使用する"
+      - id: d
+        label: "ノード間通信の相互認証(mTLS等)"
+    correctOptionIds: ["a", "b", "d"]
+    explanation: "チェックサムによる破損検出、入力値のバリデーション、相互認証は、ビザンチン耐性の合意アルゴリズムを導入せずとも広く行われる軽量な防御策である。"

@@ -1,3 +1,59 @@
+- slug: network-partition
+  term:
+    ja: "ネットワーク分断"
+    en: "network partition"
+  definition:
+    ja: "ネットワークの一部の通信経路が切断や輻輳などで途絶し、ノード群が複数のグループに分かれて相互に通信できなくなる状態。"
+    en: "A state in which a subset of network links fails or becomes congested, splitting nodes into groups that cannot communicate with each other."
+
+- slug: asynchronous-network
+  term:
+    ja: "非同期ネットワーク"
+    en: "asynchronous network"
+  definition:
+    ja: "メッセージの到達順序や遅延時間に上限の保証がないネットワークモデル。パケットが遅延・再順序化・喪失しうることを前提に設計する必要がある。"
+    en: "A network model that offers no guaranteed bound on message ordering or delivery time; packets may be delayed, reordered, or lost, so systems must be designed to tolerate this."
+
+- slug: false-positive-detection
+  term:
+    ja: "誤検知(フォールスポジティブ)"
+    en: "false positive (failure detection)"
+  definition:
+    ja: "実際には正常に稼働しているノードを、タイムアウトなどの検出基準によって誤って「停止した」と判定してしまうこと。"
+    en: "Mistakenly classifying a node that is actually still running as failed, based on a detection heuristic such as a timeout."
+
+- slug: clock-drift
+  term:
+    ja: "クロックドリフト"
+    en: "clock drift"
+  definition:
+    ja: "各マシンの水晶発振器の個体差や温度変化などにより、実時間に対して時計の進み方に生じるずれ。時間の経過とともに誤差が蓄積する。"
+    en: "The gradual divergence of a machine's clock from true elapsed time, caused by variation in its quartz oscillator and environmental factors such as temperature; the error accumulates over time."
+
+- slug: monotonic-clock
+  term:
+    ja: "単調クロック"
+    en: "monotonic clock"
+  definition:
+    ja: "時刻同期の補正やユーザー操作の影響を受けず、常に前進し続けることが保証されたクロック。経過時間の計測に適する。"
+    en: "A clock guaranteed to always move forward and never be adjusted backward by synchronization or manual changes; well suited to measuring elapsed durations."
+
+- slug: gc-pause
+  term:
+    ja: "GCポーズ"
+    en: "GC pause"
+  definition:
+    ja: "ガベージコレクションの実行中にアプリケーションのスレッドが一時的に停止する現象。停止時間はヒープサイズや実装により数ミリ秒から数秒以上に及ぶことがある。"
+    en: "A pause during which application threads are suspended while the garbage collector runs; the duration can range from milliseconds to several seconds or more depending on heap size and implementation."
+
+- slug: byzantine-fault
+  term:
+    ja: "ビザンチン障害"
+    en: "Byzantine fault"
+  definition:
+    ja: "ノードが単に停止するのではなく、矛盾したメッセージを送ったりプロトコルに反する挙動をしたりするなど、任意かつ予測不能な形で誤動作する障害モデル。"
+    en: "A fault model in which a node misbehaves in arbitrary and unpredictable ways, such as sending inconsistent messages or violating the protocol, rather than simply stopping."
+
 - slug: leader-based-replication
   term:
     ja: リーダーベースレプリケーション

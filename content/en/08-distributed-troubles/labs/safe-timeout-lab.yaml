@@ -1,0 +1,45 @@
+slug: "08-distributed-troubles/safe-timeout-lab"
+language: js
+entry: computeSafeTimeoutMs
+template: |
+  // p99RttMs: the observed p99 round-trip time (milliseconds)
+  // maxClockDriftMs: the maximum clock drift between nodes (milliseconds)
+  // safetyMarginMs: an extra safety margin (milliseconds)
+  //
+  // Return a safe timeout value (milliseconds) that keeps false positives
+  // in check. Since comparing timestamps can be skewed by clock drift in
+  // either direction, budget twice the drift bound.
+  export function computeSafeTimeoutMs(p99RttMs, maxClockDriftMs, safetyMarginMs) {
+    // TODO: implement
+  }
+tests:
+  - id: t1-typical
+    name:
+      ja: "典型的な値でタイムアウトを算出できる"
+      en: "computes a timeout for typical values"
+    call: { fn: "computeSafeTimeoutMs", args: [100, 20, 50] }
+    assert: { type: "equals", value: 190 }
+  - id: t2-zero-drift-zero-margin
+    name:
+      ja: "ドリフトとマージンが0ならRTTのp99値のみになる"
+      en: "reduces to just p99 RTT when drift and margin are both 0"
+    call: { fn: "computeSafeTimeoutMs", args: [250, 0, 0] }
+    assert: { type: "equals", value: 250 }
+  - id: t3-zero-rtt
+    name:
+      ja: "RTTが0でもドリフトとマージンを反映する"
+      en: "still reflects drift and margin when RTT is 0"
+    call: { fn: "computeSafeTimeoutMs", args: [0, 10, 5] }
+    assert: { type: "equals", value: 25 }
+  - id: t4-larger-values
+    name:
+      ja: "値が大きい場合でも正しく合計できる"
+      en: "sums correctly for larger values"
+    call: { fn: "computeSafeTimeoutMs", args: [500, 15, 100] }
+    assert: { type: "equals", value: 630 }
+timeoutMs: 3000
+hints:
+  - ja: "クロックドリフトはノード間の比較に双方向で影響しうるため、上限値の2倍を見込むと安全です"
+    en: "Clock drift can affect a cross-node comparison in either direction, so budgeting twice the drift bound is the safe choice"
+  - ja: "最終的な計算式は p99RttMs + maxClockDriftMs * 2 + safetyMarginMs のような単純な合計になります"
+    en: "The final formula is a simple sum along the lines of p99RttMs + maxClockDriftMs * 2 + safetyMarginMs"
