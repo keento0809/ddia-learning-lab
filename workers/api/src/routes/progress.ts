@@ -2,12 +2,15 @@ import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import type { Context } from "hono";
 import type { PrismaClient } from "@/lib/generated/prisma-workerd/client";
-import { isKnownSlug, slugsForModule } from "@/lib/progress/slugManifest";
+import { isKnownSlug, itemKeysForModule, slugsForModule } from "@/lib/progress/slugManifest";
 import { advanceStreak, isValidTimeZone, todayInTimeZone } from "@/lib/progress/streak";
 import { toProgressRecord } from "@/lib/progress/serialize";
+import { getCurriculumModules } from "@/lib/curriculum";
+import { evaluateNewlyEarnedBadges } from "@/lib/badges/evaluate";
 import {
   GetProgressQuerySchema,
   PutProgressRequestSchema,
+  type Badge,
   type GetProgressResponse,
   type PutProgressResponse,
 } from "@/lib/contracts";
@@ -178,11 +181,41 @@ progressRoute.put("/", async (c: Context<{ Bindings: Bindings; Variables: Variab
     },
   });
 
+  // 02§2.1(badges.criteria jsonb)/§3.1(newBadges)。この更新後のユーザー全体の
+  // 完了状態(全モジュール横断)を評価し、未取得かつ条件充足済みのバッジを新規付与する。
+  const [doneProgressRows, badgeDefs, existingUserBadges] = await Promise.all([
+    prisma.progress.findMany({
+      where: { userId, status: "done" },
+      select: { itemType: true, itemSlug: true },
+    }),
+    prisma.badge.findMany({ select: { id: true, slug: true, criteria: true } }),
+    prisma.userBadge.findMany({ where: { userId }, select: { badge: { select: { slug: true } } } }),
+  ]);
+
+  const earnedSlugs = evaluateNewlyEarnedBadges(
+    badgeDefs,
+    new Set(existingUserBadges.map((row) => row.badge.slug)),
+    {
+      modules: getCurriculumModules("ja"),
+      itemKeysForModule,
+      doneItemKeys: new Set(doneProgressRows.map((row) => `${row.itemType}:${row.itemSlug}`)),
+    },
+  );
+
+  const badgeIdBySlug = new Map(badgeDefs.map((badge) => [badge.slug, badge.id]));
+  const newBadges: Badge[] = await Promise.all(
+    earnedSlugs.map(async (slug) => {
+      const created = await prisma.userBadge.create({
+        data: { userId, badgeId: badgeIdBySlug.get(slug)! },
+      });
+      return { slug, grantedAt: created.grantedAt.toISOString() };
+    }),
+  );
+
   const responseBody: PutProgressResponse = {
     progress: toProgressRecord(progressRow),
     streak: { currentDays: streakRow.currentDays, longestDays: streakRow.longestDays },
-    // バッジ付与条件の評価はT-303のスコープ(app/api/progress/route.tsの既存踏襲)。
-    newBadges: [],
+    newBadges,
   };
   return c.json(responseBody, 200);
 });

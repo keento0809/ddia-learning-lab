@@ -29,6 +29,18 @@ export function slugsForModule(moduleSlug: string): string[] {
 }
 
 /**
+ * T-303 バッジ付与条件評価(モジュール修了判定)向け。slugsForModuleは
+ * itemType情報を失うため(lesson/quiz/exerciseで同名slugが存在した場合に
+ * 判別できない)、`${itemType}:${slug}`形式のキーで返す。isKnownSlugの
+ * knownSlugsキー形式と揃えている。
+ */
+export function itemKeysForModule(moduleSlug: string): string[] {
+  return manifest.entries
+    .filter((entry) => entry.module === moduleSlug)
+    .map((entry) => `${entry.itemType}:${entry.slug}`);
+}
+
+/**
  * T-112 ダッシュボード(GET /api/dashboard の overall.lessonsTotal)向け。
  * itemType別の全有効slug件数(マニフェスト全体)を返す。
  */
