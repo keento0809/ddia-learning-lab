@@ -1,4 +1,5 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { problemResponse } from "@/lib/auth/http";
 
 /**
  * ADR-008(docs/design/09) §2・§4 T-503: 認証のDB操作(Credentials照合・
@@ -61,15 +62,32 @@ export async function oauthUpsertViaWorkerApi(input: {
  * Content-Type(application/problem+json含む)をworker-api側の実装
  * (workers/api/src/routes/internalAuth.ts)と1バイトも変えずに再現するため、
  * ここでbodyをパースし直さない)。
+ *
+ * qa-evaluator検出: service binding呼び出し(callWorkerApiAuth)が失敗すると
+ * 例外がRoute Handlerまで伝播し、Problem Details形式ではない生の500(空ボディ)
+ * が返っていた(02§3の全API共通契約に違反)。この3関数はRoute Handlerが結果を
+ * そのまま返す薄いフォワーダのため、ここで捕捉しProblem Detailsへ変換する。
  */
-export function signupViaWorkerApi(body: unknown): Promise<Response> {
-  return callWorkerApiAuth("/internal/auth/signup", body);
+export async function signupViaWorkerApi(body: unknown): Promise<Response> {
+  try {
+    return await callWorkerApiAuth("/internal/auth/signup", body);
+  } catch {
+    return problemResponse(503, "about:blank#auth-service-unavailable", "auth_service_unavailable");
+  }
 }
 
-export function resetRequestViaWorkerApi(body: unknown): Promise<Response> {
-  return callWorkerApiAuth("/internal/auth/reset-request", body);
+export async function resetRequestViaWorkerApi(body: unknown): Promise<Response> {
+  try {
+    return await callWorkerApiAuth("/internal/auth/reset-request", body);
+  } catch {
+    return problemResponse(503, "about:blank#auth-service-unavailable", "auth_service_unavailable");
+  }
 }
 
-export function resetConfirmViaWorkerApi(body: unknown): Promise<Response> {
-  return callWorkerApiAuth("/internal/auth/reset-confirm", body);
+export async function resetConfirmViaWorkerApi(body: unknown): Promise<Response> {
+  try {
+    return await callWorkerApiAuth("/internal/auth/reset-confirm", body);
+  } catch {
+    return problemResponse(503, "about:blank#auth-service-unavailable", "auth_service_unavailable");
+  }
 }

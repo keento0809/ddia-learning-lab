@@ -9,6 +9,7 @@ export function SignInForm({ locale }: { locale: Locale }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState(t.errorInvalidCredentials);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -21,10 +22,20 @@ export function SignInForm({ locale }: { locale: Locale }) {
     try {
       result = await signIn("credentials", { email, password, redirect: false });
     } catch {
+      setErrorMessage(t.errorGeneric);
       setStatus("error");
       return;
     }
     if (!result || result.error) {
+      // qa-evaluator検出: authorize()内でworker-api連携が失敗した場合もAuth.jsは
+      // result.errorを返すが、従来は値を区別せず常に「メールアドレスまたは
+      // パスワードが正しくありません」と表示していた(実際は資格情報の誤りではなく
+      // サーバ障害のケースを含む)。実際に資格情報が誤っている場合のみ
+      // next-authが返す"CredentialsSignin"であり、それ以外(Configuration等)は
+      // サーバ起因の失敗として区別する。
+      setErrorMessage(
+        !result || result.error === "CredentialsSignin" ? t.errorInvalidCredentials : t.errorGeneric,
+      );
       setStatus("error");
       return;
     }
@@ -67,7 +78,7 @@ export function SignInForm({ locale }: { locale: Locale }) {
       </div>
       {status === "error" && (
         <p role="alert" data-testid="auth-signin-error">
-          {t.errorInvalidCredentials}
+          {errorMessage}
         </p>
       )}
       <button type="submit" disabled={status === "submitting"} data-testid="auth-signin-submit">

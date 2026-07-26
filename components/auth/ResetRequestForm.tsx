@@ -14,6 +14,7 @@ export function ResetRequestForm({ locale }: { locale: Locale }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
   const [resetLink, setResetLink] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState(messages.rateLimited);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,6 +27,16 @@ export function ResetRequestForm({ locale }: { locale: Locale }) {
     });
 
     if (response.status === 429) {
+      setErrorMessage(messages.rateLimited);
+      setStatus("error");
+      return;
+    }
+    if (!response.ok) {
+      // qa-evaluator検出: worker-api連携が失敗した場合(500系)もresponse.json()の
+      // 例外を`.catch(() => ({}))`で握り潰し「発行完了」として処理していたため、
+      // 実際にはリセットリンクが発行されていないのに成功したかのような画面が
+      // 表示されていた。ok以外は明示的にエラー状態として扱う。
+      setErrorMessage(t.requestError);
       setStatus("error");
       return;
     }
@@ -58,7 +69,7 @@ export function ResetRequestForm({ locale }: { locale: Locale }) {
       </button>
       {status === "error" && (
         <p role="alert" data-testid="auth-reset-request-error">
-          {messages.rateLimited}
+          {errorMessage}
         </p>
       )}
       {status === "done" && (

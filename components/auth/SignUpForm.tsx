@@ -26,6 +26,12 @@ export function SignUpForm({ locale }: { locale: Locale }) {
     if (!response.ok) {
       if (response.status === 429) {
         setErrorMessage(messages.rateLimited);
+      } else if (response.status >= 500) {
+        // qa-evaluator検出: worker-api連携(service binding)が失敗した場合も
+        // ここに到達するが、従来は「入力内容を確認してください」という誤った
+        // (利用者の入力ミスを示唆する)文言を表示していた。サーバ起因の失敗は
+        // 既存のerrorGeneric(元は後段のsignIn()専用だった)を使い区別する。
+        setErrorMessage(t.errorGeneric);
       } else {
         const problem = (await response.json().catch(() => null)) as { title?: string } | null;
         setErrorMessage(problem?.title === "email_taken" ? t.errorEmailTaken : t.errorValidation);
