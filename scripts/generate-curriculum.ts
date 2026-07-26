@@ -7,6 +7,8 @@ import type { Quiz } from "../lib/quiz/schema";
 import type { Locale } from "../lib/contracts/common";
 import type { CurriculumModuleSummary } from "../lib/curriculum";
 import type { ModuleDetailSummary } from "../lib/moduleDetail";
+import { loadScenario } from "../lib/scenario/content";
+import type { ScenarioDefinition } from "../lib/scenario/schema";
 
 /**
  * S-02 カリキュラム一覧(T-101)/ S-03 モジュール詳細(T-102)向けの
@@ -99,6 +101,15 @@ export function generateGlossary(root: string): GlossaryEntry[] {
   return loadGlossary(root);
 }
 
+/**
+ * S-06相当のキャップストーン画面(T-302)向けのcontent/scenario-capstone.yaml静的データ生成。
+ * glossary.yamlと同じ理由(単一ファイル・ロケール分岐なし、文言はLocalizedTextで併記)で
+ * ロケール別に分岐しない。
+ */
+export function generateScenario(root: string): ScenarioDefinition {
+  return loadScenario(root);
+}
+
 function resolveArg(flag: string, fallback: string): string {
   const index = process.argv.indexOf(flag);
   const value = index !== -1 ? process.argv[index + 1] : undefined;
@@ -113,12 +124,17 @@ function main(): void {
   const moduleDetail = generateModuleDetail(root);
   const quiz = generateQuiz(root);
   const glossary = generateGlossary(root);
+  const scenario = generateScenario(root);
 
   fs.mkdirSync(outDir, { recursive: true });
 
   const glossaryOutPath = path.join(outDir, "glossary.json");
   fs.writeFileSync(glossaryOutPath, `${JSON.stringify(glossary, null, 2)}\n`, "utf-8");
   console.log(`用語集データを書き出しました: ${glossaryOutPath}(${glossary.length}件)`);
+
+  const scenarioOutPath = path.join(outDir, "scenario-capstone.json");
+  fs.writeFileSync(scenarioOutPath, `${JSON.stringify(scenario, null, 2)}\n`, "utf-8");
+  console.log(`キャップストーンシナリオデータを書き出しました: ${scenarioOutPath}`);
 
   for (const locale of LOCALES) {
     const outPath = path.join(outDir, `curriculum.${locale}.json`);
