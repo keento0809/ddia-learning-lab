@@ -8,6 +8,7 @@ export * from "./common";
 export * from "./api";
 export * from "./exercise";
 export * from "./module";
+export * from "./quiz";
 export * from "./runner";
 export * from "./simEngine";
 export * from "./manifest";

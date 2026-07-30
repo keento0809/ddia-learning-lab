@@ -3,7 +3,7 @@ import path from "node:path";
 import { loadAllModules } from "../lib/content";
 import { loadGlossary, type GlossaryEntry } from "../lib/glossaryContent";
 import { loadQuiz } from "../lib/quiz/content";
-import type { Quiz } from "../lib/quiz/schema";
+import type { Quiz } from "../lib/contracts/quiz";
 import type { Locale } from "../lib/contracts/common";
 import type { CurriculumModuleSummary } from "../lib/curriculum";
 import type { ModuleDetailSummary } from "../lib/moduleDetail";

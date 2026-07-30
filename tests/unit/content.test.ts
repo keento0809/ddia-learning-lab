@@ -52,4 +52,20 @@ describe("loadModule", () => {
       expect(contentErr.message).toContain("minutes");
     }
   });
+
+  it("quiz.yamlのスキーマが不正だとファイルパス付きで例外を投げる", () => {
+    expect(() =>
+      loadModule(path.join(FIXTURES_ROOT, "invalid-quiz"), "ja", "01-reliability"),
+    ).toThrowError(ContentValidationError);
+
+    try {
+      loadModule(path.join(FIXTURES_ROOT, "invalid-quiz"), "ja", "01-reliability");
+      expect.unreachable();
+    } catch (err) {
+      expect(err).toBeInstanceOf(ContentValidationError);
+      const contentErr = err as ContentValidationError;
+      expect(contentErr.filePath).toContain("quiz.yaml");
+      expect(contentErr.message).toContain("correctOptionIds");
+    }
+  });
 });

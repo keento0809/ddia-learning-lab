@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatMessage, getMessages, type Locale } from "@/lib/i18n/messages";
-import type { Quiz } from "@/lib/quiz/schema";
+import type { Quiz } from "@/lib/contracts/quiz";
 import { scoreQuiz } from "@/lib/quiz/scoring";
 import { submitQuizProgress } from "@/lib/quiz/submitProgress";
 import { QuizQuestionCard } from "./QuizQuestionCard";
