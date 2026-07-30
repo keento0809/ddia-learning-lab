@@ -1,0 +1,91 @@
+---
+title: Latency and Percentiles
+order: 3
+minutes: 14
+sourceHash: 3f23175cd3ac0a752a772e3e24df1bc909e933ea8b1bb12b4108d29811d4a2cc
+---
+
+# Latency and Percentiles
+
+The previous chapter noted that averages alone aren't enough when talking about
+performance. This chapter looks concretely at why averages are so easy to misread, and
+how to work with the distribution of response times, using
+<Term slug="percentile">percentiles</Term> as the tool.
+
+## Looking at the distribution of <Term slug="latency">latency</Term>
+
+If you measure how long an operation takes hundreds or thousands of times, the
+measurements don't collapse to a single value — they form a distribution. Most requests
+tend to complete at a similar speed, while a small fraction take an extremely long
+time, producing a long-tailed distribution.
+
+Taking the arithmetic mean of such a distribution gets pulled by that small fraction of
+extremely slow requests, and tends to produce a number that doesn't represent "how fast
+a typical user's experience is." If what you want to know is how slow things feel for
+most users, you need to look at the shape of the distribution itself.
+
+## The idea behind percentiles
+
+A percentile is a measure of where the boundary falls when you sort measured values
+from smallest to largest and ask "what fraction of values fall at or below this point."
+
+- **p50 (median)**: half of all requests complete at or below this value
+- **p95**: 95% of requests complete at or below this value (put differently, 1 in 20
+  requests is slower than this)
+- **p99**: 99% of requests complete at or below this value (1 in 100 requests is slower
+  than this)
+
+p50 represents "typical speed," while p95 and p99 represent "how long the slow tail
+stretches." When discussing a service's perceived quality, looking at p95 and p99
+alongside p50 keeps you from missing situations where "most users have a comfortable
+experience, but a subset of users is clearly being made to wait."
+
+<Callout type="tip">
+Defining an SLA (service level agreement) as "p99 under 500ms" rather than "average
+response time under 200ms" is a common practice precisely because it guarantees the
+slow-tail experience that an average would hide.
+</Callout>
+
+## <Term slug="tail-latency-amplification">Tail latency amplification</Term>
+
+Percentiles matter even more once you consider architectures where a single
+user-facing request triggers multiple backend calls in parallel (fan-out) behind the
+scenes.
+
+In that case, the response time the user experiences matches whichever of the parallel
+calls was slowest. Even if each individual call's p99 is fast enough on its own, once a
+single request depends on 10 parallel calls, the probability that at least one of those
+10 calls draws a slow outlier is much higher than it would be for a single call alone.
+The more calls you make in parallel, the more the distribution of latency users
+actually experience deteriorates relative to the percentile of any single dependency on
+its own. This phenomenon is tail latency amplification.
+
+<Callout type="warn">
+"Every dependency has a fast enough p99, so we're fine" is an easy trap to fall into
+in architectures with fan-out. It's not enough to check each dependency's percentile in
+isolation — you also need to check how the combined effect changes the latency
+experienced across the whole request.
+</Callout>
+
+## Exercise: percentile calculation lab
+
+In this chapter's exercise, you'll implement a `percentile` function that computes
+p50, p95, and p99 from an array of request latencies. You'll also implement a function
+that models a request depending on multiple parallel calls, and compare the percentile
+of individual calls against the percentile a user actually experiences across the
+parallel calls — putting a number on the tail latency amplification described above.
+
+<QuizInline
+  id="latency-tail-amplification"
+  prompt="In an architecture where a single request fires 10 backend calls in parallel, why does tail latency amplification occur?"
+  options={[
+    { id: "a", label: "Because increasing the number of parallel calls always lowers the overall average response time" },
+    { id: "b", label: "Because the overall response time matches whichever of the 10 calls is slowest, and the probability of drawing a slow outlier rises as the number of calls grows" },
+    { id: "c", label: "Because parallel calls change how the p99 itself is calculated" },
+    { id: "d", label: "Because parallelizing backend calls always makes p50 and p99 equal" }
+  ]}
+  correctOptionId="b"
+  explanation="The overall response time matches whichever of the parallel calls is slowest, so as the number of calls grows, the probability that at least one draws a slow outlier increases, worsening the distribution of latency users experience."
+/>
+
+<BookRef chapter={1} />
