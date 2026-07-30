@@ -42,11 +42,17 @@ export default defineConfig({
     // workers/** はMiniflare(workerd)上で実Workerを起動する検証が必要なため、
     // 通常の `npm run test`(jsdom環境)からは除外する。
     // 実行は `npm run test:workers` / vitest.workers.config.ts(T-501)。
+    // .claude/worktrees/** は背景セッションが並列作業に使う入れ子のgit worktree
+    // (各自が独自のtests/を持つ)。configDefaults.excludeは.gitを除外するが
+    // git worktreeはリポジトリ内の通常ディレクトリのため対象外にならず、
+    // ルートで`npm run test`を実行すると他worktreeの作業中テストまで収集・
+    // 実行してしまい、無関係な失敗でexit 1になっていた。
     exclude: [
       ...configDefaults.exclude,
       "tests/e2e/**",
       "tests/integration/**",
       "workers/**",
+      ".claude/worktrees/**",
     ],
   },
 });
