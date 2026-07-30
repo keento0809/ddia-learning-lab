@@ -22,7 +22,7 @@ For example, imagine two customers simultaneously placing an order that decremen
 same inventory count by one. Without protection, only one of the two decrements might
 end up reflected, and the other write disappears entirely. Most databases prevent
 dirty writes by default, but understanding why they are prevented is a useful
-foundation for understanding the isolation levels covered later.
+foundation for understanding the <Term slug="isolation-level">isolation levels</Term> covered later.
 
 ## Dirty reads
 

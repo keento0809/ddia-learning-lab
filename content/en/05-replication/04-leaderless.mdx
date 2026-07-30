@@ -53,7 +53,7 @@ without waiting for a read to trigger it.
 
 `W + R > N` only guarantees that an overlap exists — it does not by itself resolve every
 consistency issue covered in the earlier lesson on replication lag. For instance, during a
-network partition, a system might prioritize availability and allow writes or reads against a
+<Term slug="network-partition">network partition</Term>, a system might prioritize availability and allow writes or reads against a
 set of replicas that doesn't actually satisfy `W` or `R` — a "sloppy quorum," often paired with
 "hinted handoff" (a node outside the usual set temporarily holds a write and later hands it off
 to the correct replica). Using that trades away the overlap that `W + R > N` was guaranteeing,
