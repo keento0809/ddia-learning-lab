@@ -66,11 +66,25 @@ export function buildModuleToc(detail: ModuleDetailSummary): ModuleTocItem[] {
   return [...lessons, ...quiz, ...exercises];
 }
 
+/**
+ * 演習YAMLの`slug`は`{moduleSlug}/{name}`形式で記述される(.claude/rules/i18n.md、
+ * 実データ例: content/ja/05-replication/labs/quorum-lab.yaml の
+ * `slug: 05-replication/quorum-lab`)。01基本設計書のS-06ルートは
+ * `/learn/[module]/lab/[exercise]`と単一セグメントのため、既にmoduleSlugを
+ * 含むexercise.slugをそのまま結合するとセグメントが二重になる
+ * (T-108d: `/learn/05-replication/lab/05-replication/quorum-lab`という不正URL)。
+ * ここでmoduleSlugプレフィックスを取り除き、残りをルートセグメントとする。
+ */
+function exerciseRouteSegment(moduleSlug: string, exerciseSlug: string): string {
+  const prefix = `${moduleSlug}/`;
+  return exerciseSlug.startsWith(prefix) ? exerciseSlug.slice(prefix.length) : exerciseSlug;
+}
+
 /** TOC上のアイテムへのルート内相対パス(ロケールプレフィックスなし) */
 export function tocItemHref(moduleSlug: string, item: ModuleTocItem): string {
   if (item.kind === "lesson") return `/learn/${moduleSlug}/${item.id}`;
   if (item.kind === "quiz") return `/learn/${moduleSlug}/quiz`;
-  return `/learn/${moduleSlug}/lab/${item.slug}`;
+  return `/learn/${moduleSlug}/lab/${exerciseRouteSegment(moduleSlug, item.slug)}`;
 }
 
 /** React key等に使う、TOCアイテムを一意に識別する文字列 */
