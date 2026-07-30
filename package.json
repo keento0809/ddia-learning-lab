@@ -17,7 +17,7 @@
     "pretypecheck": "npm run generate:curriculum && npm run validate:content",
     "pretest": "npm run generate:curriculum && npm run validate:content",
     "dev": "next dev",
-    "build": "next build",
+    "build": "NODE_OPTIONS=\"--import ./scripts/capture-build-uncaught.mjs ${NODE_OPTIONS:-}\" next build",
     "start": "next start",
     "prelint": "npm run validate:content",
     "lint": "eslint .",
