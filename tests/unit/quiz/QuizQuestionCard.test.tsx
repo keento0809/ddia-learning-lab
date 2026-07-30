@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { QuizQuestionCard } from "@/components/quiz/QuizQuestionCard";
-import type { QuizQuestion } from "@/lib/quiz/schema";
+import type { QuizQuestion } from "@/lib/contracts/quiz";
 
 const SINGLE: QuizQuestion = {
   id: "q1",

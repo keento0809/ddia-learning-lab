@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isQuestionCorrect, scoreQuiz } from "@/lib/quiz/scoring";
-import type { Quiz } from "@/lib/quiz/schema";
+import type { Quiz } from "@/lib/contracts/quiz";
 
 /**
  * 03文書T-106 受入基準「採点ロジックの単体テスト(全問正解/部分点/0点)」。

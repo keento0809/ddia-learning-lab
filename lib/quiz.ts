@@ -1,5 +1,5 @@
 import type { Locale } from "./contracts/common";
-import type { Quiz } from "./quiz/schema";
+import type { Quiz } from "./contracts/quiz";
 import quizJa from "./generated/quiz.ja.json";
 import quizEn from "./generated/quiz.en.json";
 

@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { QuizRunner } from "@/components/quiz/QuizRunner";
-import type { Quiz } from "@/lib/quiz/schema";
+import type { Quiz } from "@/lib/contracts/quiz";
 
 const QUIZ: Quiz = {
   questions: [

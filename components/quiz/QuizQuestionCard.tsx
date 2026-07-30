@@ -1,6 +1,6 @@
 "use client";
 
-import type { QuizQuestion } from "@/lib/quiz/schema";
+import type { QuizQuestion } from "@/lib/contracts/quiz";
 import { isQuestionCorrect } from "@/lib/quiz/scoring";
 import type { Locale } from "@/lib/i18n/messages";
 import { getMessages } from "@/lib/i18n/messages";

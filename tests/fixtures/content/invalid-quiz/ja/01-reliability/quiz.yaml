@@ -1,0 +1,11 @@
+questions:
+  - id: q1
+    type: single
+    prompt: "prompt"
+    options:
+      - id: a
+        label: "A"
+      - id: b
+        label: "B"
+    correctOptionIds: ["z"]
+    explanation: "explanation"

@@ -4,6 +4,7 @@ import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { ExerciseDefinitionSchema, type ExerciseDefinition } from "./contracts/exercise";
 import { ModuleMetaSchema, type ModuleMeta } from "./contracts/module";
+import { QuizSchema } from "./contracts/quiz";
 import type { Locale } from "./contracts/common";
 
 /**
@@ -157,9 +158,14 @@ export function loadModule(
   const quizFilePath = path.join(moduleDir, "quiz.yaml");
   const hasQuiz = fs.existsSync(quizFilePath);
   if (hasQuiz) {
-    // quiz.yamlの構造スキーマは未確定(STATUS.md 2026-07-18決定事項ログ、T-010参照)。
-    // T-006では構文(YAMLとして解析可能か)のみ検証する。
-    readYaml(quizFilePath);
+    const quizRaw = readYaml(quizFilePath);
+    const quizResult = QuizSchema.safeParse(quizRaw);
+    if (!quizResult.success) {
+      throw new ContentValidationError(
+        `quiz.yamlのスキーマが不正です: ${formatZodIssues(quizResult.error)}`,
+        quizFilePath,
+      );
+    }
   }
 
   const labsDir = path.join(moduleDir, "labs");

@@ -1,4 +1,4 @@
-import type { Quiz, QuizQuestion } from "./schema";
+import type { Quiz, QuizQuestion } from "@/lib/contracts/quiz";
 
 /**
  * 採点ロジック(T-106受入基準「採点ロジックの単体テスト(全問正解/部分点/0点)」)。
