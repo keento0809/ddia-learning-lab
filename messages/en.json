@@ -297,6 +297,52 @@
       "google": "Google"
     }
   },
+  "settings": {
+    "pageTitle": "Settings",
+    "loading": "Loading…",
+    "loadError": "Failed to load settings. Please reload the page.",
+    "profile": {
+      "heading": "Profile",
+      "displayNameLabel": "Display name",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "errorValidation": "Please check your input",
+      "errorGeneric": "Failed to save. Please try again."
+    },
+    "preferences": {
+      "heading": "Defaults",
+      "scopeNote": "Saved values are recorded as your account defaults, but right now they don't carry over to your next sign-in or to a different device or browser. The language is stored in this browser's cookie and the theme in this browser's storage, so on this browser they take effect immediately after saving and persist across reloads and other tabs. (Choosing \"Match system setting\" won't change this screen's appearance right away.)",
+      "localeLabel": "Default display language",
+      "themeLabel": "Default theme",
+      "localeOptions": {
+        "ja": "日本語",
+        "en": "English"
+      },
+      "themeOptions": {
+        "system": "Match system setting",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "errorGeneric": "Failed to save. Please try again."
+    },
+    "danger": {
+      "heading": "Delete account",
+      "description": "Deleting your account permanently removes all of your data — learning history, submissions, notes, and badges. This cannot be undone.",
+      "openDialog": "Delete account",
+      "dialogTitle": "Are you sure you want to delete your account?",
+      "confirmLabel": "To confirm, type your account email address ({email})",
+      "confirmPlaceholder": "Enter your email address",
+      "cancel": "Cancel",
+      "confirmButton": "Permanently delete",
+      "deleting": "Deleting…",
+      "errorMismatch": "The email address you entered doesn't match",
+      "errorGeneric": "Failed to delete. Please try again."
+    }
+  },
   "dashboard": {
     "pageTitle": "Dashboard",
     "loading": "Loading…",
