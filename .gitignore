@@ -33,7 +33,11 @@ test-results/
 .dev.vars
 .open-next/
 .worker-dryrun*/
-.tmp-worker-api-dryrun-*/
+# 恒久対策: `.tmp-worker-api-dryrun-*`だけでなく、検証対象名を挟む
+# `.tmp-worker-api-internal-auth-dryrun-*`/`.tmp-worker-api-routes-dryrun-*`等の
+# バリエーションも一致させる(T-207統合検証で発覚、eslint.config.mjsのignoresも
+# 同時に同パターンへ更新済み)。
+.tmp-worker-api-*dryrun-*/
 
 # === Playwright MCP(実ブラウザ検証時の一時スナップショット/ログ) ===
 .playwright-mcp/

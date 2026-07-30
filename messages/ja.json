@@ -515,7 +515,8 @@
   "vizPreview": {
     "pageTitle": "Viz検証ページ",
     "heading": "Viz検証ページ",
-    "description": "各可視化コンポーネントを content/ のカリキュラム教材投入前に検証するための固定ページ。"
+    "description": "各可視化コンポーネントを content/ のカリキュラム教材投入前に検証するための固定ページ。",
+    "raftPageTitle": "RaftViz プレビュー"
   },
   "hashRingViz": {
     "heading": "ハッシュリング",
@@ -563,6 +564,47 @@
       "acceptable": "許容範囲",
       "risky": "リスクあり",
       "broken": "破綻"
+    }
+  },
+  "raftViz": {
+    "heading": "Raftクラスタ",
+    "svgAriaLabel": "5ノードRaftクラスタの可視化",
+    "roles": {
+      "follower": "フォロワー",
+      "candidate": "候補者",
+      "leader": "リーダー",
+      "stopped": "停止中"
+    },
+    "node": {
+      "label": "ノード{id}",
+      "toggleAriaLabel": "ノード{id}({role}、term {term})。クリックまたはEnterで停止/復帰します",
+      "termLabel": "term {term}",
+      "timeoutLabel": "残り{ticks}tick",
+      "commitIndexLabel": "コミット済み: {index}",
+      "logLengthLabel": "ログ: {length}件"
+    },
+    "partition": {
+      "dividerAriaLabel": "分断線。ドラッグまたは左右矢印キーで移動します(現在位置 {split})",
+      "noneLabel": "分断なし",
+      "activeLabel": "{a}ノードと{b}ノードに分断中"
+    },
+    "controls": {
+      "proposeLabel": "書き込みを提案",
+      "proposeAriaLabel": "現在のリーダーへ書き込みを提案する"
+    },
+    "quiz": {
+      "toggleLabel": "課題モード",
+      "question": "このクラスタが書き込みをコミットし続けるために生存させておく必要がある最小ノード数はいくつですか?ノードをクリックして生存数を調整し、回答を確定してください。",
+      "aliveCountLabel": "現在の生存ノード数: {count}",
+      "submitLabel": "回答を確定",
+      "correctFeedback": "正解です。5ノード中3ノード(過半数)が生存していればクォーラムを維持できます。",
+      "incorrectFeedback": "不正解です。生存ノード数を調整してもう一度確定してください。"
+    },
+    "narrator": {
+      "leader": "term {term}: ノード{id}がリーダーです(コミット済みインデックス {commitIndex})。",
+      "noLeader": "term {term}: リーダーはまだ選出されていません。",
+      "partitioned": " {a}ノードと{b}ノードに分断されています。",
+      "stopped": " {count}台のノードが停止中です。"
     }
   }
 }

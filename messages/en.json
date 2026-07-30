@@ -515,7 +515,8 @@
   "vizPreview": {
     "pageTitle": "Viz verification page",
     "heading": "Viz verification page",
-    "description": "A fixed page for verifying visualization components before curriculum content in content/ is authored."
+    "description": "A fixed page for verifying visualization components before curriculum content in content/ is authored.",
+    "raftPageTitle": "RaftViz preview"
   },
   "hashRingViz": {
     "heading": "Hash Ring",
@@ -563,6 +564,47 @@
       "acceptable": "Acceptable",
       "risky": "Risky",
       "broken": "Broken"
+    }
+  },
+  "raftViz": {
+    "heading": "Raft cluster",
+    "svgAriaLabel": "Visualization of a 5-node Raft cluster",
+    "roles": {
+      "follower": "Follower",
+      "candidate": "Candidate",
+      "leader": "Leader",
+      "stopped": "Stopped"
+    },
+    "node": {
+      "label": "Node {id}",
+      "toggleAriaLabel": "Node {id} ({role}, term {term}). Click or press Enter to stop/revive it",
+      "termLabel": "term {term}",
+      "timeoutLabel": "{ticks} ticks left",
+      "commitIndexLabel": "Committed: {index}",
+      "logLengthLabel": "Log: {length} entries"
+    },
+    "partition": {
+      "dividerAriaLabel": "Partition divider. Drag or use the left/right arrow keys to move it (current position {split})",
+      "noneLabel": "No partition",
+      "activeLabel": "Partitioned into {a} and {b} nodes"
+    },
+    "controls": {
+      "proposeLabel": "Propose write",
+      "proposeAriaLabel": "Propose a write to the current leader"
+    },
+    "quiz": {
+      "toggleLabel": "Challenge mode",
+      "question": "What is the minimum number of nodes that must stay alive for this cluster to keep committing writes? Click nodes to adjust how many are alive, then submit your answer.",
+      "aliveCountLabel": "Nodes currently alive: {count}",
+      "submitLabel": "Submit answer",
+      "correctFeedback": "Correct. As long as 3 of the 5 nodes (a majority) stay alive, the cluster keeps a quorum.",
+      "incorrectFeedback": "Not quite. Adjust how many nodes are alive and submit again."
+    },
+    "narrator": {
+      "leader": "Term {term}: node {id} is the leader (committed index {commitIndex}).",
+      "noLeader": "Term {term}: no leader has been elected yet.",
+      "partitioned": " Partitioned into {a} and {b} nodes.",
+      "stopped": " {count} node(s) are stopped."
     }
   }
 }
