@@ -261,3 +261,87 @@
   definition:
     ja: ノードの追加・削除やデータ量の偏りに応じて、パーティションの担当ノードを移動し直す運用作業。自動化するとオペレーターの手間は減るが、意図しないタイミングで大量のデータ移動が走り性能に影響するリスクがある。
     en: The operational process of moving partition ownership between nodes in response to nodes being added or removed, or to uneven data growth. Automating it reduces operator effort, but risks triggering large, unplanned data transfers that hurt performance at an inconvenient time.
+- slug: append-only-log
+  term:
+    ja: 追記型ログ
+    en: append-only log
+  definition:
+    ja: 既存の内容を書き換えず、新しいレコードを常にファイル末尾へ追加していく形式のデータ構造。ディスクへの書き込みが常に連続領域へのシーケンシャル書き込みになるため、ランダムな位置を書き換える方式より高速になりやすい。
+    en: A data structure that never rewrites existing content and instead always appends new records to the end of a file. Because every write lands in a contiguous region on disk, it tends to be faster than schemes that overwrite data at random positions.
+- slug: hash-index
+  term:
+    ja: ハッシュインデックス
+    en: hash index
+  definition:
+    ja: キーをハッシュテーブル(メモリ上の連想配列)で管理し、値の格納位置(ログ上のバイトオフセットなど)を直接指し示すインデックス方式。ルックアップはO(1)に近い速度になるが、インデックス全体がメモリに収まる必要があり、キーの大小関係を使った範囲検索は苦手とする。
+    en: An indexing scheme that keeps keys in an in-memory hash table pointing directly at where the value is stored, such as a byte offset in a log. Lookups run in close to O(1) time, but the whole index must fit in memory, and it cannot efficiently answer range queries that rely on key ordering.
+- slug: write-ahead-log
+  term:
+    ja: Write-Ahead Log(WAL)
+    en: write-ahead log (WAL)
+  definition:
+    ja: メモリ上のデータ構造に変更を適用する前に、その変更内容を追記型ログとしてディスクへ先に書き出しておく仕組み。クラッシュ後の再起動時にログを先頭から再生することで、メモリ上でまだ永続化されていなかった変更を復元できる。
+    en: A mechanism that writes a description of a change to an append-only log on disk before applying it to an in-memory structure. After a crash, replaying the log from the start reconstructs whatever changes had not yet been persisted from memory.
+- slug: memtable
+  term:
+    ja: メモリテーブル(memtable)
+    en: memtable
+  definition:
+    ja: LSM-Treeにおいて、直近の書き込みをキー順に保持するメモリ上のソート済みデータ構造。一定サイズに達するとディスク上のSSTableとして書き出され(フラッシュ)、メモリテーブル自体は空にリセットされる。
+    en: In an LSM-tree, the in-memory sorted structure that holds the most recent writes in key order. Once it reaches a size threshold it is written out to disk as an SSTable (a flush), and the memtable itself is reset to empty.
+- slug: sstable
+  term:
+    ja: SSTable
+    en: SSTable
+  definition:
+    ja: Sorted String Tableの略で、キー順にソートされた状態でディスクに書き出されるイミュータブルなセグメントファイル。ソート済みであることを利用して、複数ファイルをマージソートの要領で効率よく統合したり、疎なインデックスだけをメモリに置いて目的のキー付近まで素早く辿り着いたりできる。
+    en: Short for Sorted String Table — an immutable segment file written to disk with entries sorted by key. Because the entries are sorted, multiple SSTables can be merged efficiently like a merge sort, and only a sparse in-memory index is needed to jump close to a target key before scanning.
+- slug: lsm-tree
+  term:
+    ja: LSM-Tree
+    en: LSM-tree
+  definition:
+    ja: Log-Structured Merge-Treeの略で、書き込みをまずメモリテーブルとWALに記録し、メモリテーブルが一定量たまるとソート済みのSSTableとしてディスクへフラッシュし、バックグラウンドで複数のSSTableを段階的にマージ・圧縮していくストレージエンジンの設計。書き込みをシーケンシャルなI/Oにまとめやすく、高い書き込みスループットが得意とされる。
+    en: Short for Log-Structured Merge-tree — a storage engine design that records writes to an in-memory memtable and a WAL, flushes the memtable to disk as a sorted SSTable once it fills up, and periodically merges and compacts SSTables in the background. Because it batches writes into sequential I/O, it is well suited to high write throughput.
+- slug: compaction
+  term:
+    ja: コンパクション
+    en: compaction
+  definition:
+    ja: 複数のSSTableをキー順にマージしながら1つ(または少数)の新しいSSTableへ統合するバックグラウンド処理。同一キーが複数のSSTableに存在する場合は最新の値だけを残し、トゥームストーンが最深レベルまで到達した場合はそのエントリ自体を取り除くことで、ディスク使用量とルックアップ時に読むファイル数を減らす。
+    en: A background process that merges several SSTables in key order into one (or a few) new SSTables. When the same key appears in multiple SSTables, only the newest value is kept, and tombstones that have reached the deepest level are dropped entirely — reducing both disk usage and the number of files a lookup has to check.
+- slug: tombstone
+  term:
+    ja: トゥームストーン
+    en: tombstone
+  definition:
+    ja: 追記型のストレージでキーの削除を表現するための特別な値(削除マーカー)。実際のレコードをその場から消すことができないため、「このキーは削除された」という事実そのものを新しいエントリとして追記し、後続の読み取りやコンパクションがそれを見て元の値を無視する。
+    en: A special marker value used to represent a key's deletion in append-only storage. Since an existing record cannot be removed in place, the fact that a key was deleted is itself appended as a new entry, and later reads or compactions see it and ignore the older value underneath.
+- slug: bloom-filter
+  term:
+    ja: ブルームフィルタ
+    en: bloom filter
+  definition:
+    ja: 「あるキーが集合に含まれていない」ことを高速かつ省メモリに判定できる確率的データ構造。存在しないという判定は確実に正しいが、「含まれている」という判定にはまれに偽陽性がありうる。LSM-Treeでは各SSTableに対応するブルームフィルタを持たせ、存在しないキーのために無駄なディスク読み取りをするのを避けるために使う。
+    en: A probabilistic data structure that can quickly and compactly tell whether a key is definitely absent from a set. A "definitely absent" answer is always correct, but a "possibly present" answer can occasionally be a false positive. LSM-trees keep one bloom filter per SSTable to skip unnecessary disk reads for keys that are not actually present.
+- slug: b-tree-index
+  term:
+    ja: B-Treeインデックス
+    en: B-tree index
+  definition:
+    ja: 固定サイズのページを単位として、根から葉へ向かうツリー構造でキーを管理するインデックス方式。各ページが多数の子ページを指せる(分岐係数が大きい)ため、データ量が増えてもツリーの深さは緩やかにしか増えない。更新時は該当ページの内容をその場で書き換える。
+    en: An indexing scheme that organizes keys in a tree of fixed-size pages from root to leaves. Because each page can point to many children (a high branching factor), the tree's depth grows only slowly as data volume increases. Updates rewrite the relevant page's contents in place.
+- slug: column-oriented-storage
+  term:
+    ja: 列指向ストレージ
+    en: column-oriented storage
+  definition:
+    ja: レコードを行単位ではなく列単位でまとめてディスクに配置するストレージ方式。特定の列だけを読めばよい集計クエリでは読み込むデータ量を大幅に減らせ、同じ列内では値の種類が偏りやすいため圧縮効率も高くなりやすい。一方、1レコード全体の更新は複数の列ファイルにまたがる書き込みになりやすい。
+    en: A storage layout that groups data by column across all records, rather than by row. Aggregate queries that only need a few columns can skip reading the rest, and values within a single column tend to compress well because they repeat more. Updating an entire record, however, tends to touch many separate column files.
+- slug: row-oriented-storage
+  term:
+    ja: 行指向ストレージ
+    en: row-oriented storage
+  definition:
+    ja: 1レコードを構成する全カラムの値を連続した領域にまとめて配置するストレージ方式。1件のレコードを丸ごと読み書きする用途(OLTP的な点検索・更新)には都合がよいが、特定の列だけを大量の行にわたって集計するような用途では、不要な列まで一緒に読み込んでしまいやすい。
+    en: A storage layout that keeps all the column values belonging to a single record together in a contiguous region. This suits workloads that read or write one whole record at a time (point lookups and updates typical of OLTP), but workloads that aggregate a few columns across many rows end up reading unrelated columns along the way.
