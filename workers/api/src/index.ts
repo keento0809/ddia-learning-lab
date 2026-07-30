@@ -10,6 +10,7 @@ import { submissionsRoute } from "./routes/submissions";
 import { dashboardRoute } from "./routes/dashboard";
 import { guestProgressImportRoute } from "./routes/guestProgressImport";
 import { notesRoute } from "./routes/notes";
+import { accountRoute } from "./routes/account";
 import { internalAuthRoute } from "./routes/internalAuth";
 import { captureWorkerError } from "@/lib/sentry/toucan";
 
@@ -49,6 +50,14 @@ app.use("*", async (c, next) => {
  * ADR-008 §2「worker-apiは同一AUTH_SECRETでCookie内JWTを検証するミドルウェアを持つ」。
  * 401ボディは移設元のNext.js側Route Handler(lib/auth/http.tsのproblemResponse呼び出し
  * 「about:blank#unauthorized」/「unauthorized」)と同一にし、既存の認可挙動を維持する。
+ *
+ * T-308(アカウント削除): セッションはJWT(strategy:"jwt")のみで状態を持たず
+ * (config.tsのコメント「T-004決定事項ログ: 02§2.1は全8テーブルで確定済み」により
+ * 別途セッションテーブルは追加しない)、Auth.jsは失効した発行済みJWT自体を
+ * 無効化する手段を持たない。そのため削除済みユーザーの「セッション無効化」は
+ * ここでDB照合して行う: 対象ユーザーが存在しない、またはdeleted_at設定済みなら
+ * 発行済みJWTの有効期限に関わらず以後の全リクエストを401にする(=削除操作をした
+ * ブラウザ以外に残っている可能性のあるセッションも含め即座に無効化される)。
  */
 async function requireSession(
   c: Context<{ Bindings: Bindings; Variables: Variables }>,
@@ -58,14 +67,27 @@ async function requireSession(
     c.req.header("cookie") ?? null,
     c.env.AUTH_SECRET,
   );
-  if (!session) {
+  const unauthorized = () => {
     const problem: ProblemDetails = {
       type: "about:blank#unauthorized",
       title: "unauthorized",
       status: 401,
     };
     return c.json(problem, 401, { "Content-Type": "application/problem+json" });
+  };
+  if (!session) {
+    return unauthorized();
   }
+
+  const prisma = c.get("prisma");
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { deletedAt: true },
+  });
+  if (!user || user.deletedAt) {
+    return unauthorized();
+  }
+
   c.set("userId", session.userId);
   await next();
 }
@@ -97,6 +119,9 @@ app.route("/api/guest-progress/import", guestProgressImportRoute);
 // 命名規則)のため、他ハンドラと異なりワイルドカードでマウントする。
 app.use("/api/notes/*", requireSession);
 app.route("/api/notes", notesRoute);
+
+app.use("/api/account", requireSession);
+app.route("/api/account", accountRoute);
 
 app.notFound((c) => {
   const problem: ProblemDetails = {

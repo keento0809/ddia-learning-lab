@@ -24,7 +24,6 @@ export function AccountMenu({ locale }: { locale: Locale }) {
           <DropdownMenu.Item asChild>
             <Link
               href="/settings"
-              prefetch={false}
               className="block cursor-pointer rounded px-2 py-1.5 outline-none data-[highlighted]:bg-neutral-100 dark:data-[highlighted]:bg-neutral-800"
             >
               {t.settings}

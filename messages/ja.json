@@ -297,6 +297,52 @@
       "google": "Google"
     }
   },
+  "settings": {
+    "pageTitle": "設定",
+    "loading": "読み込み中…",
+    "loadError": "設定の読み込みに失敗しました。再読み込みしてください。",
+    "profile": {
+      "heading": "プロフィール",
+      "displayNameLabel": "表示名",
+      "save": "保存",
+      "saving": "保存中…",
+      "saved": "保存しました",
+      "errorValidation": "入力内容を確認してください",
+      "errorGeneric": "保存に失敗しました。もう一度お試しください。"
+    },
+    "preferences": {
+      "heading": "既定値",
+      "scopeNote": "保存した値はアカウントの既定値として記録されますが、現時点では次回サインイン時の初期値や別の端末・ブラウザには反映されません。言語はこのブラウザのCookieに、テーマはこのブラウザの保存領域に記録されるため、このブラウザでは保存後すぐに切り替わり、リロードや別タブでも維持されます(「システム設定に合わせる」を選んだ場合、この画面の見た目はすぐには変わりません)。",
+      "localeLabel": "既定の表示言語",
+      "themeLabel": "既定のテーマ",
+      "localeOptions": {
+        "ja": "日本語",
+        "en": "English"
+      },
+      "themeOptions": {
+        "system": "システム設定に合わせる",
+        "light": "ライト",
+        "dark": "ダーク"
+      },
+      "save": "保存",
+      "saving": "保存中…",
+      "saved": "保存しました",
+      "errorGeneric": "保存に失敗しました。もう一度お試しください。"
+    },
+    "danger": {
+      "heading": "アカウントの削除",
+      "description": "アカウントを削除すると、学習履歴・提出物・ノート・バッジなど全てのデータが完全に削除され、元に戻せません。",
+      "openDialog": "アカウントを削除する",
+      "dialogTitle": "本当にアカウントを削除しますか?",
+      "confirmLabel": "確認のため、登録済みのメールアドレス({email})を入力してください",
+      "confirmPlaceholder": "メールアドレスを入力",
+      "cancel": "キャンセル",
+      "confirmButton": "完全に削除する",
+      "deleting": "削除中…",
+      "errorMismatch": "入力されたメールアドレスが一致しません",
+      "errorGeneric": "削除に失敗しました。もう一度お試しください。"
+    }
+  },
   "dashboard": {
     "pageTitle": "ダッシュボード",
     "loading": "読み込み中…",
