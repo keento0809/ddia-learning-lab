@@ -1,0 +1,135 @@
+slug: "02-data-models/denormalize-users-lab"
+language: js
+entry: denormalizeUsers
+template: |
+  // 正規化された2つの配列(users, orders)を受け取り、非正規化された
+  // ドキュメント配列(各userオブジェクトに、そのuserに属するordersを
+  // 埋め込んだ配列)を返す。
+  // - 戻り値の各要素は { id, name, orders: [...] } の形にする
+  // - ordersは各要素のuserIdが、対象userのidと一致するものを紐付ける
+  // - userIdがどのusersのidとも一致しないorderは無視する(結果に含めない)
+  // - 各userのordersは、入力のorders配列内での出現順を保ったまま埋め込む
+  // - 該当する注文が無いuserのordersは空配列にする
+  // - 戻り値の要素の順序は、入力のusers配列の順序を保つ
+  export function denormalizeUsers(users, orders) {
+    // TODO: 実装
+  }
+tests:
+  - id: t1
+    name:
+      ja: "複数userへ注文が正しく振り分けられる"
+      en: "Orders are grouped under the correct user"
+    call:
+      fn: "denormalizeUsers"
+      args:
+        - - { id: 1, name: "Alice" }
+          - { id: 2, name: "Bob" }
+        - - { id: 101, userId: 1, item: "Book" }
+          - { id: 102, userId: 2, item: "Pen" }
+          - { id: 103, userId: 1, item: "Pencil" }
+    assert:
+      type: deepEquals
+      value:
+        - id: 1
+          name: "Alice"
+          orders:
+            - { id: 101, userId: 1, item: "Book" }
+            - { id: 103, userId: 1, item: "Pencil" }
+        - id: 2
+          name: "Bob"
+          orders:
+            - { id: 102, userId: 2, item: "Pen" }
+  - id: t2
+    name:
+      ja: "注文が無いuserのordersは空配列になる"
+      en: "A user with no orders gets an empty orders array"
+    call:
+      fn: "denormalizeUsers"
+      args:
+        - - { id: 1, name: "Alice" }
+          - { id: 2, name: "Bob" }
+        - - { id: 101, userId: 1, item: "Book" }
+    assert:
+      type: deepEquals
+      value:
+        - id: 1
+          name: "Alice"
+          orders:
+            - { id: 101, userId: 1, item: "Book" }
+        - id: 2
+          name: "Bob"
+          orders: []
+  - id: t3
+    name:
+      ja: "どのuserにも一致しない注文は無視される"
+      en: "Orders that match no user are ignored"
+    call:
+      fn: "denormalizeUsers"
+      args:
+        - - { id: 1, name: "Alice" }
+        - - { id: 101, userId: 1, item: "Book" }
+          - { id: 102, userId: 99, item: "Ghost" }
+    assert:
+      type: deepEquals
+      value:
+        - id: 1
+          name: "Alice"
+          orders:
+            - { id: 101, userId: 1, item: "Book" }
+  - id: t4
+    name:
+      ja: "複数userの注文が交互に現れても正しくグルーピングされ、出現順が保たれる"
+      en: "Interleaved orders across users are grouped correctly and keep their relative order"
+    call:
+      fn: "denormalizeUsers"
+      args:
+        - - { id: 1, name: "Alice" }
+          - { id: 2, name: "Bob" }
+        - - { id: 301, userId: 2, item: "X" }
+          - { id: 302, userId: 1, item: "Y" }
+          - { id: 303, userId: 2, item: "Z" }
+          - { id: 304, userId: 1, item: "W" }
+    assert:
+      type: deepEquals
+      value:
+        - id: 1
+          name: "Alice"
+          orders:
+            - { id: 302, userId: 1, item: "Y" }
+            - { id: 304, userId: 1, item: "W" }
+        - id: 2
+          name: "Bob"
+          orders:
+            - { id: 301, userId: 2, item: "X" }
+            - { id: 303, userId: 2, item: "Z" }
+  - id: t5
+    name:
+      ja: "usersが空配列なら結果も空配列"
+      en: "An empty users array yields an empty result"
+    call:
+      fn: "denormalizeUsers"
+      args:
+        - []
+        - - { id: 101, userId: 1, item: "Book" }
+    assert: { type: deepEquals, value: [] }
+  - id: t6
+    name:
+      ja: "ordersが空配列ならすべてのuserのordersが空配列になる"
+      en: "An empty orders array leaves every user's orders empty"
+    call:
+      fn: "denormalizeUsers"
+      args:
+        - - { id: 1, name: "Alice" }
+        - []
+    assert:
+      type: deepEquals
+      value:
+        - id: 1
+          name: "Alice"
+          orders: []
+timeoutMs: 3000
+hints:
+  - ja: "まずuserIdごとにordersをグルーピングするMapを作ると見通しがよくなります"
+    en: "Start by building a Map that groups orders by userId"
+  - ja: "usersをmapし、各userについて対応するordersのグループ(無ければ空配列)を埋め込みます"
+    en: "Map over users and embed the matching group of orders (or an empty array) for each one"
