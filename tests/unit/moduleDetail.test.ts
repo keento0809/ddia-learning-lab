@@ -9,6 +9,7 @@ import {
   tocItemKey,
   tocItemSlug,
   type ModuleDetailSummary,
+  type ModuleTocItem,
 } from "@/lib/moduleDetail";
 
 /**
@@ -90,6 +91,51 @@ describe("tocItemHref / tocItemKey", () => {
     const keys = toc.map(tocItemKey);
     expect(new Set(keys).size).toBe(keys.length);
   });
+
+  /**
+   * T-108d: 演習YAMLの`slug`は`{moduleSlug}/{name}`形式(実データ、
+   * .claude/rules/i18n.md)。既存フィクスチャ(`percentile-lab`、prefixなし)
+   * だけでは、moduleSlugとexercise.slugの二重結合(01基本設計書 S-06の
+   * `/learn/[module]/lab/[exercise]`という単一セグメント仕様違反)を検出
+   * できなかったため、content/{ja,en}に実在する全モジュール・演習の
+   * slugパターンを網羅する。
+   */
+  it.each([
+    ["05-replication", "05-replication/quorum-lab", "/learn/05-replication/lab/quorum-lab"],
+    [
+      "05-replication",
+      "05-replication/read-your-writes-lab",
+      "/learn/05-replication/lab/read-your-writes-lab",
+    ],
+    [
+      "06-partitioning",
+      "06-partitioning/consistent-hash-ring",
+      "/learn/06-partitioning/lab/consistent-hash-ring",
+    ],
+    [
+      "07-transactions",
+      "07-transactions/isolation-level-lab",
+      "/learn/07-transactions/lab/isolation-level-lab",
+    ],
+    [
+      "08-distributed-troubles",
+      "08-distributed-troubles/retry-backoff-lab",
+      "/learn/08-distributed-troubles/lab/retry-backoff-lab",
+    ],
+    [
+      "08-distributed-troubles",
+      "08-distributed-troubles/safe-timeout-lab",
+      "/learn/08-distributed-troubles/lab/safe-timeout-lab",
+    ],
+    // prefixなしslug(フィクスチャ互換): moduleSlugを含まない場合はそのまま使う
+    ["01-reliability", "percentile-lab", "/learn/01-reliability/lab/percentile-lab"],
+  ] as const)(
+    "does not duplicate the module segment for exercise slug %s in module %s",
+    (moduleSlug, exerciseSlug, expectedHref) => {
+      const item: ModuleTocItem = { kind: "exercise", slug: exerciseSlug, index: 1 };
+      expect(tocItemHref(moduleSlug, item)).toBe(expectedHref);
+    },
+  );
 });
 
 describe("nextItemHref", () => {

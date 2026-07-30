@@ -72,8 +72,10 @@ describe("resolveResumeHref", () => {
   });
 
   it("builds an exercise href", () => {
+    // T-108d: exercise itemSlugは既に`{moduleSlug}/{name}`形式のため、
+    // tocItemHrefがmoduleSlugセグメントを二重結合しないことを検証する。
     expect(resolveResumeHref("exercise", "01-reliability/percentile-lab")).toBe(
-      "/learn/01-reliability/lab/01-reliability/percentile-lab",
+      "/learn/01-reliability/lab/percentile-lab",
     );
   });
 });
