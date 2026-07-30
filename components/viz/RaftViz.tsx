@@ -29,6 +29,7 @@ export function RaftViz() {
 
   return (
     <div data-testid="raft-viz">
+      <h2 className="text-lg font-semibold">{t.heading}</h2>
       <SvgStage viewBox={RAFT_VIEW_BOX} ariaLabel={t.svgAriaLabel}>
         <RaftSvg
           state={state}
@@ -49,13 +50,17 @@ export function RaftViz() {
           : t.partition.noneLabel}
       </div>
 
-      <div role="group" aria-label={t.controls.proposeLabel}>
+      <div role="group" aria-label={t.controls.proposeLabel} className="mt-2">
         <button
           type="button"
           data-testid="raft-propose"
-          disabled={!leader}
+          aria-disabled={!leader}
+          className={`rounded bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white dark:bg-neutral-100 dark:text-neutral-900 ${!leader ? "pointer-events-none opacity-50" : ""}`}
           aria-label={t.controls.proposeAriaLabel}
-          onClick={() => engine.dispatch({ type: "propose" })}
+          onClick={() => {
+            if (!leader) return;
+            engine.dispatch({ type: "propose" });
+          }}
         >
           {t.controls.proposeLabel}
         </button>
@@ -63,11 +68,12 @@ export function RaftViz() {
 
       <Timeline locale={locale} onStep={() => engine.step()} onReset={() => engine.reset()} />
 
-      <div data-testid="raft-quiz">
+      <div data-testid="raft-quiz" className="mt-2">
         <button
           type="button"
           data-testid="raft-quiz-toggle"
           aria-pressed={state.quizMode}
+          className="rounded border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
           onClick={() => engine.dispatch({ type: "toggleQuizMode" })}
         >
           {t.quiz.toggleLabel}
@@ -80,6 +86,7 @@ export function RaftViz() {
             <button
               type="button"
               data-testid="raft-quiz-submit"
+              className="rounded border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
               onClick={() => engine.dispatch({ type: "submitQuizAnswer" })}
             >
               {t.quiz.submitLabel}

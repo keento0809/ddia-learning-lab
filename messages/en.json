@@ -521,6 +521,7 @@
     }
   },
   "raftViz": {
+    "heading": "Raft cluster",
     "svgAriaLabel": "Visualization of a 5-node Raft cluster",
     "roles": {
       "follower": "Follower",

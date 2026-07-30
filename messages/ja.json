@@ -521,6 +521,7 @@
     }
   },
   "raftViz": {
+    "heading": "Raftクラスタ",
     "svgAriaLabel": "5ノードRaftクラスタの可視化",
     "roles": {
       "follower": "フォロワー",

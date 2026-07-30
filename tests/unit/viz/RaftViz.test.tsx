@@ -126,16 +126,23 @@ describe("RaftViz", () => {
       );
     });
 
-    const before = node(0).getAttribute("aria-label");
+    // 初期状態(全ノードfollower)ではタイマーの残りtickはaria-labelに含まれない
+    // (term/role/idのみ)ため、SVGのタイマーリング(<circle stroke-dashoffset>)を
+    // 直接読み、1ステップで実際に残りtickが減っていることを検証する
+    // (デフォルトシードの場合、最小タイムアウトは3tickのため1ステップでは
+    // どのノードも選挙タイムアウトに到達しないことをengine.tsのadvance()から
+    // 確認済み)。
+    const ring = () => node(0).querySelector("circle[stroke-dasharray]");
+    const offsetBefore = ring()!.getAttribute("stroke-dashoffset");
+
     act(() => {
       byTestId<HTMLButtonElement>("viz-timeline-step").click();
     });
-    // 何らかの状態(termまたはtimeout)が進行しaria-labelが更新されうる。
-    // 最低限、クラッシュせず引き続き5ノードが描画されることを確認する。
+
+    expect(ring()!.getAttribute("stroke-dashoffset")).not.toBe(offsetBefore);
     for (let id = 0; id < CLUSTER_SIZE; id++) {
       expect(node(id)).not.toBeNull();
     }
-    expect(typeof before).toBe("string");
   });
 
   it("supports quiz mode: toggling nodes and submitting gives correct/incorrect feedback", async () => {
@@ -199,7 +206,7 @@ describe("RaftViz", () => {
     enContainer.remove();
   });
 
-  it("disables the propose button when there is no leader yet", async () => {
+  it("marks the propose button inert (aria-disabled, not native disabled) when there is no leader yet, and clicking it is a no-op", async () => {
     await act(async () => {
       root.render(
         <LessonLocaleProvider locale="ja">
@@ -207,6 +214,18 @@ describe("RaftViz", () => {
         </LessonLocaleProvider>,
       );
     });
-    expect(byTestId<HTMLButtonElement>("raft-propose").disabled).toBe(true);
+    const proposeButton = byTestId<HTMLButtonElement>("raft-propose");
+    // ネイティブdisabledはフォーカス中の要素に付与されるとbodyへフォーカスが
+    // 強制的に落ちキーボード操作の連続動線を壊す(.claude/skills/viz-component/
+    // references/pitfalls.md §1)ため、aria-disabled + ハンドラ側ガード節を使う。
+    expect(proposeButton.hasAttribute("disabled")).toBe(false);
+    expect(proposeButton.getAttribute("aria-disabled")).toBe("true");
+
+    const nodesTextBefore = Array.from({ length: CLUSTER_SIZE }, (_, id) => node(id).textContent);
+    act(() => {
+      proposeButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    const nodesTextAfter = Array.from({ length: CLUSTER_SIZE }, (_, id) => node(id).textContent);
+    expect(nodesTextAfter).toEqual(nodesTextBefore);
   });
 });
