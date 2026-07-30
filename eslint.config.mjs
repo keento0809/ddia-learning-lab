@@ -14,7 +14,12 @@ const eslintConfig = [
       ".open-next/**",
       ".wrangler/**",
       "**/.worker-dryrun*/**",
-      "**/.tmp-worker-api-dryrun-*/**",
+      // 恒久対策: 元は`.tmp-worker-api-dryrun-*`のみを除外していたが、
+      // `.tmp-worker-api-internal-auth-dryrun-*`/`.tmp-worker-api-routes-dryrun-*`
+      // のような検証対象名を挟むバリエーションが一致せず、Workerバンドル
+      // (mutex$*等の巨大な難読化コード)がlint対象に混入しCIで無関係のerrorが
+      // 大量発生した(T-207統合検証で発覚)。`*dryrun-*`でどの命名でも一致させる。
+      "**/.tmp-worker-api-*dryrun-*/**",
       "content/generated/**",
       "next-env.d.ts",
       // 並列バックグラウンドセッション用のgit worktree(各自が独立したチェック
