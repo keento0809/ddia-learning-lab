@@ -1,0 +1,98 @@
+---
+title: "Dataflow Paths: Databases, RPC, and Messaging"
+order: 4
+minutes: 12
+sourceHash: 96a607b1d6eb25469c3176ed3ebd79898d275d05a22253a7f343d53eca966b2a
+---
+
+# Dataflow Paths: Databases, RPC, and Messaging
+
+So far the focus has been on the format of the encoded data itself, but in
+practice, how compatibility should be thought about also depends on who the
+data flows from, to whom, and by what path. This lesson organizes three
+representative paths that data travels along.
+
+## Dataflow via a database
+
+The simplest path is one where a process writes data that another process
+(which might be a future version of the same process, or might be an entirely
+different process) reads later. Storage in a database is the classic example:
+there's no guarantee whatsoever that "the code version at write time" matches
+"the code version at read time."
+
+Writing a row and then updating the application's code before reading that row
+back is exactly the scenario where the backward compatibility discussed in the
+previous lesson is needed. Conversely, writing with new code and then rolling
+back to old code for some reason puts forward compatibility to the test.
+
+<Callout type="info">
+It's tempting to think "rollbacks rarely happen, so forward compatibility can
+wait," but a rollback is exactly the kind of operation that becomes urgently
+necessary during an incident. A schema change that neglects compatibility can
+come back to bite you in the middle of incident response, in the form of "we
+can't roll back."
+</Callout>
+
+## Dataflow via RPC
+
+<Term slug="rpc">RPC (remote procedure call)</Term>
+is a mechanism for sending a request to a different process over the network
+in a way that looks like calling a local function. Calling an endpoint over
+HTTP, as with a <Term slug="rest-api">REST API</Term>
+, also falls under this dataflow pattern in a broad sense.
+
+What makes RPC tricky is that the caller (client) and callee (server) are
+often deployed independently. Since client and server update schedules
+generally don't line up, both request encoding and response encoding need
+both forward and backward compatibility. On top of that, crossing a network
+boundary means the caller can never be fully certain whether a request was
+actually processed or was lost before it arrived — an uncertainty common to
+distributed systems in general, which will come up again in a later module.
+
+## Dataflow via messaging
+
+In dataflow via a <Term slug="message-queue">message queue</Term>
+, the sender doesn't send a message directly to the other process — it puts
+the message into an intermediary queue. The receiver then pulls messages from
+the queue and processes them.
+
+The distinctive feature of this setup is that the sender and receiver don't
+need to be online at the same time. Even if the receiving process is
+temporarily down, messages stay in the queue and can be processed once it
+recovers. This setup also makes it easy to fan a single message out to
+multiple receivers, or scale the number of receivers up and down with load.
+
+<Callout type="tip">
+In systems built around message queues, it's not unusual for messages encoded
+with an "old" schema to sit in the queue for a long time before being
+consumed. When updating the receiving code, it's essential to check whether
+it can still process older-format messages still sitting in the queue.
+</Callout>
+
+## Comparing the three paths
+
+| Path | Typical compatibility requirement |
+| --- | --- |
+| Database | Both directions of compatibility are needed, since the code version at write time and at read time can't be assumed to match |
+| RPC | Both directions of compatibility are needed, since client and server update schedules can't be assumed to line up |
+| Message queue | Forward compatibility in particular tends to matter, since the receiver's schema can change while a message sits queued |
+
+What's common across all of these paths is that you should never assume "the
+sender and receiver get updated at the same time." When choosing an encoding
+format, the decision should factor in not just size and speed, but also how
+much timing mismatch between sender and receiver each path needs to tolerate.
+
+<QuizInline
+  id="dataflow-mode-comparison"
+  prompt="Which of the following best describes a characteristic of dataflow via a message queue compared to a direct RPC call?"
+  options={[
+    { id: "a", label: "The sender and receiver must always be online at the same time" },
+    { id: "b", label: "The sender and receiver don't need to be online at the same time, and messages remain in the queue even if the receiver is temporarily down" },
+    { id: "c", label: "There is no longer any need to think about encoding format compatibility at all" },
+    { id: "d", label: "A message can only ever be delivered to exactly one receiver" }
+  ]}
+  correctOptionId="b"
+  explanation="A message queue holds messages as an intermediary, so the sender and receiver don't need to be online at the same time. This asynchrony is the key difference from calling an RPC directly."
+/>
+
+<BookRef chapter={4} />

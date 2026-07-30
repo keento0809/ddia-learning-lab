@@ -1,0 +1,84 @@
+---
+title: Schema-Based Binary Formats and Field Tags
+order: 2
+minutes: 12
+sourceHash: 25adbf4096f7097c5b85844e4abdbb870b1c82163214141e2236da8183b7b3f9
+---
+
+# Schema-Based Binary Formats and Field Tags
+
+The previous lesson explained that binary formats tend to be more compact
+because they don't write out field names every time. But if field names aren't
+written out, how does the receiver know which byte corresponds to which item?
+The answer is that the sender and receiver agree on the data's structure in
+advance. That agreement is captured in what's called a "schema."
+
+## What is a schema?
+
+A schema is a specification that defines which fields a given record has and
+what type each one is (integer, boolean, string, and so on). It's easiest to
+think of it as similar to a type definition in a programming language.
+
+In <Term slug="schema-based-encoding">schema-based encoding</Term>
+, both the encoding side and the decoding side reference the same schema
+definition. This means that even without embedding field name strings in the
+byte sequence, the definition order or identifiers in the schema let you
+mechanically reconstruct "which field, of which type, this sequence of bytes
+represents."
+
+<Callout type="info">
+A schema isn't merely a trick for compression. It also functions as documentation
+in its own right, and when paired with code generation tools it can be used to
+automatically produce type-safe accessor code for each language.
+</Callout>
+
+## The idea of field tags
+
+Many schema-based formats assign each field not just a name but also a small
+integer identifier (a "tag"). At encoding time, only this tag number and the
+type information are written out as a short byte sequence — the field name
+string itself never appears in the output.
+
+Using <Term slug="field-tag">field tags</Term>
+means more than just saving space. Because data is identified by a field's
+"tag number" rather than its "position," you can add new fields to a schema or
+stop referencing fields that are no longer used, and as long as the existing
+tag numbers stay unchanged, old and new data can be correctly interpreted even
+when mixed together. This property is the foundation for the "compatibility"
+topic covered in the next lesson.
+
+<Callout type="warn">
+Conversely, reusing a tag number that has already been published for a
+different field leads to old data being misinterpreted. It's safest to treat
+tag numbers as disposable identifiers: once assigned, never reuse them.
+</Callout>
+
+## The design of the custom format used in the exercise
+
+The custom binary format used in this module's exercise, the Encoding
+Comparison Lab, represents a single field with the following simple rules.
+
+1. Tag number (1 byte)
+2. Type code (1 byte: 0 = unsigned 32-bit integer, 1 = boolean, 2 = string)
+3. A type-dependent payload (a fixed 4 bytes for integers, 1 byte for booleans,
+   and a 2-byte length prefix plus the body for strings)
+
+The key point is that a field that isn't present in the record simply isn't
+written out at all. This lets you distinguish, purely from the presence or
+absence of bytes, between "this field was omitted" and "this field's value is
+0 or an empty string."
+
+<QuizInline
+  id="field-tag-purpose"
+  prompt="What is the main reason schema-based binary formats use a small integer 'tag' instead of a field name?"
+  options={[
+    { id: "a", label: "Tag numbers are used as an encryption key" },
+    { id: "b", label: "Identifying data by tag number rather than position makes it easier to distinguish and correctly interpret old and new data even after fields are added or fall out of use" },
+    { id: "c", label: "Using tags always produces a human-readable format" },
+    { id: "d", label: "Using tag numbers eliminates the need for a schema definition" }
+  ]}
+  correctOptionId="b"
+  explanation="Tags function as field identifiers, and because meaning is determined by tag number rather than position, the format becomes resilient to schema changes. The claims about human readability or not needing a schema contradict how binary formats actually work."
+/>
+
+<BookRef chapter={4} />

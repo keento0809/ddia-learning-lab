@@ -1,0 +1,92 @@
+---
+title: Textual and Binary Formats
+order: 1
+minutes: 12
+sourceHash: 52488599bfe7851e056da9824c4a37bcd351e2b8c9f5b94b5a5c2ced30885766
+---
+
+# Textual and Binary Formats
+
+While a program is running, the data it works with lives in memory as objects and
+arrays. To save that data to a file or send it across the network to another
+process, it has to be converted into a sequence of bytes. That conversion is called
+<Term slug="encoding">encoding</Term>
+, and the reverse process — turning the received bytes back into an in-memory data
+structure — is called decoding (parsing).
+
+When building an application, deciding which format to use for this conversion can
+look like a minor detail, but it directly shapes storage footprint, transfer speed,
+and how well old and new code can coexist while a system evolves.
+
+## Characteristics of textual formats
+
+<Term slug="textual-format">Textual formats</Term>
+such as JSON, XML, and CSV represent values as a sequence of human-readable
+characters. Being able to inspect a response straight from a browser's developer
+tools, or eyeball the output of an API call made with curl, comes directly from
+this "human-readable" property.
+
+That said, textual formats share a few common weaknesses.
+
+1. **Number representation can be ambiguous**: JSON doesn't distinguish between
+   integers and floating-point numbers, and large integers can end up interpreted
+   differently by sender and receiver depending on whether they're treated as
+   strings or numbers.
+2. **They tend to be larger**: field names (keys like `"deviceId"`) plus
+   delimiters and quote characters are written out every time, so the same amount
+   of information typically takes more bytes than a binary representation would.
+3. **Raw binary data needs extra handling**: raw byte sequences such as images or
+   already-encrypted data can't be embedded directly, so an additional encoding
+   step like Base64 is required.
+
+<Callout type="info">
+None of this makes textual formats bad. Their ease of debugging and broad
+interoperability — nearly every language and tool can read them right away — are
+real advantages for internal APIs and early-stage prototyping.
+</Callout>
+
+## Characteristics of binary formats
+
+<Term slug="binary-format">Binary formats</Term>
+represent values directly as byte sequences rather than as human-readable
+strings. Instead of writing out field names each time, they indicate a value's
+position using a predetermined ordering or identifier (a "field tag," covered in
+the next lesson), which tends to make the same data more compact than a textual
+representation.
+
+The trade-off is that binary representations aren't readable by humans as-is, so
+inspecting their contents without dedicated tooling or a library is difficult.
+Both the sender and the receiver also need to agree on the data's structure
+(which bytes mean what), and how that structural agreement is managed is the
+subject of the next lesson.
+
+<Callout type="tip">
+"Textual or binary" isn't really an either/or choice — in practice teams often
+mix the two per communication path, e.g. JSON for public-facing APIs and a
+dedicated binary format for internal microservice calls or persisted logs. A
+practical approach is to consider switching to binary first on whichever path
+is actually bottlenecked by transfer size or latency.
+</Callout>
+
+## Feeling the size difference firsthand
+
+The claim that "binary formats tend to be more compact" is much easier to accept
+once you actually encode the same data both ways and compare byte counts. This
+module's exercise, the Encoding Comparison Lab, encodes the same object as both
+JSON and a small hand-rolled binary format, and checks both the byte count and
+the round trip (does encoding and then decoding return the original data?).
+
+<QuizInline
+  id="textual-vs-binary-tradeoff"
+  prompt="Which of the following is the most accurate general characteristic of binary formats compared to textual formats (JSON, etc.)?"
+  options={[
+    { id: "a", label: "They are always easier for humans to read at a glance" },
+    { id: "b", label: "By not writing out field names each time, they tend to be more compact for the same amount of information, but require a separately agreed-upon structure" },
+    { id: "c", label: "The distinction between integers and floating-point numbers becomes ambiguous" },
+    { id: "d", label: "Their contents can always be inspected in a plain text editor without dedicated tooling" }
+  ]}
+  correctOptionId="b"
+  explanation="Binary formats tend to be more compact because field names can be omitted, but in exchange the structure of the byte sequence must be agreed upon in advance. Numeric ambiguity and human readability are actually characteristics of textual formats."
+/>
+
+<BookRef chapter={4} />

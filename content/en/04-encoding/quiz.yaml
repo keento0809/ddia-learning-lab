@@ -1,0 +1,113 @@
+questions:
+  - id: q1
+    prompt: "What is something textual formats (JSON, etc.) are generally worse at than binary formats?"
+    type: single
+    options:
+      - id: a
+        label: "Being viewable as-is via curl or a browser's developer tools"
+      - id: b
+        label: "Keeping size compact by avoiding writing out field name strings every time"
+      - id: c
+        label: "Being readable and writable right away in many programming languages"
+      - id: d
+        label: "Letting you trace the content visually while debugging"
+    correctOptionIds: [b]
+    explanation: "Because textual formats write out field names and delimiters as-is, they tend to be larger than binary formats for the same amount of information."
+  - id: q2
+    prompt: "What is the main goal of using a small integer 'tag' instead of a field name in a schema-based binary format?"
+    type: single
+    options:
+      - id: a
+        label: "Using tags always makes the encoding human-readable"
+      - id: b
+        label: "Fields can be identified by tag number rather than position, allowing flexible handling of schema changes"
+      - id: c
+        label: "Using tags removes the need to share a schema at all"
+      - id: d
+        label: "Tags are used for authentication across the network"
+    correctOptionIds: [b]
+    explanation: "Identification by tag number is a mechanism that lets old and new data be distinguished and correctly interpreted even after fields are added or fall out of use."
+  - id: q3
+    prompt: "What is it called when newer code can correctly read data that was written by older code?"
+    type: single
+    options:
+      - id: a
+        label: "Forward compatibility"
+      - id: b
+        label: "Backward compatibility"
+      - id: c
+        label: "Horizontal scalability"
+      - id: d
+        label: "Idempotence"
+    correctOptionIds: [b]
+    explanation: "It's called backward compatibility in the sense that 'new code can read data from the past (backward).' The opposite direction is forward compatibility."
+  - id: q4
+    prompt: "When adding a field to a schema, what is the most important compatibility concern to watch for?"
+    type: single
+    options:
+      - id: a
+        label: "If the added field is treated as required, new code will fail to read old data that lacks it"
+      - id: b
+        label: "Adding a field always preserves every kind of compatibility automatically"
+      - id: c
+        label: "Adding a field always requires reusing a tag number"
+      - id: d
+        label: "Adding a field invalidates every existing tag number"
+    correctOptionIds: [a]
+    explanation: "Adding a field with a new tag is relatively safe by itself, but treating that field as required breaks backward compatibility (reading old data)."
+  - id: q5
+    prompt: "What happens if a field tag number, once removed, is later reused for a field with a different meaning?"
+    type: single
+    options:
+      - id: a
+        label: "It is always safe and causes no problems"
+      - id: b
+        label: "There is a risk that leftover bytes at that tag position in old data get misinterpreted as the new field's meaning"
+      - id: c
+        label: "The encoded size is guaranteed to shrink"
+      - id: d
+        label: "The schema definition itself becomes unnecessary"
+    correctOptionIds: [b]
+    explanation: "Reusing a removed tag number risks misreading the byte sequence at that tag's position in old data as the new field's meaning."
+  - id: q6
+    prompt: "Partway through a rolling deploy, an old-version server that hasn't been updated yet needs to read data written by an already-updated new-version server. Which kind of compatibility does this require?"
+    type: single
+    options:
+      - id: a
+        label: "Backward compatibility"
+      - id: b
+        label: "Forward compatibility"
+      - id: c
+        label: "Referential integrity"
+      - id: d
+        label: "Serializability"
+    correctOptionIds: [b]
+    explanation: "Because old code needs to read data written by new code, this calls for forward compatibility."
+  - id: q7
+    prompt: "What characteristic does dataflow via a message queue have compared to a direct RPC call?"
+    type: single
+    options:
+      - id: a
+        label: "The sender and receiver must always be online at the same time"
+      - id: b
+        label: "Messages remain in the queue even if the receiver is temporarily down, and can be processed once it recovers"
+      - id: c
+        label: "There is no longer any need to consider encoding format compatibility"
+      - id: d
+        label: "The sender and receiver are always in a strict one-to-one relationship"
+    correctOptionIds: [b]
+    explanation: "A message queue holds messages as an intermediary, so the sender and receiver don't need to be online at the same time."
+  - id: q8
+    prompt: "What is a typical situation where compatibility becomes an issue for dataflow that goes through a database write?"
+    type: single
+    options:
+      - id: a
+        label: "When the same process never restarts"
+      - id: b
+        label: "When the code version at write time differs from the code version at read time (including app updates and rollbacks)"
+      - id: c
+        label: "Processing that completes entirely in memory without ever touching a database"
+      - id: d
+        label: "A configuration with no read-only replicas"
+    correctOptionIds: [b]
+    explanation: "Because the application's code version can differ between when data is written to a database and when it's read back (including updates and rollbacks), compatibility in both directions matters."
