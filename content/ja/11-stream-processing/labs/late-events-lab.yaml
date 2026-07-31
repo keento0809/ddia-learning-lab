@@ -1,0 +1,130 @@
+slug: "11-stream-processing/late-events-lab"
+language: js
+entry: aggregateWithWatermark
+template: |
+  // events: { id, eventTimeMs, value } の配列。配列の並び順がそのまま
+  // 「到着順(processing time順)」を表す(eventTimeMs順とは限らない)。
+  // windowSizeMs: タンブリングウィンドウの幅(ミリ秒)
+  // allowedLatenessMs: ウィンドウ終了後、集計を確定させるまでに待つ猶予(ミリ秒)
+  //
+  // ウォーターマーク方式で集計する:
+  //  - あるイベントが到着した時点でのウォーターマーク =
+  //    「そのイベントより前に到着したイベントのeventTimeMsの最大値」-
+  //    allowedLatenessMs (イベント自身のeventTimeMsは含めずに判定する)
+  //  - ウォーターマークが、そのイベントが属するウィンドウの終了時刻
+  //    (windowStart + windowSizeMs)以上に進んでいたら、そのウィンドウは
+  //    すでに確定済みとみなし、イベントは「遅延」として集計から除外する
+  //  - それ以外の場合は、通常どおり対応するウィンドウへ加算する
+  //
+  // 戻り値: {
+  //   windows: [{ windowStart, sum, count }] (windowStart昇順),
+  //   lateEventIds: [遅延として除外されたイベントのid] (到着順)
+  // }
+  export function aggregateWithWatermark(events, windowSizeMs, allowedLatenessMs) {
+    // TODO: 実装
+  }
+tests:
+  - id: t1-one-late-event
+    name:
+      ja: "ウォーターマークを追い越して到着したイベントは遅延として除外される"
+      en: "an event arriving after the watermark has passed its window is excluded as late"
+    call:
+      {
+        fn: "aggregateWithWatermark",
+        args:
+          [
+            [
+              { id: "e1", eventTimeMs: 100, value: 10 },
+              { id: "e2", eventTimeMs: 200, value: 5 },
+              { id: "e3", eventTimeMs: 1600, value: 7 },
+              { id: "e4", eventTimeMs: 50, value: 3 },
+              { id: "e5", eventTimeMs: 1900, value: 2 },
+            ],
+            1000,
+            500,
+          ],
+      }
+    assert:
+      {
+        type: "deepEquals",
+        value:
+          {
+            windows:
+              [
+                { windowStart: 0, sum: 15, count: 2 },
+                { windowStart: 1000, sum: 9, count: 2 },
+              ],
+            lateEventIds: ["e4"],
+          },
+      }
+  - id: t2-large-lateness-no-drops
+    name:
+      ja: "許容遅延が十分大きければ同じ入力でも遅延イベントは発生しない"
+      en: "the same input produces no late events when allowed lateness is large enough"
+    call:
+      {
+        fn: "aggregateWithWatermark",
+        args:
+          [
+            [
+              { id: "e1", eventTimeMs: 100, value: 10 },
+              { id: "e2", eventTimeMs: 200, value: 5 },
+              { id: "e3", eventTimeMs: 1600, value: 7 },
+              { id: "e4", eventTimeMs: 50, value: 3 },
+              { id: "e5", eventTimeMs: 1900, value: 2 },
+            ],
+            1000,
+            10000,
+          ],
+      }
+    assert:
+      {
+        type: "deepEquals",
+        value:
+          {
+            windows:
+              [
+                { windowStart: 0, sum: 18, count: 3 },
+                { windowStart: 1000, sum: 9, count: 2 },
+              ],
+            lateEventIds: [],
+          },
+      }
+  - id: t3-empty-input
+    name:
+      ja: "イベントが1件も無ければ空のwindowsとlateEventIdsを返す"
+      en: "returns empty windows and lateEventIds when there are no events"
+    call: { fn: "aggregateWithWatermark", args: [[], 1000, 500] }
+    assert: { type: "deepEquals", value: { windows: [], lateEventIds: [] } }
+  - id: t4-zero-lateness-immediate-drop
+    name:
+      ja: "許容遅延0では、先に大きく時刻が進んだ後に届く過去イベントは即座に遅延扱いになる"
+      en: "with zero allowed lateness, a past event arriving after time has jumped forward is immediately treated as late"
+    call:
+      {
+        fn: "aggregateWithWatermark",
+        args:
+          [
+            [
+              { id: "a", eventTimeMs: 5000, value: 1 },
+              { id: "b", eventTimeMs: 0, value: 99 },
+            ],
+            1000,
+            0,
+          ],
+      }
+    assert:
+      {
+        type: "deepEquals",
+        value:
+          {
+            windows: [{ windowStart: 5000, sum: 1, count: 1 }],
+            lateEventIds: ["b"],
+          },
+      }
+timeoutMs: 3000
+hints:
+  - ja: "到着順(配列の先頭から)にイベントを1件ずつ処理しながら、それまでに見た最大のeventTimeMsを別変数で管理します。現在処理中のイベント自身はそのウォーターマーク計算にまだ反映しません"
+    en: "Process events in arrival order while tracking the maximum eventTimeMs seen so far in a separate variable. The event currently being processed is not yet reflected in that watermark calculation"
+  - ja: "ウォーターマーク = (それまでの最大eventTimeMs) - allowedLatenessMs。これが windowStart + windowSizeMs 以上なら遅延として lateEventIds に積み、そうでなければ通常どおりwindowsへ加算します"
+    en: "watermark = (max eventTimeMs seen so far) - allowedLatenessMs. If this is >= windowStart + windowSizeMs, push the event into lateEventIds; otherwise add it to windows as usual"

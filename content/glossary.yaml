@@ -685,3 +685,80 @@
   definition:
     ja: 同じタスクが再実行されたり重複して実行されたりしても、最終的な出力結果が変わらない性質。決定的な計算に加え、出力の書き込み自体をアトミックに行うことで実現される。
     en: The property that a task's final output stays the same even if the task is retried or executed more than once. Achieved through a combination of deterministic computation and writing output atomically.
+- slug: event-stream
+  term:
+    ja: イベントストリーム
+    en: event stream
+  definition:
+    ja: 「何かが起きた」という事実を表すイベントが、区切りなく発生し続ける連なりとして扱われるデータの流れ。バッチ処理のような有限のまとまりではなく、継続的に到着し続けることを前提とする。
+    en: A continuous, unbounded sequence of events, each representing a fact that something happened, treated as an ongoing flow of data rather than a finite batch.
+- slug: event-log
+  term:
+    ja: イベントログ
+    en: event log
+  definition:
+    ja: 新しいイベントが常に末尾に追加され、既存のイベントは変更されない追記専用のデータ構造。順序の保存やコンシューマーの独立した進捗管理、過去イベントの再生を可能にする。
+    en: An append-only data structure where new events are always added at the end and existing events are never modified, enabling order preservation, independently tracked consumer progress, and replay of past events.
+- slug: consumer-offset
+  term:
+    ja: コンシューマオフセット
+    en: consumer offset
+  definition:
+    ja: あるコンシューマーがイベントログのどこまで読み終えたかを示す位置。コンシューマーごとに独立して管理されるため、複数のコンシューマーが互いに干渉せず異なるペースで同じログを読み進められる。
+    en: A marker indicating how far a given consumer has read through an event log. Because it is tracked independently per consumer, multiple consumers can read the same log at their own pace without interfering with each other.
+- slug: change-data-capture
+  term:
+    ja: チェンジデータキャプチャ(CDC)
+    en: change data capture (CDC)
+  definition:
+    ja: データベースへの書き込みをイベントストリームとして取り出す手法の総称。アプリケーションコードがDBとイベントストリームへ別々に書き込む「二重書き込み」を避け、検索インデックスやキャッシュなどの派生データをDBの変更に追従させるために使われる。
+    en: A family of techniques for extracting database writes as an event stream. It avoids the "dual write" problem of application code writing to a database and an event stream separately, and is used to keep derived data such as search indexes or caches in sync with database changes.
+- slug: outbox-pattern
+  term:
+    ja: アウトボックスパターン
+    en: outbox pattern
+  definition:
+    ja: 本来のデータ更新と、送信すべきイベントの記録を同一のデータベーストランザクション内で行い、別プロセスがそのアウトボックステーブルを読み取って外部のイベントストリームへ配信する設計パターン。二重書き込み問題を単一データストア内の原子性の問題に還元する。
+    en: A design pattern in which the primary data update and the record of an event to be sent are written in the same database transaction, and a separate process later reads that outbox table and delivers the events to an external stream. It reduces the dual-write problem to a single data store's atomicity guarantee.
+- slug: tumbling-window
+  term:
+    ja: タンブリングウィンドウ
+    en: tumbling window
+  definition:
+    ja: 固定長で互いに重ならない時間区間に分割するウィンドウ方式。あるイベントは、そのイベント時刻が収まる1つのウィンドウにのみ属する。
+    en: A windowing scheme that divides time into fixed-length, non-overlapping intervals. Any given event belongs to exactly one window, the one that its event time falls into.
+- slug: sliding-window
+  term:
+    ja: スライディングウィンドウ
+    en: sliding window
+  definition:
+    ja: ウィンドウの幅とは別にステップ幅(ずらす間隔)を持ち、隣接するウィンドウが重なり合うことを許すウィンドウ方式。1つのイベントが複数のウィンドウの計算に同時に含まれ得る。
+    en: A windowing scheme with a step size separate from the window length, allowing adjacent windows to overlap. A single event can contribute to more than one window's computation at the same time.
+- slug: event-time
+  term:
+    ja: イベント時刻
+    en: event time
+  definition:
+    ja: あるイベントが実際に発生した時刻。ストリーム処理システムがそのイベントを受け取って処理した時刻(処理時刻)とは、ネットワーク遅延や再送などにより一致するとは限らない。
+    en: The time at which an event actually occurred. It is not necessarily the same as the time the stream processing system received and processed the event (processing time), since network delay and retries can separate the two.
+- slug: processing-time
+  term:
+    ja: 処理時刻
+    en: processing time
+  definition:
+    ja: ストリーム処理システムがあるイベントを実際に受け取って処理した時刻。イベント時刻より後になり、そのずれの大きさはイベントごとにばらつく。
+    en: The time at which the stream processing system actually received and processed an event. It comes after event time, and the gap between the two varies from event to event.
+- slug: watermark
+  term:
+    ja: ウォーターマーク
+    en: watermark
+  definition:
+    ja: 「これより前のイベント時刻を持つイベントは、もう届かないとみなしてよい」という処理システム側の推測を表す時刻の指標。典型的には、これまでに観測したイベント時刻の最大値から許容遅延を差し引いて計算される。
+    en: A time-valued indicator representing the processing system's assumption that "events with an earlier event time can now be considered no longer arriving." It is typically computed as the maximum event time observed so far minus an allowed lateness bound.
+- slug: late-arriving-event
+  term:
+    ja: 遅延到着イベント
+    en: late-arriving event
+  definition:
+    ja: ウォーターマークがそのイベントの属するウィンドウの終了時刻を追い越した後に到着するイベント。破棄する、許容遅延を長く取る、確定後の集計結果を再訂正する、といった対処が考えられる。
+    en: An event that arrives after the watermark has already advanced past the end of the window it belongs to. Common responses include dropping it, allowing a longer lateness bound, or issuing a correction to an already-finalized window result.
