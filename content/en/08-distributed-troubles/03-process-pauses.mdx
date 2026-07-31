@@ -2,7 +2,7 @@
 title: "Process Pauses: A Hidden Trap"
 order: 3
 minutes: 13
-sourceHash: "876ec5470318531c602cbca5f948c932891f39680d9c477dfa775c1ba2d502a"
+sourceHash: "7f8e4b4f901eab4aaa9c63b0bb72808fd3cdcaa4e2c78fcc4bff35c88672dbea"
 ---
 
 # Process Pauses: A Hidden Trap
@@ -69,7 +69,7 @@ inconsistent data.
 Since preventing pauses outright isn't realistic, production systems
 typically reduce the blast radius instead:
 
-- **Fencing tokens**: issue a monotonically increasing token every time a
+- <Term slug="fencing-token">Fencing tokens</Term>: issue a monotonically increasing token every time a
   lease is granted, and have the resource (e.g. storage) verify the token
   and reject writes carrying an older one. This way, even if a stale lease
   holder wakes up from a pause and tries to write, the resource itself can
