@@ -1,0 +1,102 @@
+---
+title: "Windowed Aggregation"
+order: 3
+minutes: 13
+sourceHash: "a859ffbd00103b6b575717d03614997c60ed93f0d335c19b6401432e5ffd9ef1"
+---
+
+# Windowed Aggregation
+
+Because an event stream keeps flowing without end, you can keep computing an
+aggregate like "the total across all events" continuously, but something
+like "the number of requests in the last 5 minutes" or "the error count per
+minute" — an aggregate bounded by time — can't be expressed that way as-is.
+Stream processing handles this kind of time boundary as a unit called a
+<Term slug="tumbling-window">window</Term>.
+
+## Why divide things into windows
+
+You could keep a single running total for an unbounded stream forever, but
+that alone can't capture "the recent trend." For example, even if the
+system's cumulative request count sits at 100 million, you probably still
+want to know something separate, like an error rate that's spiking in the
+last minute. Windowed aggregation lets you track "when" and "how much"
+something happened by aggregating over chunks (windows) that slice the
+stream along the time axis.
+
+## Tumbling windows
+
+A <Term slug="tumbling-window">tumbling window</Term> is a fixed-length
+window that never overlaps with its neighbors. For example, with a
+one-minute-wide tumbling window, time is divided into gapless,
+non-overlapping intervals like `00:00-00:01`, `00:01-00:02`,
+`00:02-00:03`, and so on. Any given event belongs to exactly one window —
+the one its event time falls into.
+
+```
+Time:      0    1    2    3    4    5   (min)
+Tumbling   [--A--][--B--][--C--][--D--][--E--]
+```
+
+Tumbling windows are relatively simple to implement. Dividing an event's
+timestamp by the window size gives you the quotient you need to uniquely
+compute the start time of the window it belongs to
+(`windowStart = floor(timestamp / windowSize) * windowSize`). Thanks to
+this property, aggregation is just a matter of sorting each event into its
+window's bucket.
+
+## Sliding windows
+
+A <Term slug="sliding-window">sliding window</Term> has, in addition to its
+width, a separate "how far apart to shift each window (step size)," and
+allows neighboring windows to overlap. For example, with "a 5-minute-wide
+window shifted every minute," `00:00-00:05` is followed by `00:01-00:06`,
+and so a single event can belong to multiple windows at once.
+
+```
+Time:      0    1    2    3    4    5    6   (min)
+Sliding    [------A------]
+               [------B------]
+                    [------C------]
+```
+
+Sliding windows suit cases where you want a smoothly changing metric, such
+as "update a 5-minute moving average every minute." On the other hand,
+because a single event affects the computation of multiple windows, sliding
+windows tend to require more state and computation than tumbling windows.
+
+<Callout type="info">
+  Which windowing scheme to use is a tradeoff between "the granularity you
+  want" and "computational cost." Simple time-bucketed aggregates (hourly
+  sales totals, for example) are often well served by tumbling windows,
+  while monitoring metrics where you want to track change smoothly tend to
+  favor sliding windows.
+</Callout>
+
+## The shape of the aggregation logic
+
+The core of windowed aggregation can be simplified to something like this.
+
+<CodeBlock lang="js">
+{`function tumblingWindowSums(events, windowSizeMs) {
+  const buckets = new Map();
+  for (const event of events) {
+    const windowStart =
+      Math.floor(event.timestampMs / windowSizeMs) * windowSizeMs;
+    const bucket = buckets.get(windowStart) ?? { windowStart, sum: 0 };
+    bucket.sum += event.value;
+    buckets.set(windowStart, bucket);
+  }
+  return [...buckets.values()].sort((a, b) => a.windowStart - b.windowStart);
+}`}
+</CodeBlock>
+
+This skeleton assumes that "events arrive in the order they occurred, and
+all of them arrive without delay." In a real stream, though, network delay
+and similar factors inevitably mean events sometimes arrive later than the
+time they actually occurred. The next lesson covers how this "time skew"
+affects windowed aggregation. This module's exercise, the "stream
+aggregation lab," has you implement the skeleton shown here and also work
+through aggregation that accounts for delayed events.
+
+<BookRef chapter={11} />
