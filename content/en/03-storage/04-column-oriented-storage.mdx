@@ -1,0 +1,97 @@
+---
+title: Column-Oriented Storage
+order: 4
+minutes: 14
+sourceHash: 992f58ba55992754332685dc86387bf126ecf9323ea4560ddb9e7c1f214b646e
+---
+
+# Column-Oriented Storage
+
+The hash index, LSM-tree, and B-tree covered in the previous three lessons
+are all index structures whose primary purpose is finding a single key (or a
+small range of keys) quickly. That kind of structure suits applications that
+read and write one record at a time — placing an order, updating stock —
+which is transaction processing (OLTP). This lesson shifts perspective and
+looks at a storage layout suited to applications that aggregate a small
+number of columns across a huge number of rows — analytics (OLAP).
+
+## The assumption behind row-oriented storage
+
+Everything up to this point has implicitly assumed
+<Term slug="row-oriented-storage">row-oriented storage</Term>
+: laying out the values of every column belonging to a single record together
+in a contiguous region on disk. That's convenient when you want to read or
+write all of a given user's columns in one disk access.
+
+But analytical queries — for example, "sum the order totals by product
+category for a given time period" — often only touch a handful of the dozens
+of columns a table might have. When records are packed together column by
+column under row-oriented storage, the remaining columns that the aggregation
+doesn't need get pulled off disk anyway, so the read cost tends to be much
+larger than the amount of data actually needed.
+
+## Grouping storage by column
+
+<Term slug="column-oriented-storage">Column-oriented storage</Term>
+flips the idea around: values from the same column, across all records, are
+laid out together in a contiguous region on disk. This layout brings two
+benefits.
+
+1. **Unneeded columns don't have to be read.** An aggregation query only
+   needs to open the files for the columns it actually uses, with no need to
+   pull unused columns off disk.
+2. **Compression tends to be more effective.** The same or similar values
+   tend to repeat within a single column (for example, a "prefecture" column
+   might repeat across only about 47 distinct values). Grouping columns with
+   few distinct values using dictionary or bitmap encoding typically achieves
+   a higher compression ratio than compressing the row-oriented layout would.
+
+## The trade-off on the write side
+
+Column-oriented storage has a cost too. Updating a single record means
+writing to every column file that record touches, rather than touching just
+one place the way row-oriented storage does. Because of this, column-oriented
+storage suits bulk appends and batch updates better than it suits OLTP-style
+workloads that update individual records frequently.
+
+Real systems often address this by first absorbing writes into a
+row-oriented-ish staging area (or an in-memory buffer), and once that
+accumulates enough, converting it to the column-oriented format and writing
+it out all at once. This shares something in common with the LSM-tree idea
+seen throughout this module — absorb writes in memory first, then flush to
+the optimal on-disk form once a threshold is reached.
+
+<Callout type="tip">
+In column-oriented storage, the order (sort order) of values within a column
+also affects performance. Sorting by a given column not only speeds up range
+queries against that column, but also tends to further improve compression,
+since identical values end up adjacent to each other. Which column to sort by
+is a design decision that depends on the expected pattern of aggregation
+queries.
+</Callout>
+
+## Wrap-up: the trade-offs covered in this module
+
+This module started from an append-only log plus a hash index, moved through
+sorted SSTables and LSM-trees, then B-trees with in-place updates, and ended
+with column-oriented storage. What they share is that each one answers the
+same underlying question — where should data be placed, and how, to read and
+write as efficiently as possible for the access pattern you expect — in a
+different way. There's no single universally correct storage structure; the
+right choice depends on the balance between write frequency, read pattern
+(point lookup, range query, or aggregation), and consistency requirements.
+
+<QuizInline
+  id="column-vs-row"
+  prompt="For a table with many columns, which storage approach best speeds up a query that aggregates just one specific column across all rows?"
+  options={[
+    { id: "a", label: "Row-oriented storage" },
+    { id: "b", label: "Column-oriented storage" },
+    { id: "c", label: "A hash index alone" },
+    { id: "d", label: "A B-tree index alone" }
+  ]}
+  correctOptionId="b"
+  explanation="Column-oriented storage groups values from the same column together, so only the columns an aggregation needs have to be read, avoiding the cost of reading unneeded columns. Row-oriented storage packs data by record, so unneeded columns tend to get read along with the rest."
+/>
+
+<BookRef chapter={3} />

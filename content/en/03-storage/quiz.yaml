@@ -1,0 +1,113 @@
+questions:
+  - id: q1
+    prompt: "Which statement about an append-only-log-plus-hash-index key-value store is correct?"
+    type: single
+    options:
+      - id: a
+        label: "The whole index doesn't necessarily need to fit in memory"
+      - id: b
+        label: "Writes are always sequential appends to the end of the file"
+      - id: c
+        label: "It's good at range queries that rely on key ordering"
+      - id: d
+        label: "Deletes are expressed by erasing the existing record in place"
+    correctOptionIds: [b]
+    explanation: "An append-only log is designed to always append to the end, which is what makes writes fast. The index must fit in memory, range queries are a poor fit, and deletes are expressed by appending a tombstone."
+  - id: q2
+    prompt: "In a hash-indexed key-value store, what's the usual way to represent deleting a key?"
+    type: single
+    options:
+      - id: a
+        label: "Rewrite and erase the matching line in the log directly"
+      - id: b
+        label: "Append a special marker value (a tombstone) as a new entry"
+      - id: c
+        label: "Just remove the key's entry from the index and leave the log untouched"
+      - id: d
+        label: "Rebuild the entire log file from scratch"
+    correctOptionIds: [b]
+    explanation: "Since an append-only log never rewrites existing content, a delete is also expressed as a new appended entry — a tombstone — that later reads and compaction see and use to ignore the older value."
+  - id: q3
+    prompt: "Why is an SSTable better suited to range queries than a hash index?"
+    type: single
+    options:
+      - id: a
+        label: "Because an SSTable doesn't go through a memtable"
+      - id: b
+        label: "Because entries within an SSTable are sorted by key, so a sparse index is enough to get close to the target"
+      - id: c
+        label: "Because an SSTable has no bloom filter"
+      - id: d
+        label: "Because an SSTable always lives in memory"
+    correctOptionIds: [b]
+    explanation: "Because an SSTable is sorted by key, there's no need to remember every key's position — a sparse index can jump close and then scan sequentially, which makes range queries and handling large datasets much easier."
+  - id: q4
+    prompt: "In an LSM-tree, where is a write first applied?"
+    type: single
+    options:
+      - id: a
+        label: "The oldest SSTable on disk"
+      - id: b
+        label: "The in-memory memtable (along with the WAL for durability)"
+      - id: c
+        label: "A leaf page of a B-tree"
+      - id: d
+        label: "The final-level SSTable produced after compaction"
+    correctOptionIds: [b]
+    explanation: "A write to an LSM-tree is first applied to the memtable, and also recorded in the WAL for durability in case of a crash. Once enough accumulates, it's flushed to disk as an SSTable."
+  - id: q5
+    prompt: "What problem tends to arise if compaction is left undone in an LSM-tree?"
+    type: single
+    options:
+      - id: a
+        label: "The memtable gets automatically wiped"
+      - id: b
+        label: "Old values and tombstones for the same keys keep piling up, growing disk usage and the number of files a read has to check"
+      - id: c
+        label: "The WAL becomes unnecessary"
+      - id: d
+        label: "Writes stop being accepted"
+    correctOptionIds: [b]
+    explanation: "Without compaction, old values and unneeded tombstones for the same key keep accumulating inside SSTables, growing both disk usage and the number of files that have to be checked on a read."
+  - id: q6
+    prompt: "What's the main benefit of a B-tree index having a high branching factor (the number of child pages one page can point to)?"
+    type: single
+    options:
+      - id: a
+        label: "The tree's depth grows only slowly as data volume increases, keeping the number of pages a search touches low"
+      - id: b
+        label: "It eliminates the need for compaction"
+      - id: c
+        label: "Writes become append-only"
+      - id: d
+        label: "It eliminates the need for a memtable"
+    correctOptionIds: [a]
+    explanation: "The higher the branching factor, the shallower the tree can stay for the same amount of data, which keeps the number of pages traversed from root to leaf — roughly the number of disk accesses — low."
+  - id: q7
+    prompt: "Why do B-tree implementations commonly also use a write-ahead log (WAL)?"
+    type: single
+    options:
+      - id: a
+        label: "To speed up range queries"
+      - id: b
+        label: "To record changes ahead of time so they can be replayed for recovery if a crash happens partway through rewriting a page in place"
+      - id: c
+        label: "To convert to column-oriented storage"
+      - id: d
+        label: "To reduce false positives from the bloom filter"
+    correctOptionIds: [b]
+    explanation: "Because a B-tree overwrites pages in place, a crash mid-write risks corrupting a page. Recording the change in the WAL first means the page's contents can be replayed back to a correct state after a crash."
+  - id: q8
+    prompt: "Which operation tends to be less favorable for column-oriented storage than for row-oriented storage?"
+    type: single
+    options:
+      - id: a
+        label: "A query that aggregates just one specific column across all rows"
+      - id: b
+        label: "Compressing a column with few distinct values"
+      - id: c
+        label: "An update that rewrites an entire record"
+      - id: d
+        label: "A scan that reads only specific columns"
+    correctOptionIds: [c]
+    explanation: "Updating an entire record means writing to the separate column file for each of its columns, unlike row-oriented storage where writing to a single location is enough."

@@ -1,0 +1,99 @@
+---
+title: Hash Indexes and Append-Only Logs
+order: 1
+minutes: 14
+sourceHash: 3769d5eef9d77c614adb997196ec55643706443e09af9e70bfef5d2c087a75d7
+---
+
+# Hash Indexes and Append-Only Logs
+
+At bottom, a database's storage engine deals with just two problems: "where do I
+write things" and "how do I find them again." This lesson starts from the
+simplest possible implementation, and uses the limitations it runs into to
+motivate the SSTables, LSM-trees, and B-trees covered in the lessons that follow.
+
+## The simplest storage engine: an append-only log
+
+The simplest key-value store imaginable appends a line reading "key,value" to
+the end of a file every time `put(key, value)` is called, and for `get(key)`
+scans the entire file from the start, returning the last line where the key
+appears. A file that only ever grows by appending to the end like this is
+called an
+<Term slug="append-only-log">append-only log</Term>
+.
+
+Append-only logs write fast for a simple reason: every write lands as a
+sequential write to a contiguous region of disk. Rewriting data at a random
+position forces a physical seek on spinning disks, and tends to be unfavorable
+even on SSDs given how their internal write units work. Appending to the end,
+by contrast, plays nicely with the OS page cache and filesystem buffering, and
+makes it easy to sustain high write throughput.
+
+<Callout type="info">
+You might wonder how deletes and updates can be expressed with append-only
+writes. The trick is that deletes and overwrites are themselves appended as
+new records at the end, and the old one is simply ignored. The special value
+used to represent a deletion is called a
+<Term slug="tombstone">tombstone</Term>
+, and it plays an important role together with the compaction process covered
+in the next lesson.
+</Callout>
+
+## The problem: reads are slow
+
+The weakness of an append-only log is on the read side. Scanning the entire
+file from the start on every `get(key)` call means read time degrades
+linearly as the log grows — not an acceptable speed for real-world use.
+
+## Speeding up reads with a hash index
+
+The classic fix for this problem is a
+<Term slug="hash-index">hash index</Term>
+. The idea is simple: keep a single hash table (an in-memory associative
+array) that records, for each key, where its latest value lives in the log
+(such as a byte offset). Writes update this index in addition to appending to
+the log. Reads look the position up in the index instead of scanning the log,
+and only need to read that one position from disk.
+
+This approach is very fast, but it comes with a few constraints.
+
+- **The whole index must fit in memory.** Once the number of keys exceeds
+  memory capacity, this scheme stops working as-is.
+- **Range queries are a poor fit.** Because a hash table doesn't preserve any
+  ordering between keys, a hash index isn't well suited to operations like
+  "read all keys from key A through key B in order."
+- **The log keeps growing without bound.** Every overwrite of the same key
+  appends another line, so old values that are no longer needed keep
+  accumulating on disk.
+
+## A preview of segments and compaction
+
+To address the third problem (the log growing without bound), practical
+implementations break the log into fixed-size "segments," always writing to
+the newest one. Older segments become read-only, and a background process
+merges segments together, dropping duplicate entries for the same key and
+tombstones that are no longer needed. This merging process is called
+compaction. Taking this idea further, into the shape of a "sorted file,"
+leads to the SSTables and LSM-trees covered in the next lesson.
+
+<Callout type="tip">
+Real systems do exist that adopt a design close to the "append-only log plus
+in-memory hash index" seen in this lesson. It's a practical enough choice for
+write-heavy workloads whose key space fits in memory, such as session stores
+or caching layers.
+</Callout>
+
+<QuizInline
+  id="hash-index-limitation"
+  prompt="Which operation is a hash-indexed, append-only-log key-value store worst suited for?"
+  options={[
+    { id: "a", label: "A get for a single specific key" },
+    { id: "b", label: "A put for a single specific key" },
+    { id: "c", label: "A range query using key ordering" },
+    { id: "d", label: "Repeated overwrites of the same key" }
+  ]}
+  correctOptionId="c"
+  explanation="A hash table doesn't preserve ordering between keys, so it's a poor fit for range queries like 'read all keys from A through B in order.' get/put and overwrites are all operations a hash index handles well."
+/>
+
+<BookRef chapter={3} />

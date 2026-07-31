@@ -1,0 +1,120 @@
+slug: 03-storage/mini-kv-lab
+language: js
+entry: put
+template: |
+  // Implement a tiny KV store backed by an "append-only log + hash index".
+  //
+  // store is an immutable object shaped like this:
+  //   {
+  //     log: [{ key, value }, ...],  // an append-only log in write order
+  //     index: { [key]: number },     // key -> the position (offset) of its latest entry in log
+  //   }
+  //
+  // Implement put(store, key, value).
+  // - Do not mutate the store argument directly (return a new object).
+  // - The new log should be the existing log with { key, value } appended to
+  //   the end (even if the key already exists, don't overwrite — always
+  //   append a new entry to the end).
+  // - The new index should be a copy of the existing index with index[key]
+  //   updated to the position of the newly appended entry in the new log
+  //   (log.length - 1).
+  // - Return { log: newLog, index: newIndex }.
+  export function put(store, key, value) {
+    // TODO: implement
+  }
+
+  // Implement get(store, key).
+  // - If key exists in store.index, return the value of the store.log entry
+  //   at that position (offset).
+  // - If key does not exist in store.index, return null.
+  // - There's no need to scan the log from the start (the index tells you
+  //   the position directly).
+  export function get(store, key) {
+    // TODO: implement
+  }
+tests:
+  - id: t1-put-empty-store
+    name:
+      ja: "空のstoreにputすると1件のログとインデックスができる"
+      en: "put on an empty store creates a one-entry log and index"
+    call:
+      fn: "put"
+      args:
+        - { log: [], index: {} }
+        - "a"
+        - "1"
+    assert:
+      type: "deepEquals"
+      value:
+        log: [{ key: "a", value: "1" }]
+        index: { a: 0 }
+  - id: t2-put-overwrite-appends
+    name:
+      ja: "既存キーへのputは上書きではなく末尾への追記になる"
+      en: "put on an existing key appends rather than overwriting"
+    call:
+      fn: "put"
+      args:
+        - { log: [{ key: "a", value: "1" }], index: { a: 0 } }
+        - "a"
+        - "2"
+    assert:
+      type: "deepEquals"
+      value:
+        log: [{ key: "a", value: "1" }, { key: "a", value: "2" }]
+        index: { a: 1 }
+  - id: t3-put-new-key-keeps-existing
+    name:
+      ja: "新しいキーへのputは既存のログとインデックスを保ったまま追加する"
+      en: "put on a new key preserves the existing log and index while adding to them"
+    call:
+      fn: "put"
+      args:
+        - log: [{ key: "a", value: "1" }, { key: "b", value: "x" }]
+          index: { a: 0, b: 1 }
+        - "c"
+        - "y"
+    assert:
+      type: "deepEquals"
+      value:
+        log: [{ key: "a", value: "1" }, { key: "b", value: "x" }, { key: "c", value: "y" }]
+        index: { a: 0, b: 1, c: 2 }
+  - id: t4-get-returns-latest-via-index
+    name:
+      ja: "getはlogを先頭から探すのではなくindexが指す最新の値を返す"
+      en: "get returns the newest value via the index rather than scanning the log"
+    call:
+      fn: "get"
+      args:
+        - log: [{ key: "a", value: "1" }, { key: "a", value: "2" }]
+          index: { a: 1 }
+        - "a"
+    assert: { type: "equals", value: "2" }
+  - id: t5-get-missing-key
+    name:
+      ja: "存在しないキーのgetはnullを返す"
+      en: "get on a missing key returns null"
+    call:
+      fn: "get"
+      args:
+        - { log: [{ key: "a", value: "1" }], index: { a: 0 } }
+        - "x"
+    assert: { type: "equals", value: null }
+  - id: t6-get-empty-store
+    name:
+      ja: "空のstoreに対するgetはnullを返す"
+      en: "get on an empty store returns null"
+    call:
+      fn: "get"
+      args:
+        - { log: [], index: {} }
+        - "a"
+    assert: { type: "equals", value: null }
+timeoutMs: 3000
+hints:
+  - ja: "putは引数のstoreを書き換えず、新しいlogとindexを持つ新しいオブジェクトを返します。スプレッド構文([...store.log, ...]や{...store.index, ...})でコピーすると書きやすいです"
+    en: "put must not mutate the store argument — return a new object with a new log and index. Spread syntax ([...store.log, ...] / {...store.index, ...}) makes this easy to write"
+  - ja: "同じキーに何度putしても、logには新しいエントリが追加され続けます。indexだけが常に最新の位置(追記後のlog.length - 1)を指すように更新されます"
+    en: "Putting the same key repeatedly keeps appending new entries to the log. Only the index is updated to point at the newest position (log.length - 1 after appending)"
+  - ja: "getはstore.indexからkeyに対応するオフセットを引き、store.log[offset].valueを返すだけです。indexにkeyが無ければnullを返します"
+    en: "get just looks up the offset for key in store.index and returns store.log[offset].value; return null if the key is not in the index"

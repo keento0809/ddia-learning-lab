@@ -1,0 +1,114 @@
+---
+title: SSTables and LSM-Trees
+order: 2
+minutes: 18
+sourceHash: 90d7101f57ae5089d09f90356f4c3c4ff1308839dc5183c6467cf778e04e5089
+---
+
+# SSTables and LSM-Trees
+
+The hash index from the previous lesson had two weaknesses: it doesn't work
+once the index no longer fits in memory, and it's a poor fit for range
+queries. This lesson looks at a design that solves both weaknesses at once by
+sorting the contents of the log ahead of time, and at the storage engine
+structure built on top of it.
+
+## A sorted segment: the SSTable
+
+What happens if a segment file's contents are stored sorted by key, rather
+than in write order? This "sorted, immutable segment file" is called an
+<Term slug="sstable">SSTable</Term>
+. Sorting it brings two major benefits.
+
+1. **Merging becomes efficient.** Merging several SSTables into one can be
+   done the same way a merge sort reads several sorted lists in lockstep from
+   the front. There's no need to load an entire file into memory — just the
+   current read position in each file needs to be tracked.
+2. **The index can stay sparse.** Once you know keys are sorted in ascending
+   order, you don't need to keep every key's position in memory. Recording a
+   position every few dozen or few hundred keys is enough for a "sparse
+   index" kept in memory — it lets you jump close to the target key and then
+   scan sequentially from there on disk. This means an SSTable can grow far
+   larger than memory and still be usable.
+
+## Where writes start: the memtable and the WAL
+
+Building a sorted file means writes can't simply be appended straight to the
+file (append order and sort order wouldn't match). Instead, writes are first
+applied to a sorted in-memory data structure called the
+<Term slug="memtable">memtable</Term>
+. Because it's an in-memory structure, maintaining sort order on every insert
+isn't hard, but its contents would be lost if the process crashed. To guard
+against this, changes are appended to a
+<Term slug="write-ahead-log">write-ahead log (WAL)</Term>
+before being applied to the memtable. On restart after a crash, replaying the
+WAL from the start restores any changes that hadn't yet made it to disk.
+
+Once the memtable reaches a certain size, its contents are written out to
+disk, still in key order, as a new
+<Term slug="sstable">SSTable</Term>
+(this operation is called a flush). Once the flush completes, the memtable is
+reset to empty and the corresponding WAL contents are no longer needed. This
+design — write to the memtable and WAL, and once enough has accumulated, flush
+it to disk as a sorted file — is called an
+<Term slug="lsm-tree">LSM-tree</Term>
+(Log-Structured Merge-tree).
+
+## The read path and bloom filters
+
+A read in an LSM-tree first checks the memtable, and if the key isn't there,
+checks the on-disk SSTables one by one, newest first. As the number of
+SSTables grows, so does the wasted work of checking for keys that don't
+exist. To avoid this, it's common to keep a
+<Term slug="bloom-filter">bloom filter</Term>
+for each SSTable. A bloom filter is a memory-efficient data structure that
+can quickly rule out "this key definitely isn't here," letting many
+unnecessary disk accesses be skipped ahead of time (a "present" answer can
+occasionally be a false positive, so a final check still has to read the
+SSTable itself).
+
+## Tidying up with compaction
+
+Because SSTables are immutable, overwriting a key just records a new value in
+a newer SSTable, leaving the old value sitting in an older SSTable. Left
+alone, this keeps growing both disk usage and the number of files a read has
+to check. To address this, a background process merges multiple SSTables,
+keeping only the newest value for each key and consolidating the result into
+new SSTables — this is called
+<Term slug="compaction">compaction</Term>
+. Tombstones (deletion markers) can likewise be dropped once compaction has
+progressed far enough that no older-generation data remains beneath them.
+
+<Callout type="warn">
+Compaction is a background process that consumes disk I/O, and if a large
+amount of compaction work piles up during a period of heavy write traffic, it
+can affect foreground read/write performance. There are several strategies
+for deciding which groups of SSTables to merge and when, and the right choice
+depends on whether write load, read load, or disk usage matters most.
+</Callout>
+
+## Try it in the simulator: memtable and SSTable transitions
+
+The visualization below is a simulator where you can issue put, delete,
+flush, and compact operations against a single LSM-tree. You can interact
+with it directly to see how put/delete change the memtable and WAL, how
+flush writes the memtable's contents out as a new SSTable at L0, and how
+compact merges adjacent-level SSTables together, clearing out duplicate keys
+and tombstones along the way.
+
+<Viz name="lsm-tree" />
+
+<QuizInline
+  id="compaction-purpose"
+  prompt="What is the main role of compaction in an LSM-tree?"
+  options={[
+    { id: "a", label: "Applying writes directly to disk via random access" },
+    { id: "b", label: "Merging multiple SSTables to remove duplicate keys and unneeded tombstones" },
+    { id: "c", label: "Automatically raising the memtable's size limit" },
+    { id: "d", label: "Disabling the bloom filter to simplify reads" }
+  ]}
+  correctOptionId="b"
+  explanation="Compaction merges multiple SSTables in key order, keeps only the newest value for each key, and drops tombstones that are no longer needed — reducing both disk usage and the number of files a read has to check."
+/>
+
+<BookRef chapter={3} />

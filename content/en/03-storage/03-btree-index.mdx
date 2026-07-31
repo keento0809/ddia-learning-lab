@@ -1,0 +1,100 @@
+---
+title: B-Tree Indexes
+order: 3
+minutes: 14
+sourceHash: f53dbcea3de03f9e7489b1def3186253b8163c53ba70929f576eb3ff40a78c3f
+---
+
+# B-Tree Indexes
+
+The hash index and LSM-tree covered so far share something in common: neither
+one ever rewrites existing data in place. This lesson looks at the opposite
+approach — an index structure that rewrites the relevant spot directly, in
+place. That structure is the
+<Term slug="b-tree-index">B-tree index</Term>
+, and it's extremely widely used as the standard index implementation in
+relational databases.
+
+## A tree structure built from pages
+
+A B-tree manages keys in a tree structure, from root to leaves, organized
+into fixed-size "pages" (typically something like 4 KB). Each page can hold a
+range of keys along with references to several child pages that further
+subdivide that range. The fact that a single page can point to many child
+pages (a high branching factor) is a key property of B-trees: it means the
+depth from root to leaf grows only slowly, even as the amount of stored data
+increases. With a branching factor in the hundreds, a tree can hold millions
+of records while still being only a few levels deep.
+
+Looking up a single key starts at the root page and follows the chain of
+"which child page's range contains the key I'm looking for" down to the
+appropriate leaf page. Because this path length closely tracks the upper
+bound on disk accesses, a shallow tree translates directly into fast lookups.
+
+## Writes: updating the relevant page in place
+
+Writing to a B-tree means finding the page that contains the target key and
+rewriting that page's contents directly (overwriting it). Unlike an
+append-only log, there's no need to create a new location holding an old
+value. If adding a new key pushes a page past its size limit, the page is
+split in two and the split is reflected in the parent page (which can, in
+turn, trigger a cascading split further up).
+
+This "overwrite in place" property looks simple on the surface, but it takes
+careful design to keep crash-safe. If power is lost or the process crashes
+partway through writing a page, that page can be left on disk in a corrupted
+(partially updated) state. To guard against this, most B-tree
+implementations also use a
+<Term slug="write-ahead-log">write-ahead log (WAL)</Term>
+: before applying a change to a page, the change is first appended to an
+append-only log, and on recovery after a crash, that log is used to replay
+pages back into a correct state.
+
+<Callout type="info">
+Some implementations take a different approach: instead of rewriting a page
+in place, they write the updated page to a new location and redirect just the
+parent page's reference to point there (copy-on-write updates). This approach
+affects the design of concurrency control when multiple writes touch the same
+page at once, but the details are beyond the scope of this lesson.
+</Callout>
+
+## The LSM-tree vs. B-tree trade-off
+
+Both structures play the same "index" role, but LSM-trees and B-trees pull in
+different directions when it comes to write and read characteristics.
+
+- **Writes.** An LSM-tree can batch disk I/O by appending to the memtable and
+  performing sequential flushes and compactions, which makes high write
+  throughput easy to achieve. A B-tree has to rewrite the relevant page
+  directly on every change, which tends to mean writing an entire page (and,
+  counting the WAL entry, effectively even more bytes) for a small change.
+  This phenomenon — writing more bytes than the actual change warrants — is
+  called write amplification.
+- **Reads.** Because a B-tree always keeps exactly one, current value for
+  each key in a single place, its read path is simple and its latency stays
+  relatively consistent. An LSM-tree has to check the memtable and then
+  multiple SSTables in newest-first order, and how many files that involves
+  varies with how far compaction has progressed, so read latency tends to be
+  more variable (this can be mitigated with tools like bloom filters).
+- **Consistency and transactions.** Because a B-tree keeps only a single
+  instance of each key, it plays well with mechanisms like locking a
+  specific key range, which is part of why relational databases that
+  traditionally offer strong transactional guarantees have favored B-trees.
+
+Neither is simply "better" — the right choice depends on the trade-off
+between a write-heavy workload and one that prioritizes stable read latency.
+
+<QuizInline
+  id="btree-vs-lsm"
+  prompt="What best explains why B-trees tend to have higher write amplification than LSM-trees?"
+  options={[
+    { id: "a", label: "Because B-trees have no memtable" },
+    { id: "b", label: "Because B-trees rewrite the entire relevant page in place on every small change" },
+    { id: "c", label: "Because B-trees don't use a WAL" },
+    { id: "d", label: "Because B-trees don't use bloom filters" }
+  ]}
+  correctOptionId="b"
+  explanation="A B-tree rewrites the entire page containing the changed key directly, which tends to mean writing more bytes than the actual change warrants (write amplification). LSM-trees avoid this more easily by appending to the memtable and flushing sequentially."
+/>
+
+<BookRef chapter={3} />
