@@ -1,0 +1,89 @@
+---
+title: The Three Pillars of Maintainability
+order: 4
+minutes: 12
+sourceHash: 39f11318af9013499d0b06855520acdc7f298763d6d645050a83694950eb8c07
+---
+
+# The Three Pillars of Maintainability
+
+The chapters so far have covered "resistance to breaking" (reliability) and "coping
+with load" (scalability). Maintainability, the subject of this chapter, is a somewhat
+different kind of property — it's about how easy the system stays to work with over the
+long stretch of time after it's built.
+
+## Why maintainability matters
+
+For most systems, the period spent operating and modifying the system after it's built
+is far longer than the period spent building it in the first place. New features, bug
+fixes, integrations with other systems, regulatory requirements — the reasons to change
+a system never run out. A system with poor maintainability takes longer to change every
+time, and that makes incidents more likely. Maintainability is easier to work with when
+you break it into three independent (yet related) properties.
+
+## <Term slug="operability">Operability</Term>: keeping the system easy to run
+
+Operability is the property that makes day-to-day operational work — monitoring,
+incident response, configuration changes, deployment — easy to carry out. Concretely,
+the following elements strengthen operability.
+
+- The system's internal state can be observed from the outside (logs, metrics, traces)
+- Behavior is predictable, with few unexpected side effects
+- Manual work is minimized, and repeated tasks are easy to automate
+- Runbooks describing what to do when something goes wrong are kept up to date
+
+Much of the "protection against human error" discussed in the previous chapter is
+itself an effort to strengthen operability. A system that's easy to operate ends up
+having fewer failures caused by human error as a result.
+
+## <Term slug="simplicity">Simplicity</Term>: reducing complexity
+
+Simplicity means reducing complexity that doesn't stem from the inherent difficulty of
+the problem the system solves. A given system may deal with a problem that's
+inherently complex, and that can't be avoided — but complexity introduced by the
+particulars of an implementation or design (tangled dependencies, layers of ad hoc
+exception handling piled on top of each other) can be reduced.
+
+<Callout type="info">
+The primary tool for reducing complexity is good abstraction. Hiding shared logic
+behind a clean interface means callers don't need to think about the details, which
+keeps the codebase easier to navigate as a whole. That said, stacking too many layers
+of abstraction on top of each other turns the layers themselves into a new source of
+complexity, so this needs to be used with care.
+</Callout>
+
+## <Term slug="evolvability">Evolvability</Term>: staying easy to change
+
+Evolvability is the property that lets a system be changed safely and cheaply as future
+requirements shift. Requirements are rarely fully known up front — they tend to reveal
+themselves gradually as the system is operated. Because of that, whether a system is
+structured to "make the next change easy" — not just "meet today's requirements" — has
+a large effect on long-term cost.
+
+Keeping modules loosely coupled and being able to verify the blast radius of a change
+through tests are both things that strengthen evolvability. Where simplicity focuses on
+"reducing complexity now," evolvability focuses on "staying easy to change in the
+future" — the two are complementary.
+
+## Summing up the three pillars
+
+Reliability, scalability, and maintainability (operability, simplicity, and
+evolvability) are themes this course returns to again and again. When you study
+individual techniques like replication or partitioning, keeping the question "is this
+for reliability, for scalability, or for maintainability?" in mind makes it much easier
+to hold onto why that technique exists in the first place.
+
+<QuizInline
+  id="maintainability-three-pillars"
+  prompt="Keeping modules loosely coupled and being able to verify the blast radius of a change through tests mainly strengthens which property of maintainability?"
+  options={[
+    { id: "a", label: "Operability" },
+    { id: "b", label: "Evolvability" },
+    { id: "c", label: "Throughput" },
+    { id: "d", label: "Fault tolerance" }
+  ]}
+  correctOptionId="b"
+  explanation="Loose coupling and a test-based safety net are classic ways to keep a system changeable safely and cheaply as requirements shift in the future — that's evolvability."
+/>
+
+<BookRef chapter={1} />

@@ -1,0 +1,130 @@
+---
+title: Foundations of Reliability and Fault Tolerance
+order: 1
+minutes: 13
+sourceHash: 4c8fbb5ea53300d13c7c2ce4a547558c483981e106b6efeac87d5ebb49d524f3
+---
+
+# Foundations of Reliability and Fault Tolerance
+
+When designing a distributed data system, one of the first questions worth asking is
+"how reliable is this system?" This chapter covers what reliability actually means,
+the kinds of faults that threaten it, and the design approach for building
+<Term slug="fault-tolerance">fault tolerance</Term> — the ability to keep working even
+when things go wrong.
+
+## What is <Term slug="reliability">reliability</Term>?
+
+A reliable system is not simply one that "rarely goes down." In practice, it's easier
+to work with reliability as a combination of the following properties.
+
+- The system keeps performing its intended function correctly
+- Even when a <Term slug="fault">fault</Term> occurs, it rarely escalates into something
+  catastrophic
+- Performance stays within an acceptable range under the expected load and data volume
+- Users are protected from unauthorized operations and data corruption
+
+These properties are often in tension with each other. Increasing redundancy improves
+reliability but also raises operational cost, for example. So "how much reliability do
+we need" becomes a design decision that depends on what the system is used for.
+
+## Faults versus failures
+
+A <Term slug="fault">fault</Term> refers to a single component of the system — one
+machine, one process, one network link — no longer behaving as specified. A "failure,"
+on the other hand, refers to the system as a whole stopping the service it provides to
+users.
+
+The goal of fault-tolerant design is not to drive faults down to zero. In a distributed
+system, faults are assumed to occur at some steady rate, and the goal becomes ensuring
+that an individual fault does not directly turn into a system-wide failure.
+
+<Callout type="info">
+Building a structure that "survives faults" is generally more cost-effective than
+trying to "prevent faults from happening" in the first place. There is no upper bound
+on the cost of making individual components perfect, whereas structural measures like
+redundancy and isolation have a realistic point of diminishing returns.
+</Callout>
+
+## Hardware faults
+
+Disk failures, faulty power supplies, and bit-flipping memory errors are, viewed from a
+single machine, low-probability events. But once you're operating a system at the scale
+of thousands of machines, it becomes statistically normal for something to be broken on
+some machine every single day.
+
+For a single-machine system, hardware-level redundancy — RAID configurations for disks,
+backup power supplies — can handle this reasonably well on its own. But as scale grows,
+you need to treat the occurrence of hardware faults as a given and design the software
+layer to automatically detach and hand off from failed components.
+
+## Software faults
+
+Software faults tend to be trickier than hardware faults. Bugs that only surface under
+a specific combination of inputs, leaks that slowly consume memory over time, processes
+that suddenly run away and devour shared resources — the root cause itself is often
+hard to pin down.
+
+What makes this worse is that when the same software runs across many machines, the
+same bug can fire in multiple instances at the same time. Most hardware faults occur
+independently on each machine (weak correlation), whereas software faults tend to occur
+in a correlated way. A <Term slug="cascading-failure">cascading failure</Term>, where a
+delay in one dependency triggers a surge of retries that in turn overloads another
+component, is a typical example of this correlation.
+
+<Callout type="warn">
+No matter how many redundant instances share the same bug, all of them can become
+unhealthy at once if the input that triggers the bug arrives. Design needs to account
+for the fact that software has failure modes that simple instance-count redundancy
+alone cannot prevent.
+</Callout>
+
+## Human error
+
+Human mistakes during operational configuration changes and deployments make up a
+significant share of real-world outage causes. Working from the premise that people
+will make mistakes, the following design and operational practices are realistic ways
+to reduce both the probability and the blast radius of such mistakes.
+
+- APIs and operating procedures that make mistakes hard to make (don't let dangerous
+  operations be triggered easily)
+- Letting people try out the error-prone parts in an environment with limited blast
+  radius
+- Providing a way to quickly roll back configuration changes and deployments
+- Having enough observability to track what's actually happening
+
+These practices are deeply connected to "maintainability," and operability in
+particular, which we cover in the next chapter.
+
+## Design approaches to fault tolerance
+
+Summarizing the design approaches that are broadly effective across the three kinds of
+faults we've covered here — hardware, software, and human error — gives us roughly the
+following.
+
+1. **Redundancy**: Provision multiple components that fill the same role, so the whole
+   system keeps running even if one stops functioning
+2. **Isolation**: Contain the blast radius of a failure so that one malfunction doesn't
+   spread to other parts
+3. **Timeouts and retries**: Don't wait forever on an unresponsive peer — give up after
+   a reasonable amount of time
+4. **Monitoring and detection**: Detect anomalies before a human notices them (or at
+   least around the same time)
+
+These aren't isolated techniques so much as fundamental ideas that will keep resurfacing
+in the chapters ahead — load, latency, and maintainability.
+
+<QuizInline
+  id="rel-fault-vs-failure"
+  prompt="Which of the following most accurately describes the relationship between a 'fault' and a 'failure'?"
+  options={[
+    { id: "a", label: "A fault and a failure mean the same thing, so there's no need to distinguish them" },
+    { id: "b", label: "A fault is an anomaly in an individual component, while a failure is the system as a whole stopping service to users — the two are distinct" },
+    { id: "c", label: "If no failure occurs, a fault can never have occurred either" },
+    { id: "d", label: "A fault refers only to human error" }
+  ]}
+  correctOptionId="b"
+  explanation="A fault refers to an anomaly at the component level, while a failure refers to the state where the system as a whole can no longer provide its function. Fault-tolerant design aims to keep individual faults from escalating into failures."
+/>
+
+<BookRef chapter={1} />
