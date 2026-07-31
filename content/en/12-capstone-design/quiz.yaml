@@ -1,0 +1,120 @@
+questions:
+  - id: q1-unbundling-definition
+    type: single
+    prompt: "Which of the following best describes unbundling?"
+    options:
+      - id: a
+        label: "Decomposing the roles a single database product used to play into multiple specialized data systems, each suited to a particular use case, and composing them into an overall system"
+      - id: b
+        label: "Integrating every feature into a single database product to eliminate any dependency on external systems"
+      - id: c
+        label: "Reducing the number of partitions to one and reverting to a single-node setup"
+      - id: d
+        label: "Removing replication and tolerating a single point of failure"
+    correctOptionIds: ["a"]
+    explanation: "Unbundling is the idea of decomposing roles into systems specialized for a particular use case, such as search, caching, or an analytical store, and combining them."
+
+  - id: q2-unbundling-connector
+    type: single
+    prompt: "Which mechanism did this module describe for continuously propagating changes from the primary database to multiple unbundled, specialized data systems?"
+    options:
+      - id: a
+        label: "Only manual, periodic bulk-copy jobs"
+      - id: b
+        label: "Batch processing and stream processing driven by change data capture (CDC)"
+      - id: c
+        label: "Synchronously updating every derived data system within a single transaction"
+      - id: d
+        label: "Unbundling requires no coordination between derived data systems"
+    correctOptionIds: ["b"]
+    explanation: "The typical setup extracts changes to the primary database as CDC, then propagates them to each derived data system via batch processing (rebuilding) or stream processing (continuous incremental updates)."
+
+  - id: q3-end-to-end-argument
+    type: single
+    prompt: "Which statement best captures the end-to-end argument?"
+    options:
+      - id: a
+        label: "As long as lower-layer reliability (like TCP) is high enough, the application doesn't need to think about correctness at all"
+      - id: b
+        label: "An application-level correctness guarantee can't be fully delegated to lower layers — it ultimately has to be enforced by both ends of the communication (the application itself)"
+      - id: c
+        label: "Adopting end-to-end encryption automatically solves the problem of duplicate execution"
+      - id: d
+        label: "Disabling the network layer's retransmission feature eliminates duplicate requests"
+    correctOptionIds: ["b"]
+    explanation: "Lower-layer guarantees are useful optimizations, but they aren't a sufficient condition for correctness — the final guarantee has to be designed at both ends of the application."
+
+  - id: q4-idempotency-key
+    type: single
+    prompt: "Which design for preventing duplicate execution of a request follows the end-to-end perspective?"
+    options:
+      - id: a
+        label: "Make the network reliable enough that retransmission is banned entirely"
+      - id: b
+        label: "The client issues an idempotency key, and the server avoids treating a request carrying the same key as a new operation"
+      - id: c
+        label: "Set the server's timeout to zero"
+      - id: d
+        label: "Execute every request synchronously and serially on a single node"
+    correctOptionIds: ["b"]
+    explanation: "An idempotency key is a design where the application (the end) absorbs duplication, so that the final effect stays a single execution even if retransmission happens somewhere along the path."
+
+  - id: q5-uniqueness-across-partitions
+    type: single
+    prompt: "In a partitioned, unbundled environment, what's a typical trick for making a uniqueness constraint practical to enforce?"
+    options:
+      - id: a
+        label: "Include the key you want to guarantee uniqueness for as (part of) the partition key, so the same key always lands on the same partition"
+      - id: b
+        label: "Give up on verifying uniqueness and accept that duplicates will occur"
+      - id: c
+        label: "Consolidate every partition back onto a single node"
+      - id: d
+        label: "Only enforce a uniqueness constraint on the derived data side, and leave the primary database unconstrained"
+    correctOptionIds: ["a"]
+    explanation: "Including the key you want to guarantee uniqueness for in the partition key makes it possible to effectively guarantee uniqueness through a local, per-partition constraint alone."
+
+  - id: q6-event-sourcing
+    type: single
+    prompt: "What advantage does event-sourcing-style data storage have over a simple overwrite style?"
+    options:
+      - id: a
+        label: "It always uses less storage than the overwrite style"
+      - id: b
+        label: "Because what happened, when, and in what order remains in the log, it's easier to reconstruct past state and trace the cause of an abnormal value"
+      - id: c
+        label: "It always has lower read latency than the overwrite style"
+      - id: d
+        label: "It removes the need to consider event ordering"
+    correctOptionIds: ["b"]
+    explanation: "Event sourcing keeps the history of changes itself as a log, which gives it a strength in auditability — the ability to trace causes after the fact."
+
+  - id: q7-derived-data-reproducibility
+    type: single
+    prompt: "Which property is essential for derived-data reproducibility to hold?"
+    options:
+      - id: a
+        label: "The transformation that produces the derived data is idempotent (running it any number of times on the same input yields the same result)"
+      - id: b
+        label: "There are more derived data systems than primary databases"
+      - id: c
+        label: "The transformation logic is never changed"
+      - id: d
+        label: "The primary database uses the relational model"
+    correctOptionIds: ["a"]
+    explanation: "If the transformation isn't idempotent, rebuilding it from the same log can produce a different result each time, which makes rebuild-based verification (auditing) meaningless."
+
+  - id: q8-auditability-not-just-logging
+    type: single
+    prompt: "Why is just \"keeping a log\" not enough to achieve auditability?"
+    options:
+      - id: a
+        label: "Because you need to design all the way through to actually reconstructing state from the log and comparing the reconstructed result against the original state"
+      - id: b
+        label: "Because logs consume disk space and therefore must never be kept in production"
+      - id: c
+        label: "Because keeping a log always introduces replication lag"
+      - id: d
+        label: "Because auditability is fundamentally impossible without using event sourcing"
+    correctOptionIds: ["a"]
+    explanation: "Auditability only works once you go beyond just retaining a log and also build the ability to reconstruct and compare state from it."

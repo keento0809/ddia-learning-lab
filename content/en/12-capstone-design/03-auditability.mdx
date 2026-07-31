@@ -1,0 +1,106 @@
+---
+title: "Auditability: Reproducibility and Traceability of Derived Data"
+order: 3
+minutes: 13
+sourceHash: "fcc8df352fead2a99a161062a44838cff6dc948ef6222693944943dc6c0a2426"
+---
+
+# Auditability: Reproducibility and Traceability of Derived Data
+
+The previous lesson covered guaranteeing "correctness" end to end. This
+lesson looks at how to make sure that inconsistencies or unintended
+results that slip through anyway can still be discovered and traced back
+to their cause afterward. We call this property
+<Term slug="auditability">auditability</Term>.
+
+## Why you need to be able to verify things after the fact
+
+In an unbundled setup involving multiple derived data systems, you need to
+be able to answer questions like these:
+
+- Which input events produced a given aggregated number, and how?
+- Does the value in the search index match the primary database's latest
+  state? If not, when did it start drifting?
+- If "a wrong value got written," was it an application bug, a bug in the
+  derived data's transformation logic, or was the primary data itself
+  wrong to begin with?
+
+None of these can be answered just by looking at the system's state
+"right now." You need the history of how the state got there.
+
+## Overwriting state vs. keeping a change history
+
+Many applications store data by overwriting a record with its "current
+value." Under this model, information about what a value used to be, or
+why it changed, is simply lost.
+
+<Term slug="event-sourcing">Event sourcing</Term>
+takes a different approach: instead of directly storing and overwriting
+state itself, it records events representing "what happened" as an
+<Term slug="append-only-log">append-only log</Term>, and derives the
+current state by applying that sequence of events in order from the
+start.
+
+```
+Overwrite style:
+  balance = 100 -> balance = 80 -> balance = 60
+  (what happened between 100 and 80 leaves no trace)
+
+Event sourcing style:
+  [DEPOSIT +100] [WITHDRAW -20] [WITHDRAW -20]
+  balance = result of applying the event sequence from the start (= 60)
+```
+
+With event sourcing, not just the current balance but "when, what, and in
+what order" things happened remains in the log itself, which makes it
+possible to reconstruct the state at a specific point in time, or trace an
+abnormal value back to the event that caused it.
+
+<Callout type="info">
+  Event sourcing is exactly the same shape as the "produce output from an
+  input log via a defined transformation" structure of the batch and
+  stream processing covered in modules 10 and 11. Achieving auditability
+  is an extension of the same machinery used to build derived data.
+</Callout>
+
+## The guarantee of derived-data reproducibility
+
+If the primary information is kept as an append-only event log, and
+derived data is defined as "the result of applying a defined
+transformation to that log," the following property holds:
+
+- Applying the same transformation logic to the same log always produces
+  the same derived data (reproducibility)
+- If derived data is suspected to be wrong, you can rebuild it from
+  scratch and compare the results to tell apart "a bug in the logic" from
+  "something broke at runtime"
+- If you fix the transformation logic itself, you can rerun it against the
+  historical log to verify what the corrected logic would have produced
+  in the past
+
+The key to this reproducibility holding is that the transformation that
+produces the derived data is <Term slug="idempotency">idempotent</Term>:
+running it any number of times on the same input always yields the same
+result. For a non-idempotent transformation — one where side effects pile
+up every time it runs — "rebuilding from scratch" isn't a valid way to
+verify anything.
+
+<Callout type="warn">
+  Auditability isn't achieved just by "keeping a log." Your design also
+  needs to cover actually being able to reconstruct state from that log,
+  and being able to compare the reconstructed result against the original
+  state. This module's exercise (an audit log integrity check) has you
+  write code that detects gaps and duplicates in a log to get a feel for
+  this.
+</Callout>
+
+## Summary
+
+Correctness (the previous lesson) is "designing so that a broken state
+never gets created," while auditability is "designing so that a broken
+state, if it does happen, can be discovered and its cause traced." Both
+share the common thread that they can't be handled within a single
+component alone — you need to reason about them across the whole
+unbundled system.
+
+<BookRef chapter={12} />

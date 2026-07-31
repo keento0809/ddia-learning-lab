@@ -1,0 +1,70 @@
+---
+title: "Summary and the Capstone Exercise"
+order: 4
+minutes: 10
+sourceHash: "21a9b01f70752f4558e3b6bf99f3aff4df2581e09db7b7e72beb1b8b01d462ca"
+---
+
+# Summary and the Capstone Exercise
+
+Across the previous three lessons, we looked at how to design and verify
+a data system built from multiple components, through the three lenses of
+[unbundling](./01-unbundling), [end-to-end correctness](./02-correctness),
+and [auditability](./03-auditability). In this final lesson, we move on to
+an exercise that pulls together everything from the course so far
+(reliability, data models, storage, encoding, replication, partitioning,
+transactions, the troubles with distributed systems, consistency and
+consensus, batch processing, and stream processing) into a single design
+decision.
+
+## Tying the knowledge together
+
+Each of the building blocks covered in this course stands on its own, but
+real-world system design always requires choosing several of them at
+once.
+
+- Your choice of **replication approach** (module 5) shifts which is
+  easier to favor: write availability or read consistency
+- Your choice of **partitioning strategy** (module 6) shifts which is
+  easier to favor: ease of load distribution or the efficiency of range
+  queries
+- Your choice of **consistency model** (module 9) shifts whether the
+  system, when a partition happens, "stops writes to protect
+  consistency" or "keeps accepting writes and tolerates temporary
+  inconsistency"
+
+These three choices aren't independent — they influence each other. For
+example, if you want strong consistency, that pairs well with a
+replication approach that funnels writes through a single place; if you
+prioritize availability instead, you'd look at combining it with an
+approach that accepts writes concurrently in multiple places. There's no
+single "right answer" — the stance that's been consistent throughout this
+course, choosing tradeoffs against your requirements, holds all the way to
+the end.
+
+## About the capstone exercise
+
+<Callout type="tip">
+  The capstone exercise presents the requirements for a service with users
+  across multiple regions, and has you choose among a replication
+  approach, a partitioning strategy, and a consistency model in a
+  branching scenario. Depending on the combination you choose, you get
+  feedback on how well that design meets the requirements — and what it
+  costs you.
+</Callout>
+
+With the tradeoff thinking from this lesson in mind, let's actually put it
+into practice and make some design decisions.
+
+→ [Continue to the capstone exercise](/learn/capstone)
+
+## This module's hands-on exercise
+
+Separately from the capstone, this module's own exercise has you implement
+the "audit log integrity check" covered in the auditability lesson as
+code. By writing logic that detects gaps and duplicates in a sequence of
+event numbers, you'll get a feel for confirming the foundation that
+supports derived-data reproducibility — namely, that the log itself is
+trustworthy and complete.
+
+<BookRef chapter={12} />
