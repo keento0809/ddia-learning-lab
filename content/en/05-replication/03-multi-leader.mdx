@@ -2,7 +2,7 @@
 title: Multi-Leader Replication and Conflict Resolution
 order: 3
 minutes: 13
-sourceHash: dff62dfd1a2633bdf074c002e7fb9fc58d6f21ffac101e4a0c2e5bba7b9c3c60
+sourceHash: 677a4d7c612ef482b518263bbca05ca1f555b6610fbc052e234b89715a3aa174
 ---
 
 # Multi-Leader Replication and Conflict Resolution
@@ -51,7 +51,7 @@ have to accept that conflicts will happen and design how to resolve them after t
 Once a conflict is detected, the system has to decide which write wins — or how to merge both.
 Common strategies include:
 
-1. **Last-write-wins (LWW)**: attach a timestamp to each write and mechanically keep the newest
+1. <Term slug="lww">Last-write-wins (LWW)</Term>: attach a timestamp to each write and mechanically keep the newest
    one. Simple to implement, but the losing write is silently discarded, which can look to a
    user like their change just vanished. Clock skew across machines also makes "newest" an
    unreliable judgment.
