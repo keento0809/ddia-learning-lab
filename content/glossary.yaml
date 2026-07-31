@@ -262,6 +262,94 @@
     ja: ノードの追加・削除やデータ量の偏りに応じて、パーティションの担当ノードを移動し直す運用作業。自動化するとオペレーターの手間は減るが、意図しないタイミングで大量のデータ移動が走り性能に影響するリスクがある。
     en: The operational process of moving partition ownership between nodes in response to nodes being added or removed, or to uneven data growth. Automating it reduces operator effort, but risks triggering large, unplanned data transfers that hurt performance at an inconvenient time.
 
+- slug: relational-model
+  term:
+    ja: リレーショナルモデル
+    en: relational model
+  definition:
+    ja: データを行(タプル)の集合であるテーブルとして表現し、テーブル間の関係を外部キーで結びつけるデータモデル。複数テーブルにまたがるデータを取得するにはJOINによる結合が必要になる。
+    en: A data model that represents data as tables of rows (tuples), linking tables together via foreign keys. Retrieving data that spans multiple tables typically requires a join.
+
+- slug: document-model
+  term:
+    ja: ドキュメントモデル
+    en: document model
+  definition:
+    ja: 関連するデータを1つの自己完結した構造化ドキュメント(JSON等)にまとめて格納するデータモデル。ネストしたオブジェクトや配列をそのまま1件のレコードとして表現できる。
+    en: A data model that stores related data together in a single self-contained structured document (such as JSON), allowing nested objects and arrays to be represented directly as one record.
+
+- slug: impedance-mismatch
+  term:
+    ja: インピーダンスミスマッチ
+    en: impedance mismatch
+  definition:
+    ja: アプリケーションコード側の木構造に近いオブジェクト表現と、永続化層のフラットなテーブル形式表現との間にある構造上のズレ、およびそれを埋めるための変換作業の手間。
+    en: The structural gap between an application's tree-like object representation and the flat table representation of a persistence layer, along with the conversion effort needed to bridge it.
+
+- slug: schema-on-write
+  term:
+    ja: スキーマオンライト
+    en: schema-on-write
+  definition:
+    ja: データを書き込む時点でスキーマ(列や型)を確定させ、以降の書き込みがそのスキーマに従うことを要求する運用方式。
+    en: An approach where the schema (columns and types) is fixed at write time, and subsequent writes are required to conform to it.
+
+- slug: schema-on-read
+  term:
+    ja: スキーマオンリード
+    en: schema-on-read
+  definition:
+    ja: 書き込み時にスキーマを固定せず、読み取り側がそのつどデータの構造を解釈する運用方式。異なる形のデータが同じ格納先に混在しうる。
+    en: An approach where the schema is not fixed at write time, and the reading code interprets the structure of the data as needed. Records of differing shapes can coexist in the same store.
+
+- slug: locality
+  term:
+    ja: ローカリティ
+    en: locality
+  definition:
+    ja: 関連するデータを物理的に近い場所(連続した領域)にまとめて格納する性質。関連データをまとめて読み書きするアクセスパターンでは往復回数を減らせるが、部分読み取りや部分更新では無駄が生じやすい。
+    en: The property of storing related data close together in a contiguous region. It reduces round trips for access patterns that read or write related data together, but can waste effort on partial reads or partial updates.
+
+- slug: normalization
+  term:
+    ja: 正規化
+    en: normalization
+  definition:
+    ja: 重複するデータを別テーブルへ切り出し、参照(外部キーなどの識別子)で結びつけることで、同じ情報を複数箇所に重複して持たないようにする設計手法。
+    en: A design technique that extracts duplicated data into separate tables and links them via references (such as foreign keys), so the same information is not stored redundantly in multiple places.
+
+- slug: denormalization
+  term:
+    ja: 非正規化
+    en: denormalization
+  definition:
+    ja: 参照先のデータをコピーして同じレコード内に埋め込み、読み取り時の結合を減らす設計手法。読み取りは単純になる一方、更新時にコピーした全箇所を一貫して直す責任を引き受ける。
+    en: A design technique that copies referenced data and embeds it in the same record to reduce joins at read time. Reads become simpler, but every copy must be kept consistent on update.
+
+- slug: many-to-many-relationship
+  term:
+    ja: 多対多関係
+    en: many-to-many relationship
+  definition:
+    ja: 一方の集合の1件が他方の集合の複数件と結びつき、かつその逆方向も複数件と結びつきうる関係。中間テーブル(連関テーブル)や同等の参照構造で表現することが多い。
+    en: A relationship in which one record in a set can be linked to multiple records in another set, and vice versa. It is typically represented with a join table or an equivalent reference structure.
+
+- slug: graph-data-model
+  term:
+    ja: グラフデータモデル
+    en: graph data model
+  definition:
+    ja: データを頂点(ノード)と、頂点間を結ぶ辺(エッジ)の集合として表現するデータモデル。要素間の関係そのものが一級のデータとして扱われる点が特徴。
+    en: A data model that represents data as a set of vertices (nodes) and edges connecting them. The relationships between elements are treated as first-class data in their own right.
+
+- slug: property-graph
+  term:
+    ja: プロパティグラフ
+    en: property graph
+  definition:
+    ja: 頂点と辺のそれぞれが任意のキーと値の組(プロパティ)を持てるグラフデータモデルの一形態。頂点にはラベル、辺には向きとタイプを持たせられることが多い。
+    en: A form of graph data model in which both vertices and edges can carry arbitrary key-value properties. Vertices are often given labels, and edges a direction and a type.
+
 - slug: reliability
   term:
     ja: 信頼性
