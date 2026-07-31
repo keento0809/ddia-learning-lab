@@ -12,8 +12,30 @@ UI変更を「エディタ上で編集が成功した」だけで完了と報告
    `npm run lint && npm run typecheck && npm run test`
    コンテンツを触った場合は `npm run validate:content` も実行する。
 
-2. **dev serverを起動し、変更したページを実際に開く。**
-   対象ルートは /ja と /en の両方を開くこと。
+2. **`next dev`(`npm run dev`)ではなく `npm run preview` でサーバを起動し、変更したページを実際に開く。**
+   **失敗→恒久対策(2026-07-31確認)**: `next dev`は`getCloudflareContext`が使う
+   `getPlatformProxy`のservice bindingローカルスタブが`Request`オブジェクトを
+   受け付けず(URL文字列のみ許容と推定)、`env.API.fetch(request)`を呼ぶ全ルート
+   (`lib/api/workerApiDispatch.ts`・`lib/auth/workerApiAuth.ts`経由の
+   `/api/*`——認証・dashboard・progress・submissions・guest-progress/import・
+   account等)が`TypeError: Failed to parse URL from [object Request]`で無条件に
+   500を返す(worker-apiを別途起動して接続済みにしても再現する。実workerd
+   `wrangler dev`/`opennextjs-cloudflare preview`/本番では同じアプリコードが
+   正しく動作することを確認済み — アプリのバグではなく`next dev`側の制約)。
+   - 起動: `npm run preview`(`opennextjs-cloudflare build && opennextjs-cloudflare preview`、
+     http://localhost:8787)。ビルド成果物を使うため、コード変更のたびに再実行が必要
+     (next devのような自動リロードはない)。
+   - 検証対象が`/api/*`(認証・dashboard・progress・submissions・
+     guest-progress/import・account)を経由する変更の場合は、別プロセスで
+     worker-apiも起動しておくこと: `(cd workers/api && npx wrangler dev)`
+     (http://localhost:8788)。ローカルのdev registry経由でservice bindingが
+     接続される。未起動のまま`npm run preview`だけで叩くと
+     `503 Worker "ddia-learning-lab-api" not found`になるが、これはworker-api
+     未起動という前提条件の問題であり本項のバグとは別(期待通りの挙動)。
+   - `next dev`はページのSSR自体(`/ja`・`/en`等の直接アクセス)は200を返すため、
+     `/api/*`を経由しない純粋なUI変更ではエラーに気づけない。`/api/*`を経由するか
+     不明な場合は安全側に倒して`npm run preview`で検証すること。
+   - 対象ルートは /ja と /en の両方を開くこと。
 
 3. **変更点を直接操作する。** 新しいコントロール(ボタン、エディタ、Viz操作)なら:
    クリック/入力し、期待する状態変化を確認する。操作前後の状態を
