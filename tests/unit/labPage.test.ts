@@ -43,4 +43,20 @@ describe("buildLabPageData", () => {
     const detail = getModuleDetail("ja", "05-replication");
     expect(buildLabPageData("ja", "05-replication", "does-not-exist-xyz", detail!)).toBeUndefined();
   });
+
+  describe("nextHref (T-108e, 02§3.2 next-lesson CTA)", () => {
+    it("points to the next exercise in the module TOC when one follows", () => {
+      const detail = getModuleDetail("ja", "05-replication");
+      const data = buildLabPageData("ja", "05-replication", "quorum-lab", detail!);
+
+      expect(data?.nextHref).toBe("/learn/05-replication/lab/read-your-writes-lab");
+    });
+
+    it("falls back to the module detail page when this is the last TOC item", () => {
+      const detail = getModuleDetail("ja", "05-replication");
+      const data = buildLabPageData("ja", "05-replication", "read-your-writes-lab", detail!);
+
+      expect(data?.nextHref).toBe("/learn/05-replication");
+    });
+  });
 });

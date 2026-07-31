@@ -1,5 +1,10 @@
 import { getExercise } from "./labContent";
-import { exerciseRouteSegment, type ModuleDetailSummary } from "./moduleDetail";
+import {
+  buildModuleToc,
+  exerciseRouteSegment,
+  tocItemHref,
+  type ModuleDetailSummary,
+} from "./moduleDetail";
 import type { Locale } from "./contracts/common";
 import type { ExerciseDefinition } from "./contracts/exercise";
 
@@ -8,6 +13,12 @@ export interface LabPageData {
   /** 目次上の通し番号(1始まり)。messages.moduleDetail.exerciseItemLabelに渡す */
   index: number;
   exercise: ExerciseDefinition;
+  /**
+   * 合格演出後の「次へ」導線(T-108e, 02§3.2「合格演出 + 次レッスン導線」)。
+   * モジュール目次(レッスン→クイズ→演習の順、lib/moduleDetail.ts)上でこの演習の
+   * 次のアイテムへのパス。目次の末尾だった場合はモジュール詳細ページへ戻す。
+   */
+  nextHref: string;
 }
 
 /**
@@ -33,5 +44,12 @@ export function buildLabPageData(
   const exercise = getExercise(locale, detail.exercises[index].slug);
   if (!exercise) return undefined;
 
-  return { moduleTitle: detail.meta.title, index: index + 1, exercise };
+  const toc = buildModuleToc(detail);
+  const tocIndex = toc.findIndex(
+    (item) => item.kind === "exercise" && item.slug === detail.exercises[index].slug,
+  );
+  const nextTocItem = tocIndex === -1 ? undefined : toc[tocIndex + 1];
+  const nextHref = nextTocItem ? tocItemHref(moduleSlug, nextTocItem) : `/learn/${moduleSlug}`;
+
+  return { moduleTitle: detail.meta.title, index: index + 1, exercise, nextHref };
 }

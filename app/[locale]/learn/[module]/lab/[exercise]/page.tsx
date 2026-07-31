@@ -6,6 +6,7 @@ import { buildLabPageData } from "@/lib/labPage";
 import { getMessages, formatMessage } from "@/lib/i18n/messages";
 import { routing, type AppLocale } from "@/lib/i18n/routing";
 import { buildLanguageAlternates } from "@/lib/i18n/alternates";
+import { auth } from "@/lib/auth/config";
 
 /**
  * S-06 演習ページ本番ルート(T-108r, 01基本設計書 ディレクトリ構成
@@ -65,5 +66,14 @@ export default async function LabPage({
     notFound();
   }
 
-  return <LabWorkspace exercise={data.exercise} locale={locale} />;
+  const session = await auth();
+
+  return (
+    <LabWorkspace
+      exercise={data.exercise}
+      locale={locale}
+      isAuthenticated={Boolean(session?.user?.id)}
+      nextHref={data.nextHref}
+    />
+  );
 }

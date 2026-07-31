@@ -8,17 +8,23 @@ import { runSqlExercise } from "@/lib/runner/sqlRunner";
 import { buildRunRequest } from "@/lib/lab/buildRunRequest";
 import { buildSqlRunRequest } from "@/lib/lab/buildSqlRunRequest";
 import { adaptSqlRunResult } from "@/lib/lab/adaptSqlRunResult";
-import { labTransition, outcomeFromRunResult } from "@/lib/lab/labStateMachine";
+import { buildSubmissionRequest } from "@/lib/lab/buildSubmissionRequest";
+import { labTransition, outcomeFromRunResult, type LabOutcome } from "@/lib/lab/labStateMachine";
 import { readDraft, writeDraft } from "@/lib/lab/draftStorage";
 import { createDebouncedSaver } from "@/lib/lab/debouncedSaver";
 import { useResizablePanes } from "@/lib/lab/useResizablePanes";
 import { MAX_PANE_WIDTH_PERCENT, MIN_PANE_WIDTH_PERCENT, useLabStore } from "@/lib/store/labStore";
+import { postSubmission } from "@/lib/submissions/api";
+import { useMarkProgressMutation } from "@/lib/progress/useMarkProgressMutation";
 import { getMessages, type Locale } from "@/lib/i18n/messages";
+import { Link } from "@/lib/i18n/navigation";
 import { CodeEditor } from "./CodeEditor";
 import { ProblemPane } from "./ProblemPane";
 import { ResultPanel } from "./ResultPanel";
 import { LabToolbar } from "./LabToolbar";
 import { SchemaViewer } from "./SchemaViewer";
+
+type SubmissionPhase = "idle" | "submitting" | "recorded" | "error";
 
 /**
  * S-06 演習(ラボ)画面(T-108, 02§4.2)の中核コンポーネント。
@@ -35,12 +41,39 @@ import { SchemaViewer } from "./SchemaViewer";
 export function LabWorkspace({
   exercise,
   locale,
+  isAuthenticated = false,
+  nextHref = "/",
 }: {
   exercise: ExerciseDefinition;
   locale: Locale;
+  /** 02§3.2「合格演出+次レッスン導線」向け。ログイン時のみ提出API接続を行う(T-108e) */
+  isAuthenticated?: boolean;
+  /** 合格演出のCTA遷移先(lib/labPage.tsのbuildLabPageData、T-108e) */
+  nextHref?: string;
 }) {
   const slug = exercise.slug;
   const t = getMessages(locale).labWorkspace;
+  const [submissionPhase, setSubmissionPhase] = useState<SubmissionPhase>("idle");
+  // qa-evaluator指摘(操作性3/5, T-108e): 提出API送信中は「実行」を再度無効化する
+  // ためのフラグ(LabToolbarのdisabledに使う)。submissionPhaseは合格パスのUI表示
+  // 専用(idle/submitting/recorded/error)なため、fail/timeout時の統計目的送信も
+  // 含めた「送信中かどうか」全体を別途この状態で追跡する。
+  //
+  // stateとrefを両方持つ理由: CodeEditorの⌘/Ctrl+Enterショートカット
+  // (components/lab/CodeEditor.tsxの`onMount`)はMonacoのマウント時に一度だけ
+  // `onRunShortcut`をaddCommandで束縛し、以後propが更新されても再束縛しない
+  // (`onMount`はマウント時1回のみ発火する@monaco-editor/reactの仕様)。
+  // `handleRun`をuseCallbackの依存配列経由でこのstateに反応させると、
+  // ショートカット側は束縛時点の古いクロージャ値(常にfalse)しか見られず
+  // ガードが効かなくなる。refなら`handleRun`の依存配列に加える必要が無く
+  // (=handleRun自体の再生成・再束縛も不要)、常に最新値を読める。
+  const [submissionInFlight, setSubmissionInFlightState] = useState(false);
+  const submissionInFlightRef = useRef(false);
+  const setSubmissionInFlight = useCallback((value: boolean) => {
+    submissionInFlightRef.current = value;
+    setSubmissionInFlightState(value);
+  }, []);
+  const progressMutation = useMarkProgressMutation();
 
   const ensureEntry = useLabStore((state) => state.ensureEntry);
   const setCode = useLabStore((state) => state.setCode);
@@ -93,7 +126,62 @@ export function LabWorkspace({
     [setCode, slug],
   );
 
+  /**
+   * 02§3.2「演習提出フロー」。全テスト合格時: POST /api/submissions(pass)→
+   * PUT /api/progress(done, score:100、全合格時のみresult:"pass"のため常に100)
+   * を順に送信し、両方成功したら合格演出+次レッスン導線を表示する。
+   * 失敗/タイムアウト時(runtime_errorも含む、シーケンス図のelse分岐)は統計目的の
+   * submission送信のみ行い(結果パネル自体の表示は変えない)、UIには反映しない。
+   * 未ログイン時はどちらも送信しない(401を送りつけないため、
+   * components/quiz/QuizRunner.tsx/CompleteAndNextButton.tsxと同じ方針)。
+   *
+   * qa-evaluator指摘(操作性3/5): 通常のJS演習は数msで採点が終わり`status`が
+   * すぐ再実行可能な終端状態に戻るため、`submissionInFlight`(送信中)ガード無しでは
+   * 素早い連続クリックだけでsubmission(fail/timeout時も含む)やprogress PUTが
+   * 二重送信されてしまう。true→finallyでfalseに戻すガードをfail/timeoutの
+   * 統計目的送信にも及ぼすため、この分岐も(呼び出し元をブロックしない前提を保ちつつ)
+   * 内部でawaitする。
+   */
+  const recordOutcome = useCallback(
+    async (outcome: LabOutcome, code: string, result: RunResult, requestTests: RunRequest["tests"]) => {
+      if (!isAuthenticated) return;
+      const submissionBody = buildSubmissionRequest(exercise, code, result, requestTests);
+
+      setSubmissionInFlight(true);
+      try {
+        if (outcome !== "passed") {
+          await postSubmission(submissionBody).catch(() => {
+            // 統計目的の送信のため失敗してもユーザー操作をブロックしない
+          });
+          return;
+        }
+
+        setSubmissionPhase("submitting");
+        try {
+          await postSubmission(submissionBody);
+          await progressMutation.mutateAsync({
+            itemType: "exercise",
+            itemSlug: exercise.slug,
+            status: "done",
+            score: 100,
+          });
+          setSubmissionPhase("recorded");
+        } catch {
+          setSubmissionPhase("error");
+        }
+      } finally {
+        setSubmissionInFlight(false);
+      }
+    },
+    [exercise, isAuthenticated, progressMutation, setSubmissionInFlight],
+  );
+
   const handleRun = useCallback(async () => {
+    // qa-evaluator指摘(操作性3/5, T-108e): ⌘/Ctrl+Enterショートカット
+    // (CodeEditorのonRunShortcut)はLabToolbarのdisabledボタンを経由しないため、
+    // ボタン側のガードだけでは再実行を防げない。ここでも送信中は弾く
+    // (refを読む理由は上のsubmissionInFlightRef宣言部のコメント参照)。
+    if (submissionInFlightRef.current) return;
     const store = useLabStore.getState();
     if (!store.entries[slug]) {
       store.ensureEntry(slug, readDraft(slug, locale) ?? exercise.template);
@@ -103,6 +191,7 @@ export function LabWorkspace({
     const afterRun = labTransition(current.status, { type: "run" });
     if (afterRun === current.status) return; // idle以外からは実行しない(ガード)
     setStatus(slug, afterRun);
+    setSubmissionPhase("idle"); // 前回実行の合格演出/エラー表示を新しい実行の間は隠す
 
     if (current.code.trim().length === 0) {
       const emptyResult: RunResult = {
@@ -139,6 +228,7 @@ export function LabWorkspace({
         setResult(slug, result, requestTests);
         setStatus(slug, labTransition("grading", { type: "graded", outcome }));
         if (outcome !== "passed") incrementFailCount(slug);
+        void recordOutcome(outcome, current.code, result, requestTests);
         return;
       }
 
@@ -149,14 +239,25 @@ export function LabWorkspace({
       setResult(slug, result, request.tests);
       setStatus(slug, labTransition("grading", { type: "graded", outcome }));
       if (outcome !== "passed") incrementFailCount(slug);
+      void recordOutcome(outcome, current.code, result, request.tests);
     } catch (e) {
       const errorResult: RunResult = { result: "error", error: String(e), logs: [], durationMs: 0 };
       setResult(slug, errorResult, []);
       setStatus(slug, labTransition("running", { type: "worker_result" }));
       setStatus(slug, labTransition("grading", { type: "graded", outcome: "runtime_error" }));
       incrementFailCount(slug);
+      void recordOutcome("runtime_error", current.code, errorResult, []);
     }
-  }, [exercise, incrementFailCount, locale, setResult, setStatus, slug, t.results.emptyCodeError]);
+  }, [
+    exercise,
+    incrementFailCount,
+    locale,
+    recordOutcome,
+    setResult,
+    setStatus,
+    slug,
+    t.results.emptyCodeError,
+  ]);
 
   const handleReset = useCallback(() => {
     resetCode(slug, exercise.template);
@@ -216,7 +317,14 @@ export function LabWorkspace({
       />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-        <LabToolbar status={status} onRun={handleRun} onReset={handleReset} autosaving={autosaving} locale={locale} />
+        <LabToolbar
+          status={status}
+          onRun={handleRun}
+          onReset={handleReset}
+          autosaving={autosaving}
+          locale={locale}
+          submissionInFlight={submissionInFlight}
+        />
         {/*
           失敗→恒久対策(T-202): このラッパーのmin-heightは、内側のCodeEditor自身が
           持つmin-h-[280px](components/lab/CodeEditor.tsx)より小さい値(220px)に
@@ -252,6 +360,45 @@ export function LabWorkspace({
             locale={locale}
           />
         </div>
+        {status === "passed" ? (
+          <div
+            data-testid="lab-submission-banner"
+            role="status"
+            className="shrink-0 border-t border-neutral-200 p-3 dark:border-neutral-800"
+          >
+            {!isAuthenticated ? (
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                {t.submission.signInToSaveLabel}
+              </p>
+            ) : submissionPhase === "submitting" ? (
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                {t.submission.submittingLabel}
+              </p>
+            ) : submissionPhase === "error" ? (
+              <p
+                role="alert"
+                data-testid="lab-submission-error"
+                className="text-sm text-red-700 dark:text-red-400"
+              >
+                {t.submission.submitErrorLabel}
+              </p>
+            ) : submissionPhase === "recorded" ? (
+              <div className="flex flex-col items-start gap-2">
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                  {t.submission.passedCelebrationLabel}
+                </p>
+                <Link
+                  href={nextHref}
+                  prefetch={false}
+                  data-testid="lab-next-lesson-link"
+                  className="rounded bg-neutral-900 px-4 py-1.5 text-sm text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+                >
+                  {t.submission.nextLessonCta}
+                </Link>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );

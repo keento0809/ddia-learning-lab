@@ -243,6 +243,13 @@
       "noLogs": "No console output",
       "durationLabel": "Duration: {ms}ms",
       "emptyCodeError": "No code has been entered"
+    },
+    "submission": {
+      "signInToSaveLabel": "Sign in to save your submission and progress",
+      "submittingLabel": "Sending your submission…",
+      "passedCelebrationLabel": "🎉 You passed! Progress recorded",
+      "submitErrorLabel": "Failed to send your submission",
+      "nextLessonCta": "Continue"
     }
   },
   "auth": {
