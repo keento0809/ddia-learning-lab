@@ -12,6 +12,11 @@ import { buildLanguageAlternates } from "@/lib/i18n/alternates";
  * (T-110/T-111)前でも、S-06自体の受入基準(Playwright/qa-evaluator/
  * verify-webapp)を安定して検証するために新設した(content/には一切依存しない、
  * T-000の`/demo`ルートと同じ設計上の位置づけ)。
+ *
+ * T-108r: 本番ルート(`/learn/[module]/lab/[exercise]`)新設後も開発専用ルート
+ * として残す(Playwright/verify-webappの固定検証先として引き続き使用するため)。
+ * ヘッダーナビ(`components/layout/Header.tsx`)からはリンクしておらず、
+ * 検索インデックスにも含めないよう`robots: noindex`を明示する。
  */
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -33,6 +38,7 @@ export async function generateMetadata({
   return {
     title: getMessages(locale).labPreview.pageTitle,
     alternates: { languages: buildLanguageAlternates("/lab-preview") },
+    robots: { index: false, follow: false },
   };
 }
 
