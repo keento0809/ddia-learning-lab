@@ -75,7 +75,7 @@ export function buildModuleToc(detail: ModuleDetailSummary): ModuleTocItem[] {
  * (T-108d: `/learn/05-replication/lab/05-replication/quorum-lab`という不正URL)。
  * ここでmoduleSlugプレフィックスを取り除き、残りをルートセグメントとする。
  */
-function exerciseRouteSegment(moduleSlug: string, exerciseSlug: string): string {
+export function exerciseRouteSegment(moduleSlug: string, exerciseSlug: string): string {
   const prefix = `${moduleSlug}/`;
   return exerciseSlug.startsWith(prefix) ? exerciseSlug.slice(prefix.length) : exerciseSlug;
 }

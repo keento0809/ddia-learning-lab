@@ -1,0 +1,40 @@
+slug: "07-transactions/atomic-transfer-lab"
+language: sql
+entry: |
+  CREATE TABLE accounts (id INTEGER PRIMARY KEY, name TEXT NOT NULL, balance INTEGER NOT NULL);
+  INSERT INTO accounts (id, name, balance) VALUES
+    (1, 'alice', 1000),
+    (2, 'bob', 500);
+template: |
+  -- Write two UPDATE statements that transfer 200 from alice (id=1) to bob (id=2).
+  -- The total balance (SUM) must stay the same before and after the transfer.
+tests:
+  - id: t1-balances-after-transfer
+    name:
+      ja: "送金後の各口座残高が正しい"
+      en: "Each account's balance is correct after the transfer"
+    call: { fn: "SELECT id, balance FROM accounts ORDER BY id", args: [] }
+    assert:
+      type: "equals"
+      value:
+        columns: ["id", "balance"]
+        rows:
+          - [1, 800]
+          - [2, 700]
+  - id: t2-total-balance-unchanged
+    name:
+      ja: "残高の合計が送金の前後で変わらない(原子性)"
+      en: "The total balance is unchanged across the transfer (atomicity)"
+    call: { fn: "SELECT SUM(balance) AS total FROM accounts", args: [] }
+    assert:
+      type: "equals"
+      value:
+        columns: ["total"]
+        rows:
+          - [1500]
+timeoutMs: 3000
+hints:
+  - ja: "残高を減らすUPDATEと増やすUPDATEを1文ずつ、合計2文書きます"
+    en: "Write one UPDATE that decreases a balance and one that increases a balance — two statements total"
+  - ja: "WHERE句でidを指定し、対象の口座だけを更新します"
+    en: "Use a WHERE clause with id to update only the intended account"

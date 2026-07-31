@@ -1,0 +1,95 @@
+---
+title: Forward and Backward Compatibility
+order: 3
+minutes: 12
+sourceHash: b91acb5a26d3a816d832d849d24e38bc4094d153f1722641f77469ab67587da0
+---
+
+# Forward and Backward Compatibility
+
+In real systems, a schema is never decided once and left alone forever. New
+requirements lead to wanting to add fields, and fields that fall out of use get
+removed. The problem is that changing a schema doesn't mean you can swap out
+every server's and client's code all at once. During a rolling deploy, old and
+new code run side by side, and it's not unusual for clients — mobile apps, for
+example — to keep running an old version for a long time.
+
+This creates a design requirement: schema changes need to let old and new code
+keep reading and writing data from each other. This is called
+<Term slug="schema-evolution">schema evolution</Term>.
+
+## Two directions of compatibility
+
+Thinking about schema evolution requires separating two distinct directions:
+"who wrote the data" versus "who is reading it."
+
+<Term slug="backward-compatibility">Backward compatibility</Term>
+means that newer code can correctly read data written by older code. "Backward"
+might feel slightly counterintuitive at first, but it becomes easier to
+understand if you read it as "new code supports data from the past (backward in
+time)." A typical example is an updated application reading old records that
+were already stored in a database.
+
+<Term slug="forward-compatibility">Forward compatibility</Term>
+is the reverse: older code being able to read (or at least not break on) data
+written by newer code. This matters partway through a rolling deploy, when a
+server that hasn't been updated yet still has to read data written by a server
+that has already been updated.
+
+<Callout type="info">
+It's less confusing to think of it purely as a direction: backward
+compatibility is "new code reading old data," while forward compatibility is
+"old code reading new data." A schema change that satisfies only one direction
+is common, so it's important to be explicit about which direction (or both) a
+given change needs to guarantee.
+</Callout>
+
+## Changes that tend to preserve compatibility, and changes that tend to break it
+
+Building on the field tag mechanism from the previous lesson, a few patterns
+emerge.
+
+- **Adding a field with a new tag number** is relatively safe. If data written
+  by new code contains a tag the old code doesn't recognize, the old code can
+  simply ignore that tag and keep reading the rest of the fields (which
+  preserves forward compatibility). However, if the newly added field is
+  treated as "required," new code will fail to read old data that lacks that
+  field (which breaks backward compatibility).
+- **Removing a field** is safe as long as its tag number is never reused
+  afterward — if it still appears in old data, it's simply ignored. Reusing
+  the removed tag for a different meaning causes old data to be
+  misinterpreted under the new meaning.
+- **Changing a field's type** (e.g. from an integer to a string) is generally
+  a dangerous change. If the type changes while the tag number stays the
+  same, one side or the other will end up reading the byte sequence as the
+  wrong type.
+
+<Callout type="warn">
+Don't assume "I only added a field, so it's safe" — every change should be
+checked for whether the new field is being treated as required on the new-code
+side, and whether a removed tag is being reused. That habit is what prevents
+incidents.
+</Callout>
+
+## Connection to the exercise
+
+This module's exercise, the Encoding Comparison Lab, includes a test case that
+decodes data — encoded with a schema that has an added field — using the
+older schema from before that field existed. You can confirm, as actual code
+behavior, that the old schema safely skips the tag it doesn't recognize while
+correctly recovering the remaining fields.
+
+<QuizInline
+  id="compat-direction"
+  prompt="Partway through a rolling deploy, an old-version server that hasn't been updated yet needs to read data written by an already-updated new-version server. Which kind of compatibility does this situation require?"
+  options={[
+    { id: "a", label: "Backward compatibility (new code can read old data)" },
+    { id: "b", label: "Forward compatibility (old code can read new data)" },
+    { id: "c", label: "Neither kind of compatibility is relevant here" },
+    { id: "d", label: "This situation can't happen unless the schema is changed" }
+  ]}
+  correctOptionId="b"
+  explanation="Because the old version (old code) needs to read data written by the new version, this is a question of forward compatibility. Since old and new code run simultaneously during a rolling deploy, both directions of compatibility need to be kept in mind."
+/>
+
+<BookRef chapter={4} />

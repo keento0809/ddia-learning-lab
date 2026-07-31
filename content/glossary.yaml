@@ -349,3 +349,81 @@
   definition:
     ja: 頂点と辺のそれぞれが任意のキーと値の組(プロパティ)を持てるグラフデータモデルの一形態。頂点にはラベル、辺には向きとタイプを持たせられることが多い。
     en: A form of graph data model in which both vertices and edges can carry arbitrary key-value properties. Vertices are often given labels, and edges a direction and a type.
+
+- slug: encoding
+  term:
+    ja: エンコーディング(シリアライズ)
+    en: encoding (serialization)
+  definition:
+    ja: 実行中のメモリ上のデータ構造を、保存や送信のためのバイト列へ変換すること。受け取った側がバイト列を元のデータ構造へ戻す処理はデコーディング(パース)と呼ぶ。
+    en: Converting an in-memory data structure into a sequence of bytes for storage or transmission. The reverse process, turning bytes back into a data structure, is called decoding (parsing).
+- slug: textual-format
+  term:
+    ja: テキスト形式
+    en: textual format
+  definition:
+    ja: JSON・XML・CSVのように、値を人間が読める文字の並びとして表現するエンコーディング形式。目視での確認がしやすい一方、同じ情報量でもバイナリ形式よりサイズが大きくなりがちである。
+    en: An encoding format such as JSON, XML, or CSV that represents values as human-readable characters. Easy to inspect visually, but tends to be larger than binary formats for the same amount of information.
+- slug: binary-format
+  term:
+    ja: バイナリ形式
+    en: binary format
+  definition:
+    ja: 値を人間可読な文字列ではなく直接バイト列として表現するエンコーディング形式。フィールド名を毎回書き出さない分コンパクトになりやすいが、専用のツールなしでは中身を確認しづらい。
+    en: An encoding format that represents values directly as bytes rather than human-readable text. Tends to be more compact since field names need not be written out each time, but is hard to inspect without dedicated tooling.
+- slug: schema-based-encoding
+  term:
+    ja: スキーマベースエンコーディング
+    en: schema-based encoding
+  definition:
+    ja: エンコード側とデコード側が共通のスキーマ定義を参照することで、フィールド名の文字列をバイト列に含めずにデータの構造を復元できるエンコーディング方式。
+    en: An encoding approach where both the encoder and decoder refer to a shared schema definition, so the structure of the data can be reconstructed without embedding field name strings in the byte stream.
+- slug: field-tag
+  term:
+    ja: フィールドタグ
+    en: field tag
+  definition:
+    ja: スキーマベースのエンコーディングで各フィールドに割り当てられる小さな整数の識別子。フィールドの位置ではなくタグ番号でデータを識別するため、スキーマへのフィールド追加や不使用化があっても新旧のデータを区別して解釈しやすくなる。
+    en: A small integer identifier assigned to each field in a schema-based encoding. Because data is identified by tag number rather than position, old and new data can still be told apart correctly even after fields are added to or retired from the schema.
+- slug: schema-evolution
+  term:
+    ja: スキーマ進化
+    en: schema evolution
+  definition:
+    ja: 運用中にデータのスキーマを変更しても、新旧のコードが引き続き互いのデータを読み書きできるようにする設計上の取り組み。
+    en: The practice of changing a data schema over time in a way that lets old and new code continue to read and write each other's data.
+- slug: backward-compatibility
+  term:
+    ja: 後方互換性
+    en: backward compatibility
+  definition:
+    ja: 新しいバージョンのコードが、古いバージョンのコードが書いたデータを正しく読める性質のこと。
+    en: The property that newer code can correctly read data written by older code.
+- slug: forward-compatibility
+  term:
+    ja: 前方互換性
+    en: forward compatibility
+  definition:
+    ja: 古いバージョンのコードが、新しいバージョンのコードが書いたデータを(壊れずに)読める性質のこと。
+    en: The property that older code can read data written by newer code without breaking.
+- slug: rpc
+  term:
+    ja: RPC(リモートプロシージャコール)
+    en: RPC (remote procedure call)
+  definition:
+    ja: ネットワーク越しの別プロセスに対して、あたかもローカルの関数呼び出しであるかのような見た目でリクエストを送る仕組み。呼び出し側と呼び出される側が別々にデプロイされるため、双方向の互換性が求められやすい。
+    en: A mechanism for making a request to a process across the network with the same call syntax as a local function call. Because caller and callee are typically deployed independently, both directions of compatibility tend to matter.
+- slug: message-queue
+  term:
+    ja: メッセージキュー
+    en: message queue
+  definition:
+    ja: 送信者がメッセージを直接相手プロセスへ送るのではなく仲介役のキューに投入し、受信者がそこから取り出して処理する仕組み。送信者と受信者が同時にオンラインである必要がない。
+    en: A mechanism where a sender places a message into an intermediary queue rather than sending it directly to a recipient process, and a receiver later pulls it out for processing. Sender and receiver need not be online at the same time.
+- slug: rest-api
+  term:
+    ja: REST API
+    en: REST API
+  definition:
+    ja: HTTPのメソッドやURLを使ってリソースへの操作を表現する、RPCの一種として広く使われるAPIスタイル。
+    en: A widely used API style, a form of RPC, that expresses operations on resources using HTTP methods and URLs.
