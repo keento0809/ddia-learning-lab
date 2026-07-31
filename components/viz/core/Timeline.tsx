@@ -48,13 +48,24 @@ export function Timeline({
     return () => clearInterval(id);
   }, [isPlaying, speed, intervalMs]);
 
+  const primaryButtonClassName =
+    "rounded bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300 dark:disabled:hover:bg-neutral-100";
+  const secondaryButtonClassName =
+    "rounded border border-neutral-300 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:border-neutral-700 dark:hover:bg-neutral-800 dark:disabled:hover:bg-transparent";
+
   return (
-    <div role="group" aria-label={t.groupLabel} data-testid="viz-timeline">
+    <div
+      role="group"
+      aria-label={t.groupLabel}
+      data-testid="viz-timeline"
+      className="flex flex-wrap items-center gap-3"
+    >
       <button
         type="button"
         data-testid="viz-timeline-play"
         disabled={isPlaying}
         onClick={() => setIsPlaying(true)}
+        className={primaryButtonClassName}
       >
         {t.playLabel}
       </button>
@@ -63,6 +74,7 @@ export function Timeline({
         data-testid="viz-timeline-pause"
         disabled={!isPlaying}
         onClick={() => setIsPlaying(false)}
+        className={primaryButtonClassName}
       >
         {t.pauseLabel}
       </button>
@@ -71,6 +83,7 @@ export function Timeline({
         data-testid="viz-timeline-step"
         disabled={isPlaying}
         onClick={() => onStep()}
+        className={secondaryButtonClassName}
       >
         {t.stepLabel}
       </button>
@@ -82,11 +95,12 @@ export function Timeline({
             setIsPlaying(false);
             onReset();
           }}
+          className={secondaryButtonClassName}
         >
           {t.resetLabel}
         </button>
       ) : null}
-      <label data-testid="viz-timeline-speed-label">
+      <label data-testid="viz-timeline-speed-label" className="flex flex-col text-sm">
         {formatMessage(t.speedLabel, { speed: speed.toFixed(1) })}
         <input
           type="range"
@@ -97,6 +111,7 @@ export function Timeline({
           step={TIMELINE_SPEED_STEP}
           value={speed}
           onChange={(event) => setSpeed(Number(event.target.value))}
+          className="accent-neutral-900 dark:accent-neutral-100"
         />
       </label>
     </div>
