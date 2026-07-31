@@ -1,0 +1,96 @@
+---
+title: "Correctness: Guaranteeing It from an End-to-End Perspective"
+order: 2
+minutes: 13
+sourceHash: "949e679a1e0c3a7a5010776cbea65ca4dcc82b9642b696d6972cb440ad7343c7"
+---
+
+# Correctness: Guaranteeing It from an End-to-End Perspective
+
+As we saw in the previous lesson, a single operation in an unbundled
+system runs across multiple components. Guaranteeing that any one point in
+the network or middleware "works correctly" doesn't necessarily guarantee
+the "correctness" the system's users actually expect end to end. This
+lesson looks at where that correctness needs to be enforced.
+
+## Where lower-layer guarantees alone fall short
+
+TCP, for example, guarantees that "the bytes you sent arrive intact and in
+order." But that guarantee alone isn't enough in situations like these:
+
+- A client sends a request and the server finishes processing it, but the
+  response packet is lost. The client times out and resends the same
+  request. TCP itself guarantees that "a single request arrives intact,"
+  but not that "the same operation doesn't get executed twice"
+- In a multi-hop setup with load balancers or proxies in between, even if
+  every intermediate component is healthy, the paths that can cause a
+  request to reach the application more than once (retransmission,
+  retries, failover) are still there
+
+## The end-to-end argument
+
+The <Term slug="end-to-end-argument">end-to-end argument</Term>
+is the idea that an application-level requirement (such as a correctness
+guarantee) can't be fully delegated to the lower network or middleware
+layers — it ultimately has to be enforced by the application itself, at
+both ends of the communication. Lower-layer guarantees (like TCP's
+ordering and retransmission) are useful optimizations, but on their own
+they aren't a sufficient condition for end-to-end correctness.
+
+Applying this idea to the concrete example of "preventing a request from
+being executed twice" leads to a design like this:
+
+- The client issues a unique <Term slug="idempotency">idempotency</Term>
+  key (a request ID) for each request
+- The server treats any subsequent request carrying the same idempotency
+  key not as a "new execution," but as "return the previous result as-is"
+- This way, no matter where along the path a retransmission happens, the
+  end effect stays "executed exactly once"
+
+<Callout type="tip">
+  Deduplication via idempotency keys can't be replaced by making the
+  network or middleware layer more reliable, no matter how reliable you
+  make it. The end-to-end perspective is a shift in mindset: instead of
+  trying to eliminate the possibility of duplication, design things so
+  that duplication doesn't change the result.
+</Callout>
+
+## Uniqueness constraints in a partitioned, unbundled environment
+
+Recall the partitioning covered in module 6. On a single-node relational
+database, the engine can enforce a `UNIQUE` constraint with a single
+index, all at once. But once data is spread across multiple partitions or
+multiple unbundled derived data systems, problems like these show up:
+
+- It becomes hard to enforce a key's uniqueness across partitions
+  instantly with a single lock or index (uniqueness can only be cheaply
+  guaranteed within a partition)
+- Derived data systems (search indexes, caches) don't automatically
+  inherit the primary database's uniqueness constraint. If a duplicate
+  slips into the primary database, it flows straight through to the
+  derived data too
+
+The typical practical fix is to include the key you want to guarantee
+uniqueness for as (part of) the partition key, so that "the same key
+always gets written to the same partition." That way, a per-partition
+constraint alone is enough to effectively guarantee uniqueness.
+
+<Callout type="warn">
+  Even when the primary database guarantees uniqueness, derived data that
+  gets updated asynchronously (like a search index) can temporarily be in
+  an inconsistent state — a moment where the primary side is unique but
+  duplicates are visible on the derived side. Before unbundling, you need
+  to determine whether the "correctness" your users actually see requires
+  immediate consistency, or whether eventual convergence is good enough.
+</Callout>
+
+## Summary: correctness is guaranteed at the boundary (the "end")
+
+The takeaway from this lesson is a mindset: instead of expecting
+correctness to be guaranteed by "somewhere along the path," design it
+explicitly at both ends — the side that issues a request and the side
+that finalizes it. In the next lesson, we'll look at how to verify and
+trace results after the fact, once processing has spanned multiple
+components like this (auditability).
+
+<BookRef chapter={12} />

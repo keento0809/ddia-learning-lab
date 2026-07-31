@@ -1,0 +1,101 @@
+---
+title: "Unbundling: From a Single Database to Composable Parts"
+order: 1
+minutes: 12
+sourceHash: "91c9bf6dc526366f34063e2181719a44922c73a73a38d4f006aaed07b0974b90"
+---
+
+# Unbundling: From a Single Database to Composable Parts
+
+Up to this point, the modules in this course have treated replication,
+partitioning, transactions, batch processing, and stream processing as
+independent topics, each studied on its own. In this final module, we step
+back to the bigger question of how to combine them into the design of a
+single data system. We start with the idea that underlies that design
+process: <Term slug="unbundling">unbundling</Term>.
+
+## The limits of "make one database do everything"
+
+Traditional relational databases have historically packed persistence,
+indexing, full-text search, aggregation, and transactional consistency all
+into a single product. That works well for small-to-medium systems, but as
+requirements grow, friction like the following starts to appear.
+
+- An index structure optimized for full-text search and a B-tree optimized
+  for range scans have fundamentally different internal designs, making it
+  hard for a single storage engine to deliver top performance at both
+- Analytical workloads (aggregation queries) and transactional workloads
+  (fine-grained reads and writes) want different data layouts
+  (row-oriented vs. column-oriented)
+- When you want to scale "just the search feature" or "just the cache"
+  independently, being locked into a single product that bundles every
+  feature together leaves you no way to split things apart flexibly
+
+## The idea behind unbundling
+
+<Term slug="unbundling">Unbundling</Term>
+is the idea of decomposing the roles a single database product used to
+play into multiple specialized data systems, each purpose-built for a
+particular use case (a full-text search engine, a cache, a column-oriented
+analytical store, a queue, and so on), and composing them into an overall
+system. The technologies covered in earlier modules are exactly these
+"decomposed parts," and it's the mechanism of
+<Term slug="derived-data">derived data</Term> that connects them together.
+
+Derived data is data that's produced within a system from the primary
+information (the data treated as the source of truth) through a defined
+transformation. For example, all of the following are derived data.
+
+- A full-text search index built from the contents of a primary table
+- A daily summary for a dashboard, aggregated from order line items
+- A cache that copies part of a frequently updated table
+
+## What connects the derived data together
+
+Building derived data from primary information and keeping it reflected
+across multiple specialized systems requires a mechanism for continuously
+propagating changes. This is where the batch processing and stream
+processing covered in modules 10 and 11 come in as the connective tissue.
+
+<Callout type="info">
+  Batch processing is well suited to "rebuild derived data from scratch
+  from all the data up to some point in time," while stream processing is
+  well suited to "keep incrementally updating derived data every time a
+  change happens." Many real systems combine both: following along via
+  streaming under normal operation, and falling back to a batch rebuild
+  when, say, the transformation logic changes.
+</Callout>
+
+Concretely, a typical setup extracts writes to the primary database as
+<Term slug="change-data-capture">change data capture</Term>
+(CDC), streams them as events through stream processing, and lets each
+derived data system (search index, cache, analytical store, etc.) consume
+and convert them into its own format. In this setup, each derived data
+system isn't "a copy of the primary database" but rather "the output of a
+defined transformation applied to the primary database as input."
+
+## The tradeoffs of unbundling
+
+Unbundling isn't a free lunch. The more specialized systems you add, the
+more operational cost you take on, including:
+
+- More systems to monitor, deploy, and handle incidents for
+- Each derived data system now needs its own tracking of how far behind
+  the primary data it's lagging (a problem with a similar flavor to the
+  replication lag covered in module 5)
+- Data consistency and auditing (covered later in this module) now have to
+  be reasoned about across multiple systems instead of within a single
+  transaction
+
+<Callout type="warn">
+  Rather than reflexively adding more specialized systems, deciding *not*
+  to unbundle — when a single database is enough for your actual query
+  patterns and scale requirements — is also part of the design process.
+  The capstone exercise later in this module will ask you to pick a setup
+  that matches the requirements, without over- or under-building.
+</Callout>
+
+In the next lesson, we'll look at how to guarantee "correctness" even once
+processing has spread across multiple systems like this.
+
+<BookRef chapter={12} />
