@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it } from "vitest";
 import { LabWorkspace } from "@/components/lab/LabWorkspace";
 import { getDemoExercise } from "@/lib/lab/demoExercise";
@@ -20,8 +21,19 @@ import { DEFAULT_PANE_WIDTH_PERCENT, useLabStore } from "@/lib/store/labStore";
  * (=事前シードなしのデフォルト描画)のみを検証する。store駆動の動的状態
  * (結果表示・ヒント段階開放)は`ResultPanel.test.tsx`/`ProblemPane.test.tsx`で
  * 直接props経由(storeを介さず)に検証する。
+ *
+ * T-108e: `LabWorkspace`が提出API接続向けに`useMarkProgressMutation`
+ * (TanStack Query)を使うようになったため、`QueryClientProvider`でラップする
+ * (`tests/unit/dashboard/DashboardWithData.test.tsx`と同じ最小ラッパー)。
  */
 const exercise = getDemoExercise("ja");
+
+function renderLabWorkspace(element: React.ReactElement): string {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return renderToStaticMarkup(
+    <QueryClientProvider client={queryClient}>{element}</QueryClientProvider>,
+  );
+}
 
 beforeEach(() => {
   useLabStore.setState({ entries: {}, paneWidthPercent: DEFAULT_PANE_WIDTH_PERCENT });
@@ -29,7 +41,7 @@ beforeEach(() => {
 
 describe("LabWorkspace", () => {
   it("renders the 3-pane layout (problem pane, editor pane, result panel) from exercise props alone", () => {
-    const html = renderToStaticMarkup(<LabWorkspace exercise={exercise} locale="ja" />);
+    const html = renderLabWorkspace(<LabWorkspace exercise={exercise} locale="ja" />);
 
     expect(html).toContain('data-testid="lab-workspace"');
     expect(html).toContain('data-testid="lab-problem-pane"');
@@ -41,7 +53,7 @@ describe("LabWorkspace", () => {
   });
 
   it("derives problem-tab input/output examples from the exercise's own equals/deepEquals tests", () => {
-    const html = renderToStaticMarkup(<LabWorkspace exercise={exercise} locale="ja" />);
+    const html = renderLabWorkspace(<LabWorkspace exercise={exercise} locale="ja" />);
 
     expect(html).toContain("clamp");
     // t1: clamp(5, 0, 10) => 5
@@ -49,14 +61,14 @@ describe("LabWorkspace", () => {
   });
 
   it("shows a 'not run yet' result panel before any run has happened", () => {
-    const html = renderToStaticMarkup(<LabWorkspace exercise={exercise} locale="ja" />);
+    const html = renderLabWorkspace(<LabWorkspace exercise={exercise} locale="ja" />);
 
     expect(html).toContain("まだ実行していません");
   });
 
   it("renders the same fallback content in English", () => {
     const enExercise = getDemoExercise("en");
-    const html = renderToStaticMarkup(<LabWorkspace exercise={enExercise} locale="en" />);
+    const html = renderLabWorkspace(<LabWorkspace exercise={enExercise} locale="en" />);
 
     expect(html).toContain('data-testid="lab-workspace"');
     expect(html).toContain("Not run yet");

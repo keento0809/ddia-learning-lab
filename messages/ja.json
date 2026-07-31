@@ -243,6 +243,13 @@
       "noLogs": "コンソール出力はありません",
       "durationLabel": "実行時間: {ms}ms",
       "emptyCodeError": "コードが入力されていません"
+    },
+    "submission": {
+      "signInToSaveLabel": "サインインすると提出結果と進捗が記録されます",
+      "submittingLabel": "提出結果を送信しています…",
+      "passedCelebrationLabel": "🎉 合格しました!進捗を記録しました",
+      "submitErrorLabel": "提出結果の送信に失敗しました",
+      "nextLessonCta": "次へ進む"
     }
   },
   "auth": {
