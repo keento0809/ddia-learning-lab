@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { IsolationViz } from "@/components/viz/isolation/IsolationViz";
 import { LessonLocaleProvider } from "@/lib/lesson/localeContext";
+import { VizPersistenceScopeProvider } from "@/lib/lesson/vizPersistenceContext";
 
 /**
  * T-208受入基準「キーボード操作可能」「2トランザクションのタイムラインをドラッグで
@@ -134,5 +135,100 @@ describe("IsolationViz", () => {
   it("renders the a11y narrator with live region text", async () => {
     await render("dirty-read");
     expect(query('[data-testid="viz-a11y-narrator"]')).not.toBeNull();
+  });
+});
+
+/**
+ * 言語切替不具合(qa-evaluatorがPR#86で発見、/ja/viz-preview固有)の再現・修正確認。
+ * next-intlの言語トグルは同一ルートへのクライアント側遷移だが、
+ * app/[locale]/viz-preview/page.tsx はロケールごとに別々のコンパイル済みMDX
+ * コンポーネントを描画するため、Reactはこのサブツリーをアンマウント→再マウント
+ * する。ここではその実際の言語切替を、旧rootのunmount→新root(異なるlocale)の
+ * mountとして再現し、VizPersistenceScopeProvider(02§5.1)がある場合に
+ * 並べ替え・進行状況が復元されることを検証する(IsolationViz.tsx参照)。
+ */
+describe("IsolationViz locale-switch state persistence (02§5.1)", () => {
+  function mountWithLocale(locale: "ja" | "en", scope: string | null, preset?: string): { container: HTMLDivElement; root: Root } {
+    const { container, root } = mountContainer();
+    const tree = (
+      <LessonLocaleProvider locale={locale}>
+        <IsolationViz preset={preset} />
+      </LessonLocaleProvider>
+    );
+    act(() => {
+      root.render(scope ? <VizPersistenceScopeProvider scope={scope}>{tree}</VizPersistenceScopeProvider> : tree);
+    });
+    return { container, root };
+  }
+
+  function timelineOrder(container: HTMLDivElement): (string | null)[] {
+    const timeline = container.querySelector('[data-testid="isolation-timeline"]');
+    if (!timeline) throw new Error("timeline not found");
+    return Array.from(timeline.children).map((el) => el.getAttribute("data-testid"));
+  }
+
+  it("with VizPersistenceScopeProvider: reordering and step progress survive an unmount+remount across locales", async () => {
+    const scope = "locale-switch-test-with-scope";
+    const first = mountWithLocale("ja", scope, "dirty-read");
+
+    act(() => {
+      first.container.querySelector<HTMLButtonElement>('[data-testid="isolation-move-earlier-t2-read"]')!.click();
+    });
+    act(() => {
+      first.container.querySelector<HTMLButtonElement>('[data-testid="viz-timeline-step"]')!.click();
+    });
+    const orderBeforeSwitch = timelineOrder(first.container);
+    // data-status(状態そのもの)はロケール非依存で比較できる。表示テキスト
+    // (isolation-chip-status)はロケールごとに翻訳されるため、ここでの比較対象
+    // として使うと正しい多言語対応(≠不具合)を誤って不具合と判定してしまう。
+    const statusBeforeSwitch = first.container
+      .querySelector('[data-testid="isolation-chip-t2-read"]')
+      ?.getAttribute("data-status");
+    expect(orderBeforeSwitch[0]).toBe("isolation-chip-t2-read");
+    expect(statusBeforeSwitch).toBe("done");
+
+    // 言語切替の実態(同一スコープキーのまま、旧ロケールのツリーがアンマウントされ新ロケールで再マウントされる)を再現する
+    await act(async () => {
+      first.root.unmount();
+    });
+    first.container.remove();
+
+    const second = mountWithLocale("en", scope, "dirty-read");
+    expect(timelineOrder(second.container)).toEqual(orderBeforeSwitch);
+    expect(
+      second.container.querySelector('[data-testid="isolation-chip-t2-read"]')?.getAttribute("data-status"),
+    ).toBe("done");
+
+    await act(async () => {
+      second.root.unmount();
+    });
+    second.container.remove();
+  });
+
+  it("without VizPersistenceScopeProvider (default): each mount starts fresh, unaffected by prior instances", async () => {
+    const first = mountWithLocale("ja", null, "dirty-read");
+    act(() => {
+      first.container.querySelector<HTMLButtonElement>('[data-testid="isolation-move-earlier-t2-read"]')!.click();
+    });
+    expect(timelineOrder(first.container)[0]).toBe("isolation-chip-t2-read");
+
+    await act(async () => {
+      first.root.unmount();
+    });
+    first.container.remove();
+
+    const second = mountWithLocale("en", null, "dirty-read");
+    expect(timelineOrder(second.container)).toEqual([
+      "isolation-chip-t1-write",
+      "isolation-chip-t2-read",
+      "isolation-chip-t2-write",
+      "isolation-chip-t1-commit",
+      "isolation-chip-t2-commit",
+    ]);
+
+    await act(async () => {
+      second.root.unmount();
+    });
+    second.container.remove();
   });
 });

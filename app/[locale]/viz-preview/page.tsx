@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LessonLocaleProvider } from "@/lib/lesson/localeContext";
+import { VizPersistenceScopeProvider } from "@/lib/lesson/vizPersistenceContext";
 import { getMessages } from "@/lib/i18n/messages";
 import { routing, type AppLocale } from "@/lib/i18n/routing";
 import { buildLanguageAlternates } from "@/lib/i18n/alternates";
@@ -59,7 +60,14 @@ export default async function VizPreviewPage({
     <main style={{ maxWidth: "720px", margin: "0 auto", padding: "1rem" }}>
       <article>
         <LessonLocaleProvider locale={locale}>
-          <Content />
+          {/* 02§5.1: 言語トグルは同一ルートへのクライアント側遷移だが、CONTENT[locale]が
+              ロケールごとに別々のコンパイル済みMDXコンポーネントを描画するため、Reactは
+              このサブツリーをアンマウント→再マウントする。VizPersistenceScopeProviderで
+              ロケール非依存の固定スコープキーを渡し、Viz側(IsolationViz.tsx)の
+              モジュールスコープキャッシュで状態を復元する(詳細はlib/lesson/vizPersistenceContext.tsx参照)。 */}
+          <VizPersistenceScopeProvider scope="viz-preview">
+            <Content />
+          </VizPersistenceScopeProvider>
         </LessonLocaleProvider>
       </article>
     </main>
