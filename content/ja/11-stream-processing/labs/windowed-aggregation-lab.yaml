@@ -1,0 +1,74 @@
+slug: "11-stream-processing/windowed-aggregation-lab"
+language: js
+entry: tumblingWindowSums
+template: |
+  // events: { timestampMs, value } の配列(順不同でよい)
+  // windowSizeMs: タンブリングウィンドウの幅(ミリ秒)
+  //
+  // 固定長・重複なしのタンブリングウィンドウごとに value を合計し、
+  // { windowStart, sum, count } の配列を windowStart 昇順で返す。
+  // windowStart は windowSizeMs の倍数(0, windowSizeMs, 2*windowSizeMs, ...)で、
+  // そのウィンドウの開始時刻を表す。
+  // 1件もイベントが無いウィンドウは結果に含めない。
+  export function tumblingWindowSums(events, windowSizeMs) {
+    // TODO: 実装
+  }
+tests:
+  - id: t1-single-window
+    name:
+      ja: "同じウィンドウ内の複数イベントを合計できる"
+      en: "sums multiple events that fall in the same window"
+    call:
+      {
+        fn: "tumblingWindowSums",
+        args: [[{ timestampMs: 100, value: 10 }, { timestampMs: 500, value: 5 }], 1000],
+      }
+    assert:
+      { type: "deepEquals", value: [{ windowStart: 0, sum: 15, count: 2 }] }
+  - id: t2-multiple-windows-unsorted-input
+    name:
+      ja: "入力順が不揃いでもwindowStart昇順で複数ウィンドウを返せる"
+      en: "returns multiple windows sorted by windowStart even when input order is unsorted"
+    call:
+      {
+        fn: "tumblingWindowSums",
+        args:
+          [
+            [
+              { timestampMs: 1500, value: 3 },
+              { timestampMs: 100, value: 10 },
+              { timestampMs: 2200, value: 1 },
+            ],
+            1000,
+          ],
+      }
+    assert:
+      {
+        type: "deepEquals",
+        value:
+          [
+            { windowStart: 0, sum: 10, count: 1 },
+            { windowStart: 1000, sum: 3, count: 1 },
+            { windowStart: 2000, sum: 1, count: 1 },
+          ],
+      }
+  - id: t3-empty-input
+    name:
+      ja: "イベントが1件も無ければ空配列を返す"
+      en: "returns an empty array when there are no events"
+    call: { fn: "tumblingWindowSums", args: [[], 1000] }
+    assert: { type: "deepEquals", value: [] }
+  - id: t4-boundary-timestamp
+    name:
+      ja: "ウィンドウ境界ちょうどのタイムスタンプは次のウィンドウに属する"
+      en: "a timestamp exactly on the boundary belongs to the next window"
+    call:
+      { fn: "tumblingWindowSums", args: [[{ timestampMs: 1000, value: 7 }], 1000] }
+    assert:
+      { type: "deepEquals", value: [{ windowStart: 1000, sum: 7, count: 1 }] }
+timeoutMs: 3000
+hints:
+  - ja: "windowStart は Math.floor(timestampMs / windowSizeMs) * windowSizeMs で計算できます"
+    en: "windowStart can be computed as Math.floor(timestampMs / windowSizeMs) * windowSizeMs"
+  - ja: "Mapなどでwindow開始時刻ごとにsum/countを積み上げてから、最後にwindowStart昇順でソートして配列に変換します"
+    en: "Accumulate sum/count per window start (e.g. in a Map), then convert to an array sorted ascending by windowStart at the end"
