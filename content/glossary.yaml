@@ -615,6 +615,48 @@
   definition:
     ja: HTTPのメソッドやURLを使ってリソースへの操作を表現する、RPCの一種として広く使われるAPIスタイル。
     en: A widely used API style, a form of RPC, that expresses operations on resources using HTTP methods and URLs.
+- slug: unbundling
+  term:
+    ja: アンバンドリング
+    en: unbundling
+  definition:
+    ja: 単一のデータベース製品が担っていた役割を、用途ごとに特化した複数の専用データシステムに分解し、それらを組み合わせて全体のシステムを構成する設計の考え方。
+    en: The design idea of decomposing the roles a single database product used to play into multiple specialized data systems, each suited to a particular use case, and composing them into the overall system.
+- slug: derived-data
+  term:
+    ja: 派生データ
+    en: derived data
+  definition:
+    ja: システム内で正とみなされる一次情報から、決まった変換処理によって生成される別の表現のデータ。検索インデックスや集計結果、キャッシュなどが該当する。
+    en: Data produced from a system's authoritative source of truth by applying a defined transformation, such as a search index, an aggregated summary, or a cache.
+- slug: end-to-end-argument
+  term:
+    ja: エンドツーエンド原則
+    en: end-to-end argument
+  definition:
+    ja: あるアプリケーション要件(正しさの保証など)は下位のネットワークやミドルウェア層に完全には肩代わりさせられず、最終的には通信の両端(アプリケーション自身)が責任を持って保証する必要がある、という設計上の考え方。
+    en: The design principle that an application-level requirement, such as a correctness guarantee, cannot be fully delegated to lower network or middleware layers and must ultimately be enforced by the communicating endpoints (the application itself).
+- slug: idempotency
+  term:
+    ja: 冪等性
+    en: idempotency
+  definition:
+    ja: ある操作を同じ入力で複数回実行しても、1回実行した場合と同じ結果になる性質。重複実行や再送があっても最終的な効果が変わらないようにする設計で利用される。
+    en: The property that performing an operation multiple times with the same input produces the same result as performing it once, used to make an operation's effect unchanged by duplicate execution or retries.
+- slug: event-sourcing
+  term:
+    ja: イベントソーシング
+    en: event sourcing
+  definition:
+    ja: 状態そのものを上書き保存するのではなく、「何が起きたか」を表すイベントを追記専用ログとして記録し、現在の状態はそのイベント列を順に適用して導出するデータ保持のスタイル。
+    en: A style of data storage in which state is not overwritten directly; instead, events describing what happened are recorded to an append-only log, and current state is derived by applying that sequence of events in order.
+- slug: auditability
+  term:
+    ja: 監査可能性
+    en: auditability
+  definition:
+    ja: システムの現在の状態や派生データがどのように導出されたかを、後から履歴をたどって検証・再現できる性質。ログからの状態再構築と、元の状態との突き合わせまでを含む。
+    en: The property that a system's current state or derived data can be traced back and verified or reproduced after the fact, encompassing both reconstructing state from a log and comparing it against the original state.
 - slug: batch-processing
   term:
     ja: バッチ処理
