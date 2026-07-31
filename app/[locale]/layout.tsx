@@ -56,7 +56,7 @@ export default async function LocaleLayout({
             usePathname/useRouterがこのProviderのロケールcontextに依存するため
             Provider自体は必須)。 */}
         <NextIntlClientProvider locale={locale} messages={{}}>
-          <Header locale={locale} />
+          <Header locale={locale} isAuthenticated={isAuthenticated} />
           <AppQueryProvider>
             <GuestProgressImportGate isAuthenticated={isAuthenticated} />
             <div className="flex-1">{children}</div>
