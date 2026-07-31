@@ -4,7 +4,13 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Link } from "@/lib/i18n/navigation";
 import { getMessages, type Locale } from "@/lib/i18n/messages";
 
-export function AccountMenu({ locale }: { locale: Locale }) {
+export function AccountMenu({
+  locale,
+  isAuthenticated,
+}: {
+  locale: Locale;
+  isAuthenticated: boolean;
+}) {
   const t = getMessages(locale).account;
 
   return (
@@ -21,23 +27,28 @@ export function AccountMenu({ locale }: { locale: Locale }) {
           sideOffset={8}
           className="min-w-[10rem] rounded-md border border-neutral-200 bg-white p-1 text-sm shadow-md dark:border-neutral-700 dark:bg-neutral-900"
         >
-          <DropdownMenu.Item asChild>
-            <Link
-              href="/settings"
-              className="block cursor-pointer rounded px-2 py-1.5 outline-none data-[highlighted]:bg-neutral-100 dark:data-[highlighted]:bg-neutral-800"
-            >
-              {t.settings}
-            </Link>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item asChild>
-            <Link
-              href="/auth"
-              prefetch={false}
-              className="block cursor-pointer rounded px-2 py-1.5 outline-none data-[highlighted]:bg-neutral-100 dark:data-[highlighted]:bg-neutral-800"
-            >
-              {t.signIn}
-            </Link>
-          </DropdownMenu.Item>
+          {/* 設定(S-10)はログイン必須のため、未ログイン時にリンクを出すと
+              クリックのたびにサインイン画面へ押し戻される体験になる。
+              未ログイン時はサインインのみ、ログイン時は設定のみを提示する。 */}
+          {isAuthenticated ? (
+            <DropdownMenu.Item asChild>
+              <Link
+                href="/settings"
+                className="block cursor-pointer rounded px-2 py-1.5 outline-none data-[highlighted]:bg-neutral-100 dark:data-[highlighted]:bg-neutral-800"
+              >
+                {t.settings}
+              </Link>
+            </DropdownMenu.Item>
+          ) : (
+            <DropdownMenu.Item asChild>
+              <Link
+                href="/auth/signin"
+                className="block cursor-pointer rounded px-2 py-1.5 outline-none data-[highlighted]:bg-neutral-100 dark:data-[highlighted]:bg-neutral-800"
+              >
+                {t.signIn}
+              </Link>
+            </DropdownMenu.Item>
+          )}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>

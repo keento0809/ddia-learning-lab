@@ -45,15 +45,15 @@ test("キーボードのみでヘッダの全操作が完結する", async ({ pa
   await expect(accountTrigger).toBeFocused();
 
   await page.keyboard.press("Enter");
-  const settingsItem = page.getByRole("menuitem", { name: "Settings", exact: true });
-  await expect(settingsItem).toBeVisible();
-  await expect(settingsItem).toBeFocused();
-
-  await page.keyboard.press("ArrowDown");
-  await expect(page.getByRole("menuitem", { name: "Sign in", exact: true })).toBeFocused();
+  // 未ログイン時は設定(ログイン必須)へのリンクを出さず、サインインのみを
+  // 提示する(components/layout/AccountMenu.tsx参照)。
+  const signInItem = page.getByRole("menuitem", { name: "Sign in", exact: true });
+  await expect(signInItem).toBeVisible();
+  await expect(signInItem).toBeFocused();
+  await expect(page.getByRole("menuitem", { name: "Settings", exact: true })).toHaveCount(0);
 
   await page.keyboard.press("Escape");
-  await expect(settingsItem).toBeHidden();
+  await expect(signInItem).toBeHidden();
   await expect(accountTrigger).toBeFocused();
 
   expect(consoleErrors).toEqual([]);
