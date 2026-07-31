@@ -1,18 +1,20 @@
 "use client";
 
 import { useEffect, useState, type DragEvent } from "react";
+import type { SimEngine } from "@/lib/contracts";
 import type { VizComponentProps } from "@/components/viz/registry";
 import { createSimEngine } from "@/components/viz/core/simEngine";
 import { SvgStage } from "@/components/viz/core/SvgStage";
 import { Timeline } from "@/components/viz/core/Timeline";
 import { A11yNarrator } from "@/components/viz/core/A11yNarrator";
 import { useLessonLocale } from "@/lib/lesson/localeContext";
+import { useVizPersistenceScope } from "@/lib/lesson/vizPersistenceContext";
 import { getMessages } from "@/lib/i18n/messages";
 import { isolationSimDefinition, isValidOrder, moveOperation } from "./engine";
 import { isolationNarrator } from "./describeState";
 import { PRESETS, PRESET_IDS } from "./presets";
 import { ISOLATION_LEVELS } from "./types";
-import type { IsolationLevel, IsolationState, PresetId, StepEvent, TxnId } from "./types";
+import type { IsolationAction, IsolationLevel, IsolationState, PresetId, StepEvent, TxnId } from "./types";
 
 /**
  * IsolationViz(Ch7, 02§8.2)。2トランザクションの操作タイムラインをドラッグ/
@@ -23,6 +25,33 @@ import type { IsolationLevel, IsolationState, PresetId, StepEvent, TxnId } from 
 
 function normalizePreset(preset: string | undefined): PresetId {
   return preset && (PRESET_IDS as readonly string[]).includes(preset) ? (preset as PresetId) : "dirty-read";
+}
+
+/**
+ * VizPersistenceScopeProviderのスコープキーごとにSimEngineインスタンスを
+ * 保持するモジュールスコープのキャッシュ(lib/store/labStore.tsのコメントにある
+ * 「言語切替をまたぐ保持は、モジュールスコープのシングルトンが再生成されない
+ * ことで実現する」と同じ発想。02§5.1)。scopeKeyがnull(Provider未使用)の場合は
+ * 何もキャッシュせず、常にフレッシュな状態を返す(既存の呼び出し元との後方互換)。
+ */
+const engineCache = new Map<string, SimEngine<IsolationState, IsolationAction>>();
+
+function getOrCreateEngine(
+  scopeKey: string | null,
+  initialPresetId: PresetId,
+): SimEngine<IsolationState, IsolationAction> {
+  if (scopeKey) {
+    const cached = engineCache.get(scopeKey);
+    if (cached) return cached;
+  }
+  const created = createSimEngine(isolationSimDefinition, { seed: 1 });
+  if (initialPresetId !== created.getState().presetId) {
+    created.dispatch({ type: "select-preset", presetId: initialPresetId });
+  }
+  if (scopeKey) {
+    engineCache.set(scopeKey, created);
+  }
+  return created;
 }
 
 function chipStatus(
@@ -58,14 +87,10 @@ export function IsolationViz({ preset }: VizComponentProps) {
   const locale = useLessonLocale();
   const t = getMessages(locale).isolationViz;
 
-  const [engine] = useState(() => {
-    const created = createSimEngine(isolationSimDefinition, { seed: 1 });
-    const initialPresetId = normalizePreset(preset);
-    if (initialPresetId !== created.getState().presetId) {
-      created.dispatch({ type: "select-preset", presetId: initialPresetId });
-    }
-    return created;
-  });
+  const persistenceScope = useVizPersistenceScope();
+  const initialPresetId = normalizePreset(preset);
+  const scopeKey = persistenceScope ? `${persistenceScope}::${initialPresetId}` : null;
+  const [engine] = useState(() => getOrCreateEngine(scopeKey, initialPresetId));
   const [state, setState] = useState<IsolationState>(() => engine.getState());
 
   useEffect(() => engine.subscribe(setState), [engine]);
