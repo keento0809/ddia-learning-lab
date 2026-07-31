@@ -1,0 +1,171 @@
+slug: 04-encoding/encoding-comparison-lab
+language: js
+entry: encodeCompact
+template: |
+  // Encoding Comparison Lab
+  //
+  // Encode the same record (a plain object) both as (a) JSON and as (b) a
+  // small hand-rolled binary format, then compare the byte count and the
+  // round trip (does encoding and then decoding return the original data?).
+  //
+  // The "schema" is represented as an array of the following shape:
+  //   [{ tag: 1, key: "deviceId", type: "uint32" },
+  //    { tag: 2, key: "active",   type: "bool" },
+  //    { tag: 3, key: "label",    type: "string" }]
+  //
+  // Layout of the custom binary format (per-field byte sequence):
+  //   1 byte:  tag number
+  //   1 byte:  type code (0 = uint32, 1 = bool, 2 = string)
+  //   payload:
+  //     - uint32: 4 bytes (big-endian, unsigned 32-bit integer)
+  //     - bool:   1 byte (0 = false, 1 = true)
+  //     - string: 2 bytes (big-endian UTF-8 byte length) + the UTF-8 body
+  //   A field whose key is missing from the record (or whose value is
+  //   undefined) is not written out at all.
+  //
+  // typeCode(type) is already implemented (do not change it).
+  function typeCode(type) {
+    if (type === "uint32") return 0;
+    if (type === "bool") return 1;
+    return 2;
+  }
+
+  // Implement encodeCompact(record, schema).
+  // Walk each field in schema's order, and for only the fields whose key
+  // exists on record, encode it using the layout above; return the result
+  // as an array of byte values (0-255).
+  export function encodeCompact(record, schema) {
+    // TODO: implement
+  }
+
+  // Implement decodeCompact(bytes, schema).
+  // Read bytes (a byte array such as the one encodeCompact returns) from
+  // the start, and for tags that exist in schema, store the decoded value
+  // into the result object. For a tag that is not present in schema,
+  // determine the payload length from its type code and skip it correctly
+  // (without adding it to the result), then continue reading the next
+  // field.
+  export function decodeCompact(bytes, schema) {
+    // TODO: implement
+  }
+
+  // Implement jsonByteSize(record).
+  // Return the number of bytes in the UTF-8 encoding of
+  // JSON.stringify(record) (you can use the length of TextEncoder's
+  // encode result).
+  export function jsonByteSize(record) {
+    // TODO: implement
+  }
+
+  // Implement compactByteSize(record, schema).
+  // Return the byte count (array length) of encodeCompact(record, schema).
+  export function compactByteSize(record, schema) {
+    // TODO: implement
+  }
+
+  // Implement isCompactSmaller(record, schema).
+  // Return a boolean indicating whether compactByteSize(record, schema) is
+  // smaller than jsonByteSize(record).
+  export function isCompactSmaller(record, schema) {
+    // TODO: implement
+  }
+tests:
+  - id: t1
+    name:
+      ja: "encodeCompact: フィールドがすべて揃ったレコードを正しくエンコードする"
+      en: "encodeCompact: correctly encodes a record with every field present"
+    call:
+      fn: encodeCompact
+      args:
+        - { deviceId: 42, active: true, label: "sensor-a" }
+        - - { tag: 1, key: "deviceId", type: "uint32" }
+          - { tag: 2, key: "active", type: "bool" }
+          - { tag: 3, key: "label", type: "string" }
+    assert:
+      type: deepEquals
+      value: [1, 0, 0, 0, 0, 42, 2, 1, 1, 3, 2, 0, 8, 115, 101, 110, 115, 111, 114, 45, 97]
+  - id: t2
+    name:
+      ja: "encodeCompact: レコードに存在しないフィールドは書き出さない(省略可能フィールド)"
+      en: "encodeCompact: a field missing from the record is simply omitted (optional field)"
+    call:
+      fn: encodeCompact
+      args:
+        - { deviceId: 5, active: true }
+        - - { tag: 1, key: "deviceId", type: "uint32" }
+          - { tag: 2, key: "active", type: "bool" }
+          - { tag: 3, key: "label", type: "string" }
+    assert:
+      type: deepEquals
+      value: [1, 0, 0, 0, 0, 5, 2, 1, 1]
+  - id: t3
+    name:
+      ja: "往復変換: encodeCompactしてdecodeCompactすると元のレコードに戻る"
+      en: "round trip: decoding an encoded record returns the original record"
+    call:
+      fn: decodeCompact
+      args:
+        - [1, 0, 0, 0, 0, 42, 2, 1, 1, 3, 2, 0, 8, 115, 101, 110, 115, 111, 114, 45, 97]
+        - - { tag: 1, key: "deviceId", type: "uint32" }
+          - { tag: 2, key: "active", type: "bool" }
+          - { tag: 3, key: "label", type: "string" }
+    assert:
+      type: deepEquals
+      value: { deviceId: 42, active: true, label: "sensor-a" }
+  - id: t4
+    name:
+      ja: "前方互換性: 新しいスキーマで追加されたタグを、古いスキーマでdecodeすると安全に無視される"
+      en: "forward compatibility: decoding with the old schema safely skips a tag added by the new schema"
+    call:
+      fn: decodeCompact
+      args:
+        - [1, 0, 0, 0, 0, 7, 2, 1, 0, 3, 2, 0, 8, 115, 101, 110, 115, 111, 114, 45, 98, 4, 0, 0, 0, 0, 3]
+        - - { tag: 1, key: "deviceId", type: "uint32" }
+          - { tag: 2, key: "active", type: "bool" }
+          - { tag: 3, key: "label", type: "string" }
+    assert:
+      type: deepEquals
+      value: { deviceId: 7, active: false, label: "sensor-b" }
+  - id: t5
+    name:
+      ja: "jsonByteSize: JSONエンコード結果のバイト数を正しく計算する"
+      en: "jsonByteSize: correctly computes the UTF-8 byte size of the JSON encoding"
+    call:
+      fn: jsonByteSize
+      args:
+        - { deviceId: 42, active: true, label: "sensor-a" }
+    assert: { type: equals, value: 48 }
+  - id: t6
+    name:
+      ja: "compactByteSize: 自作バイナリ形式のバイト数を正しく計算する"
+      en: "compactByteSize: correctly computes the byte size of the custom binary encoding"
+    call:
+      fn: compactByteSize
+      args:
+        - { deviceId: 42, active: true, label: "sensor-a" }
+        - - { tag: 1, key: "deviceId", type: "uint32" }
+          - { tag: 2, key: "active", type: "bool" }
+          - { tag: 3, key: "label", type: "string" }
+    assert: { type: equals, value: 21 }
+  - id: t7
+    name:
+      ja: "isCompactSmaller: 同じレコードでは自作バイナリ形式の方がJSONより小さくなる"
+      en: "isCompactSmaller: the custom binary encoding is smaller than JSON for the same record"
+    call:
+      fn: isCompactSmaller
+      args:
+        - { deviceId: 42, active: true, label: "sensor-a" }
+        - - { tag: 1, key: "deviceId", type: "uint32" }
+          - { tag: 2, key: "active", type: "bool" }
+          - { tag: 3, key: "label", type: "string" }
+    assert: { type: equals, value: true }
+timeoutMs: 3000
+hints:
+  - ja: "encodeCompactはschemaを順番に走査し、record[field.key]が存在するときだけタグ・型コード・ペイロードをこの順でbytes配列にpushしていきます"
+    en: "encodeCompact walks schema in order and, only when record[field.key] exists, pushes tag, type code, then payload bytes in that order"
+  - ja: "uint32は4バイトのビッグエンディアンです。(n >>> 24) & 0xff のようにビットシフトで各バイトを取り出せます"
+    en: "uint32 is 4 bytes big-endian; you can extract each byte with bit shifts like (n >>> 24) & 0xff"
+  - ja: "stringはUTF-8のバイト長を2バイト(ビッグエンディアン)で先に書き、その後に本体のバイト列を続けます。TextEncoderが使えます"
+    en: "a string writes its UTF-8 byte length as 2 big-endian bytes first, then the body bytes; TextEncoder is available"
+  - ja: "decodeCompactは常にタグと型コードの2バイトをまず読み、型コードからペイロード長を決めてから、schemaにそのタグがあるときだけ結果へ格納します(なくても読み進める処理自体は続けます)"
+    en: "decodeCompact always reads the tag and type code (2 bytes) first, determines the payload length from the type code, and only stores the value into the result if that tag exists in schema (parsing continues either way)"

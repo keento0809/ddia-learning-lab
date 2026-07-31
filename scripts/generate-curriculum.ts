@@ -4,6 +4,7 @@ import { loadAllModules } from "../lib/content";
 import { loadGlossary, type GlossaryEntry } from "../lib/glossaryContent";
 import { loadQuiz } from "../lib/quiz/content";
 import type { Quiz } from "../lib/contracts/quiz";
+import type { ExerciseDefinition } from "../lib/contracts/exercise";
 import type { Locale } from "../lib/contracts/common";
 import type { CurriculumModuleSummary } from "../lib/curriculum";
 import type { ModuleDetailSummary } from "../lib/moduleDetail";
@@ -92,6 +93,26 @@ export function generateQuiz(root: string): Record<Locale, Record<string, Quiz>>
 }
 
 /**
+ * S-06 演習ページ(T-108r, 02§4.2)向けの演習YAMLデータ。キーは演習YAMLの
+ * `slug`フィールドそのもの(content/{locale}配下で一意、.claude/rules/i18n.md)。
+ * `lib/moduleDetail.ts`のexercises(slugのみ)とは異なり、ExerciseDefinition
+ * 全体(template/tests/hints等)を保持する。
+ */
+export function generateExercises(root: string): Record<Locale, Record<string, ExerciseDefinition>> {
+  const result = {} as Record<Locale, Record<string, ExerciseDefinition>>;
+  for (const locale of LOCALES) {
+    const bySlug: Record<string, ExerciseDefinition> = {};
+    for (const mod of loadAllModules(root, locale)) {
+      for (const exercise of mod.exercises) {
+        bySlug[exercise.slug] = exercise.definition;
+      }
+    }
+    result[locale] = bySlug;
+  }
+  return result;
+}
+
+/**
  * <Term>(T-103, 02§4.1)向けのcontent/glossary.yaml静的データ生成。
  * .claude/rules/i18n.md「用語はcontent/glossary.yamlを正とする」に対応するファイルは
  * ロケール別ではなく単一(entryごとにja/enを併記)のため、curriculum/module-detailとは
@@ -123,6 +144,7 @@ function main(): void {
   const curriculum = generateCurriculum(root);
   const moduleDetail = generateModuleDetail(root);
   const quiz = generateQuiz(root);
+  const exercises = generateExercises(root);
   const glossary = generateGlossary(root);
   const scenario = generateScenario(root);
 
@@ -155,6 +177,12 @@ function main(): void {
     fs.writeFileSync(quizOutPath, `${JSON.stringify(quiz[locale], null, 2)}\n`, "utf-8");
     console.log(
       `クイズデータを書き出しました: ${quizOutPath}(${Object.keys(quiz[locale]).length}件)`,
+    );
+
+    const exercisesOutPath = path.join(outDir, `exercise.${locale}.json`);
+    fs.writeFileSync(exercisesOutPath, `${JSON.stringify(exercises[locale], null, 2)}\n`, "utf-8");
+    console.log(
+      `演習データを書き出しました: ${exercisesOutPath}(${Object.keys(exercises[locale]).length}件)`,
     );
   }
 }
