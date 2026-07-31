@@ -1,0 +1,88 @@
+---
+title: "Fault Tolerance and Determinism in Batch Processing"
+order: 4
+minutes: 12
+sourceHash: "6464ed21834828e306ffcf0fddb270c272deb3c1ba3a849bab20507251a501b4"
+---
+
+# Fault Tolerance and Determinism in Batch Processing
+
+Run a batch job for several hours across a cluster of hundreds of machines,
+and having one machine fail somewhere along the way isn't a rare exception —
+it's a built-in assumption. This lesson looks at why MapReduce and dataflow
+engines can recover from failure with nothing more than re-running the
+affected task, and at the design assumptions that make that possible.
+
+## Re-running individual tasks
+
+When the machine running a given map or reduce task goes down partway
+through, batch-processing systems don't restart the whole job from scratch —
+they take the comparatively simple approach of "just re-run the failed task
+on a different, still-living machine." Online systems can't afford to be
+this casual about starting over, because there are clients waiting
+synchronously for a response with some partial state already in flight.
+Batch processing, by contrast, has no user waiting synchronously for the
+result, and its input data is usually immutable and unchanged during
+processing — which makes plain re-execution a practical option.
+
+## Why determinism has to be assumed
+
+For re-running a task to work correctly, the map and reduce functions need
+to have an <Term slug="idempotent-output">idempotent output</Term> property.
+In other words, without determinism — "running the same input any number of
+times always returns the same output" — a re-run would produce a different
+result each time, and there would be no way to consistently combine the
+result of a successfully completed task with the result of a task that
+failed and was re-run.
+
+The following kinds of processing, for instance, break this assumption:
+
+- Using the current time or a random number directly in the output (a
+  re-run produces a different value each time)
+- Returning a result that depends on processing order (order can shift
+  across parallel execution or re-runs)
+- Calling an external API or database and depending on whatever response
+  happens to come back at that moment
+
+<Callout type="warn">
+  The map, shuffle, and reduce functions you implemented in the word-count
+  and join exercises in earlier lessons were all designed as pure functions,
+  where the output is determined by the input alone. That wasn't just an
+  implementation convenience — it's the actual precondition that makes it
+  safe to re-run a task.
+</Callout>
+
+## Making output writes idempotent too
+
+Deterministic computation alone isn't enough — the act of writing the
+computed result out to its final destination also has to be safe to repeat.
+A common approach:
+
+- Write each task's output to a dedicated temporary directory or file first
+- Only once a task completes successfully, atomically rename (or promote)
+  that output to its final output path
+- Because a failed task's half-finished output never appears at the final
+  path, there's no risk of it getting mixed up with or overwritten by a
+  correct output from a later re-run
+
+With this mechanism in place, even if the same task somehow runs twice (say,
+the first run was just slow rather than actually dead, and both runs end up
+completing), the final output ends up with no duplication or inconsistency.
+This is the same "running an operation any number of times doesn't change
+the result" idea behind idempotence, applied consistently — not just to the
+computation itself, but all the way through the output-write path.
+
+## Summary: what this module covered
+
+This module started from MapReduce's basic map/shuffle/reduce model, moved
+on to strategies for joining multiple datasets (the tradeoff between
+reduce-side joins and broadcast hash joins), looked at how dataflow engines
+evolved to make multi-stage pipelines more efficient, and finished with the
+determinism and idempotence assumptions that let large numbers of tasks be
+safely re-run in a distributed environment. These aren't independent
+topics — they're different facets of one consistent theme: processing large
+amounts of data so that, no matter what goes wrong along the way, you still
+arrive at the correct result. The exercises let you work through this same
+theme hands-on, by implementing map, shuffle, and reduce yourself.
+
+<BookRef chapter={10} />

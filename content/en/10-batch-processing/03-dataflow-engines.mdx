@@ -1,0 +1,102 @@
+---
+title: "Beyond MapReduce: Dataflow Engines"
+order: 3
+minutes: 12
+sourceHash: "6981bef5e6131551db2f5314f252638ab19cb8ddebfe6c98f8e3f8cbb8993289"
+---
+
+# Beyond MapReduce: Dataflow Engines
+
+MapReduce made large-scale distributed processing tractable by fitting batch
+work into the simple "map, shuffle, reduce" mold. But in practice, most
+real-world processing doesn't stop at a single-stage aggregation like word
+count. You often need a multi-stage pipeline — "filter, then join, then
+re-aggregate the result under a different key," for example. This lesson
+looks at what goes wrong when you try to build that kind of multi-stage
+pipeline out of MapReduce alone, and at the idea that emerged to solve it:
+<Term slug="dataflow-engine">dataflow engines</Term>.
+
+## The problem with chaining MapReduce jobs
+
+Complex processing can be built by running several MapReduce jobs one after
+another, feeding the output of one job in as the input to the next. This
+approach comes with a few problems:
+
+- **Full materialization of intermediate results is mandatory**: each job's
+  output must be completely written out to distributed file storage before
+  the next job can start reading it. This holds no matter how large the
+  intermediate result is, and every
+  <Term slug="materialization">materialization</Term> step means another
+  round of disk writes and reads
+- **Job-startup overhead**: each job has to redo task scheduling and cluster
+  resource allocation from scratch, and this overhead adds up the more
+  small stages you chain together
+- **No pipelining across jobs**: even though the whole computation could
+  finish sooner if the next stage's map work could start before the
+  previous stage's reduce work has fully finished, the "a job must be fully
+  done before the next one starts" boundary rules that out
+
+<Callout type="warn">
+  Writing intermediate results to disk every time does have a fault-tolerance
+  upside: if a job fails, you don't have to redo the job before it. The next
+  lesson digs into this fault-tolerance angle, but for now, keep in mind that
+  it's a tradeoff against speed.
+</Callout>
+
+## Computation as a DAG (directed acyclic graph)
+
+The response to these problems was the idea of a
+<Term slug="dataflow-engine">dataflow engine</Term>: instead of a fixed
+two-stage map/reduce shape, the entire computation is expressed as any
+number of processing stages (operators). The whole computation is
+represented as a DAG (directed acyclic graph) describing which operator's
+output flows into which other operator.
+
+- Each node is an "operator" representing an operation such as filtering,
+  joining, aggregating, or sorting
+- Each edge between nodes represents which downstream operator a given
+  operator's output flows into
+- A scheduler analyzes the whole graph and runs operators with no
+  dependency between them in parallel, while respecting ordering for
+  operators that do depend on each other
+
+The advantage of this representation is that it isn't locked into the two
+fixed roles of map and reduce — a whole sequence like "filter, then join,
+then aggregate" can be described and optimized as a single unit of
+computation.
+
+## Pipelining and using memory
+
+DAG-based dataflow engines can often pass data between stages directly in
+memory (pipelining it) rather than always materializing it fully to disk.
+In some cases, downstream processing can start before all of an upstream
+stage's output is even ready, which can substantially cut down the total
+time a job takes to finish.
+
+That said, this doesn't mean everything always stays in memory. When input
+size exceeds available memory, most implementations fall back to the
+traditional approach of temporarily spilling to disk, just as before.
+Dataflow engines take a hybrid strategy — aggressively using memory when
+it's available, and falling back to disk when needed — improving the speed
+of multi-stage pipelines while preserving the robustness of MapReduce.
+
+<Callout type="tip">
+  A dataflow engine's operators cover a wide range — filtering, joining,
+  aggregating, sorting, and more — but much of their internal implementation
+  is an evolution of the map/shuffle/reduce mechanics from the earlier
+  lessons. The essential role of shuffle — gathering data with the same key
+  in one place — lives on in a different form.
+</Callout>
+
+## Applying this to iterative computation
+
+For workloads like graph algorithms or machine learning training loops that
+repeat the same computation over the same dataset many times, a DAG-based
+representation pays off even more. Running each iteration as an independent
+MapReduce job wastes effort re-reading unchanging data from disk on every
+iteration. Dataflow engines can instead keep repeatedly-accessed data in
+memory and reuse it across multiple iterations, which improves matters
+substantially over MapReduce's naive chained-job execution for this kind of
+iterative workload.
+
+<BookRef chapter={10} />
