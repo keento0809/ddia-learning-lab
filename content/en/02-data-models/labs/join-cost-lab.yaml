@@ -1,0 +1,62 @@
+slug: "02-data-models/join-cost-lab"
+language: js
+entry: countLookups
+template: |
+  // For a query that "reads rootCount root records together with the
+  // related data attached to each," return how many lookups are needed,
+  // depending on whether shape is normalized ("normalized") or
+  // denormalized ("denormalized").
+  // - When shape is "normalized": one lookup fetches the group of root
+  //   records, and then one additional lookup against the related table
+  //   is needed per root record (lookups against the related table are
+  //   not batched together — count one per root record).
+  //   The total is 1 + rootCount.
+  // - When shape is "denormalized": the related data is already embedded
+  //   in the root record, so a single lookup for the group of root
+  //   records is enough. It's always 1, regardless of rootCount.
+  export function countLookups(shape, rootCount) {
+    // TODO: implement
+  }
+tests:
+  - id: t1
+    name:
+      ja: "正規化: root 5件なら参照は6回"
+      en: "Normalized: 5 roots need 6 lookups"
+    call: { fn: "countLookups", args: ["normalized", 5] }
+    assert: { type: "equals", value: 6 }
+  - id: t2
+    name:
+      ja: "非正規化: root 5件でも参照は1回のまま"
+      en: "Denormalized: 5 roots still need only 1 lookup"
+    call: { fn: "countLookups", args: ["denormalized", 5] }
+    assert: { type: "equals", value: 1 }
+  - id: t3
+    name:
+      ja: "正規化の境界値: root 0件でも参照は1回"
+      en: "Normalized boundary: 0 roots still need 1 lookup"
+    call: { fn: "countLookups", args: ["normalized", 0] }
+    assert: { type: "equals", value: 1 }
+  - id: t4
+    name:
+      ja: "非正規化の境界値: root 0件でも参照は1回"
+      en: "Denormalized boundary: 0 roots still need 1 lookup"
+    call: { fn: "countLookups", args: ["denormalized", 0] }
+    assert: { type: "equals", value: 1 }
+  - id: t5
+    name:
+      ja: "正規化: root件数が増えると参照回数も線形に増える"
+      en: "Normalized: lookups grow linearly with root count"
+    call: { fn: "countLookups", args: ["normalized", 100] }
+    assert: { type: "equals", value: 101 }
+  - id: t6
+    name:
+      ja: "非正規化: root件数が増えても参照回数は一定"
+      en: "Denormalized: lookups stay constant as root count grows"
+    call: { fn: "countLookups", args: ["denormalized", 100] }
+    assert: { type: "equals", value: 1 }
+timeoutMs: 3000
+hints:
+  - ja: "shapeで分岐し、normalizedのときだけrootCountを足し込みます"
+    en: "Branch on shape, and only add rootCount when shape is normalized"
+  - ja: "denormalizedは常に1を返すだけで十分です"
+    en: "For denormalized, simply returning 1 is enough"
