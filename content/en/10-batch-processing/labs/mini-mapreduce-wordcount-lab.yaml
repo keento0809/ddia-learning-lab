@@ -1,0 +1,98 @@
+slug: "10-batch-processing/mini-mapreduce-wordcount-lab"
+language: js
+entry: wordCount
+template: |
+  // Mini MapReduce: word count
+  //
+  // Implement the map, shuffle, and reduce functions, plus wordCount
+  // to tie them together.
+
+  // mapPhase: takes a single document (string) and returns an array
+  // of [word, 1] pairs.
+  // Words should be lowercased, and any non-alphanumeric character
+  // treated as a separator
+  // (e.g. "Hello, world!" -> [["hello", 1], ["world", 1]]).
+  // The output order should match the order words appear in the document.
+  export function mapPhase(document) {
+    // TODO: implement
+  }
+
+  // shufflePhase: takes an array of [key, value] pairs (the combined
+  // map output across multiple documents) and groups the values by key.
+  // Returns an array of [key, array of values] pairs, sorted ascending
+  // by key
+  // (e.g. [["a",1],["b",1],["a",1]] -> [["a",[1,1]],["b",[1]]]).
+  export function shufflePhase(pairs) {
+    // TODO: implement
+  }
+
+  // reducePhase: takes shufflePhase's output (an array of [key, array of
+  // values] pairs) and returns an object { key: sum } with the values
+  // summed per key.
+  export function reducePhase(groups) {
+    // TODO: implement
+  }
+
+  // wordCount: takes an array of documents (strings) and applies
+  // mapPhase -> shufflePhase -> reducePhase in order, returning an
+  // object of per-word occurrence counts.
+  export function wordCount(documents) {
+    // TODO: implement
+  }
+tests:
+  - id: t1-map-basic
+    name:
+      ja: "mapPhaseが単語ごとに(単語,1)ペアを出現順で出力する"
+      en: "mapPhase emits a (word, 1) pair per word in appearance order"
+    call: { fn: "mapPhase", args: ["the quick brown fox"] }
+    assert:
+      type: equals
+      value: [["the", 1], ["quick", 1], ["brown", 1], ["fox", 1]]
+  - id: t2-map-punctuation
+    name:
+      ja: "mapPhaseが大文字・句読点を正規化する"
+      en: "mapPhase normalizes casing and strips punctuation"
+    call: { fn: "mapPhase", args: ["Hello, hello world!"] }
+    assert:
+      type: equals
+      value: [["hello", 1], ["hello", 1], ["world", 1]]
+  - id: t3-shuffle-groups-sorted
+    name:
+      ja: "shufflePhaseが同じキーの値をまとめキー昇順で返す"
+      en: "shufflePhase groups values by key, sorted ascending by key"
+    call: { fn: "shufflePhase", args: [[["b", 1], ["a", 1], ["b", 1]]] }
+    assert:
+      type: equals
+      value: [["a", [1]], ["b", [1, 1]]]
+  - id: t4-reduce-sums-values
+    name:
+      ja: "reducePhaseがキーごとに値を合計する"
+      en: "reducePhase sums the values for each key"
+    call: { fn: "reducePhase", args: [[["a", [1, 1]], ["b", [1]]]] }
+    assert:
+      type: equals
+      value: { "a": 2, "b": 1 }
+  - id: t5-wordcount-end-to-end
+    name:
+      ja: "wordCountが複数ドキュメントから単語出現数を集計する"
+      en: "wordCount aggregates word counts across multiple documents"
+    call: { fn: "wordCount", args: [["the cat sat", "the cat ran"]] }
+    assert:
+      type: equals
+      value: { "the": 2, "cat": 2, "sat": 1, "ran": 1 }
+  - id: t6-wordcount-punctuation-multi-doc
+    name:
+      ja: "wordCountが複数ドキュメントで句読点・大文字小文字を正しく扱う"
+      en: "wordCount correctly handles punctuation and casing across documents"
+    call: { fn: "wordCount", args: [["Cat, cat!", "DOG dog dog."]] }
+    assert:
+      type: equals
+      value: { "cat": 2, "dog": 3 }
+timeoutMs: 3000
+hints:
+  - ja: "mapPhaseは正規表現(例: 英数字の連続部分にマッチする)でドキュメントを単語に分割すると、句読点の除去と分割を同時に行えます"
+    en: "In mapPhase, matching runs of alphanumeric characters with a regular expression lets you split into words and strip punctuation in one step"
+  - ja: "shufflePhaseはMapを使ってキーごとに値を集め、最後にキーの配列をソートしてから[キー,値配列]の形に整形すると実装しやすいです"
+    en: "In shufflePhase, accumulate values per key with a Map, then sort the keys before converting to [key, values] pairs"
+  - ja: "wordCountは新しいロジックを書く必要はなく、mapPhase・shufflePhase・reducePhaseを順番に呼び出すだけで組み立てられます"
+    en: "wordCount doesn't need new logic — it can simply chain calls to mapPhase, shufflePhase, and reducePhase"
