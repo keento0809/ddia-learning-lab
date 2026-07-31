@@ -1,0 +1,101 @@
+---
+title: "Handling Time and Late Events"
+order: 4
+minutes: 13
+sourceHash: "dfd6b1116c507322200b893f09d5727f3aba365d56619aed828ac23ef28a04a7"
+---
+
+# Handling Time and Late Events
+
+The windowed-aggregation skeleton from the previous lesson implicitly
+assumed that "events reach the processing system without delay, in the
+order they occurred." In real systems, though, it's routine for a batch of
+events generated while a mobile device was offline to arrive together much
+later, or for network congestion to delay only some messages. Correctly
+handling this gap between "when an event happened" and "when it was
+processed" is one of the practical hard problems in stream processing.
+
+## Event time versus processing time
+
+<Term slug="event-time">Event time</Term> is the time an event actually
+occurred — the moment a sensor took a reading, the moment a user clicked,
+and so on. <Term slug="processing-time">Processing time</Term>, by
+contrast, is the time the stream processing system received and actually
+processed that event.
+
+- The delay between generating an event on the client and sending it
+- Time spent in transit over the network
+- Retries and retransmission due to transient failures or being offline
+
+Because of these factors, processing time is always the same as or later
+than event time, and the size of that gap varies from event to event. When
+you want to aggregate "the number of events in the last minute," whether
+that "minute" is measured against event time or against processing time can
+change the result, even with the same implementation.
+
+<Callout type="warn">
+  Bucketing windows by processing time keeps the implementation simple, but
+  it introduces a problem: reprocessing the same input data at a different
+  time produces a different aggregate result. When you replay a stream to
+  redo an aggregation after recovering from a failure, for instance,
+  situations that call for reproducibility are usually better served by
+  bucketing on event time instead.
+</Callout>
+
+## The question of how long to wait
+
+Even once you decide to bucket windows by event time, a new problem shows
+up. How do you decide that "all the events belonging to some window have
+now arrived"? In theory, you can never fully rule out the possibility that
+"an event with an event time before this window's end might still arrive
+later."
+
+In practice, we settle this with a pragmatic call: you can't wait forever.
+The mechanism for that is the
+<Term slug="watermark">watermark</Term>. A watermark is a time-valued
+indicator representing the processing system's own guess that "an event
+with an event time earlier than this can now be assumed not to be coming."
+It's typically computed as the maximum event time observed so far, minus
+some allowed upper bound on lateness.
+
+```
+watermark = max event time observed so far - allowed lateness
+
+Example: allowed lateness of 30 seconds
+  If the maximum event time observed is 10:05:40,
+  the watermark is 10:05:10
+  -> windows with an event time before 10:05:10 may be considered finalized
+```
+
+## How to handle late events
+
+After the watermark has advanced past a window's end time, an event that
+belongs to that window can still arrive. This is called a
+<Term slug="late-arriving-event">late-arriving event</Term>. There are a
+few typical ways to handle late events.
+
+- **Drop it**: simple, but the aggregate result ends up smaller than the
+  actual value by that amount
+- **Allow a longer lateness bound**: fewer late events get missed, but it
+  takes longer before a window is finalized (i.e. before its result becomes
+  available)
+- **Allow corrections after finalization**: update an already-finalized
+  window's aggregate result as late events arrive. This improves accuracy,
+  but requires downstream systems to accept the premise that "an aggregate
+  result can change later"
+
+<Callout type="tip">
+  "How much allowed lateness to configure" is a tradeoff a lot like
+  designing timeout values (module 8). A longer allowed lateness reduces how
+  often events get missed but stretches out the wait before a result is
+  available; a shorter one produces results sooner but makes it easier to
+  lose late events. This isn't a matter of finding "the one correct value" —
+  it's a design decision based on the actual distribution of delay you
+  observe and how fresh the results need to be.
+</Callout>
+
+This module's exercise, the "stream aggregation lab," has you get hands-on
+with tumbling-window aggregation plus the watermark idea covered here, to
+see for yourself how late events actually get handled.
+
+<BookRef chapter={11} />

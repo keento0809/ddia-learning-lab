@@ -629,13 +629,6 @@
   definition:
     ja: システム内で正とみなされる一次情報から、決まった変換処理によって生成される別の表現のデータ。検索インデックスや集計結果、キャッシュなどが該当する。
     en: Data produced from a system's authoritative source of truth by applying a defined transformation, such as a search index, an aggregated summary, or a cache.
-- slug: change-data-capture
-  term:
-    ja: 変更データキャプチャ
-    en: change data capture (CDC)
-  definition:
-    ja: 一次データベースへの書き込みをイベントの並びとして継続的に抽出し、他のシステムへ伝搬させる仕組み。派生データを最新の状態に追随させる手段として使われる。
-    en: A mechanism that continuously extracts writes to a primary database as a sequence of events and propagates them to other systems, commonly used to keep derived data up to date.
 - slug: end-to-end-argument
   term:
     ja: エンドツーエンド原則
@@ -664,3 +657,150 @@
   definition:
     ja: システムの現在の状態や派生データがどのように導出されたかを、後から履歴をたどって検証・再現できる性質。ログからの状態再構築と、元の状態との突き合わせまでを含む。
     en: The property that a system's current state or derived data can be traced back and verified or reproduced after the fact, encompassing both reconstructing state from a log and comparing it against the original state.
+- slug: batch-processing
+  term:
+    ja: バッチ処理
+    en: batch processing
+  definition:
+    ja: 蓄積された有限のデータ集合をまとめて読み込み、集計・変換した結果を後で使えるように書き出す処理形態。個々の処理への即時応答は求められない代わりに、大規模な入力を扱えるスループットが重視される。
+    en: A processing style that reads in a finite, already-accumulated set of data, transforms or aggregates it, and writes out results for later use. Individual operations need not respond instantly, but the system must handle high-throughput, large-scale input.
+- slug: mapreduce
+  term:
+    ja: MapReduce
+    en: MapReduce
+  definition:
+    ja: 分散バッチ処理を「map」「シャッフル」「reduce」の3段階に定式化するプログラミングモデル。各レコードを独立に変換するmapと、キーごとに値を集約するreduceに役割を分けることで、大規模な並列実行と障害からの再実行を扱いやすくする。
+    en: A programming model that formulates distributed batch processing as three stages — map, shuffle, and reduce. Splitting the work into an independent per-record transformation (map) and a per-key aggregation (reduce) makes large-scale parallel execution and recovery from failed tasks easier to manage.
+- slug: shuffle-phase
+  term:
+    ja: シャッフルフェーズ
+    en: shuffle phase
+  definition:
+    ja: MapReduceにおいて、map段階が出力したキー・値ペアを、同じキーの値同士が同じreduceタスクに集まるようクラスタ全体でネットワーク越しに再配置する段階。
+    en: The stage in MapReduce that redistributes the key-value pairs emitted by the map stage across the cluster's network so that all values sharing a key arrive at the same reduce task.
+- slug: reduce-side-join
+  term:
+    ja: リデュース側結合
+    en: reduce-side join
+  definition:
+    ja: 結合対象の複数の入力からキーを揃えたペアを出力し、シャッフル段階で同じキーの値を1つのreduceタスクへ集約したうえで結合結果を組み立てる戦略。入力サイズに関わらず動作するが、全データがシャッフルを経由するため通信コストが大きくなりやすい。
+    en: A join strategy in which multiple inputs emit pairs keyed by the join key, the shuffle stage gathers same-key values into a single reduce task, and the reduce task assembles the joined output. It works regardless of input size, but routing all data through the shuffle tends to be costly in network traffic.
+- slug: sort-merge-join
+  term:
+    ja: ソートマージ結合
+    en: sort-merge join
+  definition:
+    ja: 結合対象の入力をあらかじめ結合キーでソートしておき、ソート済みの2つのストリームを先頭から一度だけ突き合わせて結合する手法。MapReduceのシャッフル段階がキー順でデータを届ける性質を利用している。
+    en: A join technique that sorts both inputs by the join key ahead of time, then merges the two sorted streams in a single pass from the start. It relies on the property that MapReduce's shuffle stage delivers data to reducers in key order.
+- slug: broadcast-hash-join
+  term:
+    ja: ブロードキャストハッシュ結合
+    en: broadcast hash join
+  definition:
+    ja: 結合対象の一方が全マシンのメモリに収まるほど小さいとき、その入力を全マシンへ配布してハッシュテーブルとして保持し、大きい方の入力を読みながらその場で結合する戦略。シャッフル段階そのものを省略できる。
+    en: "A join strategy usable when one input is small enough to fit in memory on every machine: that input is broadcast to all machines and kept as a hash table, and the larger input is joined against it on the fly as it is read. This avoids the shuffle stage entirely."
+- slug: skewed-key
+  term:
+    ja: スキューしたキー
+    en: skewed key
+  definition:
+    ja: 結合や集計の対象データにおいて、他のキーに比べて著しく多くのレコードが紐づいているキー。シャッフル段階は同じキーの値を1つのタスクへ集約するため、スキューしたキーがあるとそのタスクだけが突出して重くなりジョブ全体のボトルネックになりやすい。
+    en: A key that has a disproportionately large number of records associated with it compared to other keys, in a join or aggregation workload. Because the shuffle stage funnels all values for a key into a single task, a skewed key can make that one task a severe bottleneck for the whole job.
+- slug: dataflow-engine
+  term:
+    ja: データフローエンジン
+    en: dataflow engine
+  definition:
+    ja: 計算全体を固定のmap・reduce2段階ではなく、任意個数のオペレータからなる有向非巡回グラフ(DAG)として表現し実行するバッチ処理の仕組み。段階間のデータをディスクへ完全に書き出さずメモリ上でパイプライン的に受け渡せる場合があり、多段階パイプラインを効率化する。
+    en: A batch-processing mechanism that expresses an entire computation as a directed acyclic graph (DAG) of arbitrarily many operators rather than a fixed two-stage map/reduce, and executes it accordingly. It can sometimes pipeline data between stages in memory instead of fully materializing it to disk, making multi-stage pipelines more efficient.
+- slug: materialization
+  term:
+    ja: マテリアライズ
+    en: materialization
+  definition:
+    ja: 処理の途中結果を、次の処理段階が読み始める前に永続ストレージへ完全に書き出すこと。耐障害性に寄与する一方、書き込み・読み込みのI/Oコストがかかり、多段階パイプラインの速度を落とす要因になる。
+    en: Writing an intermediate processing result completely to persistent storage before the next stage begins reading it. This helps with fault tolerance, but the write/read I/O cost can slow down multi-stage pipelines.
+- slug: idempotent-output
+  term:
+    ja: 冪等な出力
+    en: idempotent output
+  definition:
+    ja: 同じタスクが再実行されたり重複して実行されたりしても、最終的な出力結果が変わらない性質。決定的な計算に加え、出力の書き込み自体をアトミックに行うことで実現される。
+    en: The property that a task's final output stays the same even if the task is retried or executed more than once. Achieved through a combination of deterministic computation and writing output atomically.
+- slug: event-stream
+  term:
+    ja: イベントストリーム
+    en: event stream
+  definition:
+    ja: 「何かが起きた」という事実を表すイベントが、区切りなく発生し続ける連なりとして扱われるデータの流れ。バッチ処理のような有限のまとまりではなく、継続的に到着し続けることを前提とする。
+    en: A continuous, unbounded sequence of events, each representing a fact that something happened, treated as an ongoing flow of data rather than a finite batch.
+- slug: event-log
+  term:
+    ja: イベントログ
+    en: event log
+  definition:
+    ja: 新しいイベントが常に末尾に追加され、既存のイベントは変更されない追記専用のデータ構造。順序の保存やコンシューマーの独立した進捗管理、過去イベントの再生を可能にする。
+    en: An append-only data structure where new events are always added at the end and existing events are never modified, enabling order preservation, independently tracked consumer progress, and replay of past events.
+- slug: consumer-offset
+  term:
+    ja: コンシューマオフセット
+    en: consumer offset
+  definition:
+    ja: あるコンシューマーがイベントログのどこまで読み終えたかを示す位置。コンシューマーごとに独立して管理されるため、複数のコンシューマーが互いに干渉せず異なるペースで同じログを読み進められる。
+    en: A marker indicating how far a given consumer has read through an event log. Because it is tracked independently per consumer, multiple consumers can read the same log at their own pace without interfering with each other.
+- slug: change-data-capture
+  term:
+    ja: チェンジデータキャプチャ(CDC)
+    en: change data capture (CDC)
+  definition:
+    ja: データベースへの書き込みをイベントストリームとして取り出す手法の総称。アプリケーションコードがDBとイベントストリームへ別々に書き込む「二重書き込み」を避け、検索インデックスやキャッシュなどの派生データをDBの変更に追従させるために使われる。
+    en: A family of techniques for extracting database writes as an event stream. It avoids the "dual write" problem of application code writing to a database and an event stream separately, and is used to keep derived data such as search indexes or caches in sync with database changes.
+- slug: outbox-pattern
+  term:
+    ja: アウトボックスパターン
+    en: outbox pattern
+  definition:
+    ja: 本来のデータ更新と、送信すべきイベントの記録を同一のデータベーストランザクション内で行い、別プロセスがそのアウトボックステーブルを読み取って外部のイベントストリームへ配信する設計パターン。二重書き込み問題を単一データストア内の原子性の問題に還元する。
+    en: A design pattern in which the primary data update and the record of an event to be sent are written in the same database transaction, and a separate process later reads that outbox table and delivers the events to an external stream. It reduces the dual-write problem to a single data store's atomicity guarantee.
+- slug: tumbling-window
+  term:
+    ja: タンブリングウィンドウ
+    en: tumbling window
+  definition:
+    ja: 固定長で互いに重ならない時間区間に分割するウィンドウ方式。あるイベントは、そのイベント時刻が収まる1つのウィンドウにのみ属する。
+    en: A windowing scheme that divides time into fixed-length, non-overlapping intervals. Any given event belongs to exactly one window, the one that its event time falls into.
+- slug: sliding-window
+  term:
+    ja: スライディングウィンドウ
+    en: sliding window
+  definition:
+    ja: ウィンドウの幅とは別にステップ幅(ずらす間隔)を持ち、隣接するウィンドウが重なり合うことを許すウィンドウ方式。1つのイベントが複数のウィンドウの計算に同時に含まれ得る。
+    en: A windowing scheme with a step size separate from the window length, allowing adjacent windows to overlap. A single event can contribute to more than one window's computation at the same time.
+- slug: event-time
+  term:
+    ja: イベント時刻
+    en: event time
+  definition:
+    ja: あるイベントが実際に発生した時刻。ストリーム処理システムがそのイベントを受け取って処理した時刻(処理時刻)とは、ネットワーク遅延や再送などにより一致するとは限らない。
+    en: The time at which an event actually occurred. It is not necessarily the same as the time the stream processing system received and processed the event (processing time), since network delay and retries can separate the two.
+- slug: processing-time
+  term:
+    ja: 処理時刻
+    en: processing time
+  definition:
+    ja: ストリーム処理システムがあるイベントを実際に受け取って処理した時刻。イベント時刻より後になり、そのずれの大きさはイベントごとにばらつく。
+    en: The time at which the stream processing system actually received and processed an event. It comes after event time, and the gap between the two varies from event to event.
+- slug: watermark
+  term:
+    ja: ウォーターマーク
+    en: watermark
+  definition:
+    ja: 「これより前のイベント時刻を持つイベントは、もう届かないとみなしてよい」という処理システム側の推測を表す時刻の指標。典型的には、これまでに観測したイベント時刻の最大値から許容遅延を差し引いて計算される。
+    en: A time-valued indicator representing the processing system's assumption that "events with an earlier event time can now be considered no longer arriving." It is typically computed as the maximum event time observed so far minus an allowed lateness bound.
+- slug: late-arriving-event
+  term:
+    ja: 遅延到着イベント
+    en: late-arriving event
+  definition:
+    ja: ウォーターマークがそのイベントの属するウィンドウの終了時刻を追い越した後に到着するイベント。破棄する、許容遅延を長く取る、確定後の集計結果を再訂正する、といった対処が考えられる。
+    en: An event that arrives after the watermark has already advanced past the end of the window it belongs to. Common responses include dropping it, allowing a longer lateness bound, or issuing a correction to an already-finalized window result.

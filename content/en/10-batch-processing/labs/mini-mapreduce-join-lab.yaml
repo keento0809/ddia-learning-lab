@@ -1,0 +1,143 @@
+slug: "10-batch-processing/mini-mapreduce-join-lab"
+language: js
+entry: joinOrdersWithCustomers
+template: |
+  // Mini MapReduce: reduce-side join (orders x customer master data)
+  //
+  // Join an array of order records { orderId, customerId, item } with
+  // an array of customer records { customerId, name }, following the
+  // map/shuffle/reduce approach.
+
+  // mapOrders: takes an array of order records and returns an array of
+  // [customerId, { type: "order", orderId, item }] pairs, in the same
+  // order as the input.
+  export function mapOrders(orders) {
+    // TODO: implement
+  }
+
+  // mapCustomers: takes an array of customer records and returns an
+  // array of [customerId, { type: "customer", name }] pairs, in the
+  // same order as the input.
+  export function mapCustomers(customers) {
+    // TODO: implement
+  }
+
+  // shuffleJoin: takes mapCustomers' output and mapOrders' output, and
+  // groups pairs by customerId, preserving the order in which
+  // customerPairs was concatenated before orderPairs.
+  // Returns an array of [customerId, array of values] pairs, sorted
+  // ascending by customerId.
+  export function shuffleJoin(customerPairs, orderPairs) {
+    // TODO: implement
+  }
+
+  // reduceJoin: takes shuffleJoin's output. For each group where a
+  // customer-derived value (name) is found, emits
+  // { orderId, item, customerId, customerName } for every order-derived
+  // value in that group.
+  // Groups with no matching customer emit nothing (orders for a
+  // customer ID missing from the master data are excluded from the
+  // join result).
+  export function reduceJoin(groups) {
+    // TODO: implement
+  }
+
+  // joinOrdersWithCustomers: takes an array of orders and an array of
+  // customers, and applies mapOrders -> mapCustomers -> shuffleJoin ->
+  // reduceJoin in order, returning an array of joined results.
+  export function joinOrdersWithCustomers(orders, customers) {
+    // TODO: implement
+  }
+tests:
+  - id: t1-map-orders
+    name:
+      ja: "mapOrdersが注文ごとにcustomerIdをキーとするペアを出力する"
+      en: "mapOrders emits a pair keyed by customerId for each order"
+    call:
+      fn: "mapOrders"
+      args:
+        - - { orderId: "o1", customerId: "c1", item: "Book" }
+          - { orderId: "o2", customerId: "c2", item: "Pen" }
+    assert:
+      type: equals
+      value:
+        - ["c1", { type: "order", orderId: "o1", item: "Book" }]
+        - ["c2", { type: "order", orderId: "o2", item: "Pen" }]
+  - id: t2-map-customers
+    name:
+      ja: "mapCustomersが顧客ごとにcustomerIdをキーとするペアを出力する"
+      en: "mapCustomers emits a pair keyed by customerId for each customer"
+    call:
+      fn: "mapCustomers"
+      args:
+        - - { customerId: "c1", name: "Alice" }
+    assert:
+      type: equals
+      value:
+        - ["c1", { type: "customer", name: "Alice" }]
+  - id: t3-shuffle-groups-and-sorts
+    name:
+      ja: "shuffleJoinが同じcustomerIdの値をまとめキー昇順で返す"
+      en: "shuffleJoin groups values by customerId, sorted ascending"
+    call:
+      fn: "shuffleJoin"
+      args:
+        - - ["c2", { type: "customer", name: "Bob" }]
+          - ["c1", { type: "customer", name: "Alice" }]
+        - - ["c1", { type: "order", orderId: "o1", item: "Book" }]
+    assert:
+      type: equals
+      value:
+        - ["c1", [{ type: "customer", name: "Alice" }, { type: "order", orderId: "o1", item: "Book" }]]
+        - ["c2", [{ type: "customer", name: "Bob" }]]
+  - id: t4-reduce-drops-unmatched-orders-and-orderless-customers
+    name:
+      ja: "reduceJoinが顧客未一致の注文と注文のない顧客を除外する"
+      en: "reduceJoin drops orders with no matching customer and customers with no orders"
+    call:
+      fn: "reduceJoin"
+      args:
+        - - ["c1", [{ type: "customer", name: "Alice" }, { type: "order", orderId: "o1", item: "Book" }]]
+          - ["c2", [{ type: "customer", name: "Bob" }]]
+          - ["c3", [{ type: "order", orderId: "o9", item: "X" }]]
+    assert:
+      type: equals
+      value:
+        - { orderId: "o1", item: "Book", customerId: "c1", customerName: "Alice" }
+  - id: t5-join-end-to-end
+    name:
+      ja: "joinOrdersWithCustomersが注文と顧客マスタを結合する"
+      en: "joinOrdersWithCustomers joins orders against the customer master data"
+    call:
+      fn: "joinOrdersWithCustomers"
+      args:
+        - - { orderId: "o1", customerId: "c1", item: "Book" }
+          - { orderId: "o2", customerId: "c2", item: "Pen" }
+          - { orderId: "o3", customerId: "c1", item: "Notebook" }
+          - { orderId: "o4", customerId: "c3", item: "Eraser" }
+        - - { customerId: "c1", name: "Alice" }
+          - { customerId: "c2", name: "Bob" }
+    assert:
+      type: equals
+      value:
+        - { orderId: "o1", item: "Book", customerId: "c1", customerName: "Alice" }
+        - { orderId: "o3", item: "Notebook", customerId: "c1", customerName: "Alice" }
+        - { orderId: "o2", item: "Pen", customerId: "c2", customerName: "Bob" }
+  - id: t6-join-empty-inputs
+    name:
+      ja: "joinOrdersWithCustomersが空入力に対して空配列を返す"
+      en: "joinOrdersWithCustomers returns an empty array for empty inputs"
+    call:
+      fn: "joinOrdersWithCustomers"
+      args:
+        - []
+        - []
+    assert:
+      type: equals
+      value: []
+timeoutMs: 3000
+hints:
+  - ja: "shuffleJoinはcustomerPairsとorderPairsを1つの配列に連結してから、Mapでキーごとにグループ化すると、customer由来の値が先に来る順序を自然に保てます"
+    en: "In shuffleJoin, concatenate customerPairs and orderPairs into one array before grouping with a Map, so customer-derived values naturally end up first in each group"
+  - ja: "reduceJoinはまず各グループの中からtypeが'customer'の要素を1つ探し、見つからなければそのグループのorderは全てスキップします"
+    en: "In reduceJoin, first look for the element with type 'customer' in each group; if none is found, skip every order in that group"

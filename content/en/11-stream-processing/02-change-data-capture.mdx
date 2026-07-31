@@ -1,0 +1,99 @@
+---
+title: "Change Data Capture (CDC)"
+order: 2
+minutes: 12
+sourceHash: "646c5588c90c7a6d7070389c7dd97fab3562d7d93891afd23bcb92b33a29080a"
+---
+
+# Change Data Capture (CDC)
+
+In many systems, the data of record lives in a relational database. But
+there are plenty of situations where you also want database changes
+reflected elsewhere — updating a search index, invalidating a cache,
+feeding an analytics platform.
+<Term slug="change-data-capture">CDC (change data capture)</Term> is the
+umbrella term for techniques that extract writes to a database as an event
+stream.
+
+## Why not just send events from the application code directly?
+
+At first glance, it seems reasonable for the application code to do both:
+write to the DB, and send the event, itself. But this "dual write" has a
+fundamental problem.
+
+```
+Application code:
+  1. Write to the database
+  2. Send a message to the event stream
+```
+
+These are two separate writes to two separate systems, so there's no way to
+avoid the possibility that one succeeds and the other fails. If the process
+crashes between step 1 and step 2, you end up with an inconsistency: the DB
+has the change, but nobody was ever sent the event.
+
+<Callout type="warn">
+  Even ordering it as "write to the DB first, and only send the event if
+  that succeeds" doesn't eliminate the inconsistency — a failed event send
+  or a crash at the wrong moment can still cause it. Rather than trying to
+  make dual writes "succeed at both, no matter what," CDC's approach is to
+  design the system so it never has to do a dual write in the first place.
+</Callout>
+
+## Log-based CDC: picking up changes after the fact
+
+Many databases internally record every change to a pre-existing
+<Term slug="event-log">append-only log</Term> (a write-ahead log, for
+example) before applying it to a table. Log-based CDC reads that existing
+log from outside the database and turns row inserts, updates, and deletes
+into an event stream.
+
+- Application code just writes to the DB as usual — no dual write needed
+- By the time the DB has committed a write, the change is guaranteed to
+  already be in the log
+- The CDC mechanism just reads and delivers from that log, so it runs
+  independently of the application's transactions
+
+With this approach, if the CDC reader falls behind temporarily, it can catch
+up as long as the DB's log is still retained. As with the event log from the
+previous lesson, though, log retention is finite, so a CDC process that
+stays down for a long time can miss changes.
+
+## The outbox pattern
+
+When you don't have access to a database's internal log, or you want to
+deliver changes spanning multiple different kinds of data stores in one
+place, the <Term slug="outbox-pattern">outbox pattern</Term> is a common
+choice.
+
+1. The application writes the actual data update and a record of the "event
+   to be sent" **within the same database transaction** (into a dedicated
+   "outbox" table)
+2. A separate process periodically reads the outbox table and delivers the
+   events to an external event stream
+3. Delivered records are marked (or deleted)
+
+The key idea here is that bundling the "real data" write and the "event to
+send" write into the same transaction reduces the dual-write problem to a
+problem confined to a single transaction within a single data store. A
+single database transaction makes it much easier to guarantee atomicity
+(all or nothing).
+
+<Callout type="tip">
+  Unlike log-based CDC, which needs access to the DB's internal log, the
+  outbox pattern can be implemented entirely at the application layer. This
+  gives it a practical advantage: it also works in environments — managed
+  database services, for instance — where access to the internal log is
+  restricted.
+</Callout>
+
+## The design shift CDC enables
+
+Once CDC lets you treat database changes as an event stream, it becomes
+natural to keep "derived data" — search indexes, caches, materialized views
+for aggregation — continuously up to date with the changes made to the
+original database. This idea of "deriving data into multiple forms via an
+event stream" also connects closely with windowed aggregation, which the
+back half of this module covers.
+
+<BookRef chapter={11} />
