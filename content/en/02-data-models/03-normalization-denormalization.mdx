@@ -1,0 +1,111 @@
+---
+title: Normalization, Denormalization, and Many-to-Many Relationships
+order: 3
+minutes: 14
+sourceHash: fca1b476e275101189103f0dab614ec4401daa6312e3359aeddf6e887c480b93
+---
+
+# Normalization, Denormalization, and Many-to-Many Relationships
+
+So far we've mostly looked at situations where you want to handle a single entity
+together with the data attached to it. In real applications, though, you also often
+need to handle relationships where multiple entities are tangled together in more
+complex ways. This lesson uses many-to-many relationships as a lens for organizing a
+design decision about how much data duplication to allow: normalization versus
+denormalization.
+
+## Normalization: avoid duplication, connect by reference
+
+<Term slug="normalization">Normalization</Term>
+is a design technique that extracts duplicated data out into a separate table and
+links it back via a reference (an identifier such as a foreign key), so the same
+information isn't stored redundantly in multiple places.
+
+For example, rather than writing out the full shipping address every time inside an
+"order" record, you can keep addresses in a separate table and have orders reference
+only an address ID. That way, the same address being reused doesn't require copying
+every field of that address again. When a user updates their address, rewriting a
+single row in the address table is enough to update it everywhere it's referenced.
+
+## Denormalization: copy data to cut down on joins
+
+<Term slug="denormalization">Denormalization</Term>
+is the opposite: a design technique that copies referenced data and embeds it
+directly into the same record, cutting down on joins at read time. In the example
+above, if the order record directly copies the contents of the shipping address,
+reading an order no longer requires joining against the address table.
+
+Neither approach is unconditionally correct — both rest on the following trade-offs.
+
+| Aspect | Normalization | Denormalization |
+|---|---|---|
+| Consistency on update | Fix one place | Every copy must be fixed (risk of missed updates) |
+| Cost at read time | Often needs a join | Often complete in a single read |
+| Storage | Less duplication | Grows with the amount of duplication |
+
+<Callout type="info">
+A common middle ground is to keep normalized data as the source of truth and
+additionally maintain a denormalized view purely for a high-traffic read path. In
+this setup, the normalized data is treated as authoritative and the denormalized
+view as a derived result, which makes the risk of missed updates easier to manage.
+</Callout>
+
+## Representing many-to-many relationships
+
+The decision between normalization and denormalization matters especially for
+<Term slug="many-to-many-relationship">many-to-many relationships</Term>
+— relationships where one record in one set can be linked to multiple records in
+another set, and vice versa. A classic example is the relationship between users
+and groups: "one user can belong to multiple groups, and one group can have multiple
+users."
+
+A many-to-many relationship can't be correctly represented by embedding on just one
+side. If you embed a list of groups inside a user document, then finding the full
+list of members for a given group would require scanning every user document. For
+this reason, many-to-many relationships are usually represented through a junction
+table that holds only pairs of "user ID" and "group ID." This idea of a junction
+table shows up in both the relational model and the document model.
+
+<Callout type="warn">
+Trying to force a many-to-many relationship into the document model by embedding an
+array on just one side tends to lead to duplicate bookkeeping — "the same
+relationship maintained separately on both sides" — which is a breeding ground for
+bugs where one side gets updated but not the other, breaking consistency. For
+relationships involving many-to-many links, representing them via references (a
+list of IDs, or a structure equivalent to a junction table) is usually safer than
+embedding.
+</Callout>
+
+## The trade-off between degree of normalization and join cost
+
+Running the same query against normalized versus denormalized data requires a
+different number of "references/joins." With normalized data, following each
+related record can trigger a reference to another table, so the number of
+references tends to stack up as the number of records grows. With denormalized
+data, the information you need is already embedded together in advance, so the
+number of references stays low and stable — but you take on the write cost of
+keeping that data up to date.
+
+<Callout type="tip">
+In the hands-on exercise for this lesson, you'll implement a function that
+converts normalized array data (corresponding to a users table and an orders
+table) into denormalized documents (orders embedded per user), and a function
+that counts the number of references needed to run a given query against each
+of the normalized and denormalized shapes. Try it out hands-on to see how join
+cost scales with the amount of data.
+</Callout>
+
+<QuizInline
+  id="normalize-denormalize-choice"
+  prompt="In an order system, you want to prioritize the display speed of the order list screen (orders and shipping addresses are read together frequently, but addresses are updated rarely). What's the most reasonable design decision?"
+  options={[
+    { id: "a", label: "Keep the address normalized, and join against the address table every time the order list is displayed" },
+    { id: "b", label: "Denormalize a snapshot of the shipping address into the order data, so a single read is enough" },
+    { id: "c", label: "Don't store the address at all, and have the user re-enter it every time" },
+    { id: "d", label: "Normalization vs. denormalization makes no difference to performance either way" }
+  ]}
+  correctOptionId="b"
+  explanation="Data that's read frequently but updated rarely is the classic case where denormalizing to lower read cost outweighs the write cost. Shipping addresses in particular also carry meaning as a snapshot of the address at the time the order was placed."
+/>
+
+<BookRef chapter={2} />

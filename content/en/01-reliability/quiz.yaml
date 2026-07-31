@@ -1,0 +1,99 @@
+questions:
+  - id: q1
+    prompt: "Which of the following best describes what fault-tolerant design aims to achieve?"
+    type: single
+    options:
+      - id: a
+        label: "Driving the probability of a fault occurring all the way down to zero"
+      - id: b
+        label: "Making sure the system as a whole can keep providing service even when individual faults occur"
+      - id: c
+        label: "Continuously replacing hardware with higher-performance hardware"
+      - id: d
+        label: "Handling incidents on the fly without writing any runbooks"
+    correctOptionIds: [b]
+    explanation: "Fault tolerance is not about driving the occurrence of faults to zero — it's about designing the system so that individual faults don't escalate into a system-wide failure."
+  - id: q2
+    prompt: "Why are software faults considered harder to deal with than hardware faults?"
+    type: single
+    options:
+      - id: a
+        label: "Because software faults always occur at a higher rate than hardware faults"
+      - id: b
+        label: "Because they tend to occur in a correlated way — for example, multiple instances sharing the same bug can become unhealthy at the same time"
+      - id: c
+        label: "Because software faults are always caused by human error"
+      - id: d
+        label: "Because software faults only occur during network partitions"
+    correctOptionIds: [b]
+    explanation: "Most hardware faults occur independently on each machine, whereas software faults tend to occur in a correlated way — the same bug can fire simultaneously across multiple instances that share it."
+  - id: q3
+    prompt: "Which of the following best describes a 'load parameter'?"
+    type: single
+    options:
+      - id: a
+        label: "A single load metric common to all systems — you should always just use requests per second"
+      - id: b
+        label: "A metric that expresses how large the load is (requests per second, concurrent connections, read/write ratio, and so on), chosen based on the system's architecture"
+      - id: c
+        label: "The amount of memory a system has available to it"
+      - id: d
+        label: "A metric that's only measured while an outage is happening"
+    correctOptionIds: [b]
+    explanation: "Which metric is meaningful depends on the system's architecture, so you need to choose whichever of requests per second, concurrent connections, read/write ratio, and so on is meaningful for that particular system."
+  - id: q4
+    prompt: "Which statement best describes the relationship between throughput and response time?"
+    type: single
+    options:
+      - id: a
+        label: "Higher throughput automatically means shorter response time — the two always move together"
+      - id: b
+        label: "Throughput is processing capacity and response time is the experienced time for a single request to complete — they are independent metrics that can vary separately"
+      - id: c
+        label: "Response time has a fixed relationship as the reciprocal of throughput"
+      - id: d
+        label: "The two terms mean the same thing and don't need to be distinguished"
+    correctOptionIds: [b]
+    explanation: "Throughput is the number of operations processed per unit of time, and response time is how long a single request takes to complete — they can vary independently, for example due to queueing delay."
+  - id: q5
+    prompt: "What does it mean when p99 latency is 500ms?"
+    type: single
+    options:
+      - id: a
+        label: "All requests complete within 500ms"
+      - id: b
+        label: "99% of requests complete within 500ms, and the remaining 1% take longer"
+      - id: c
+        label: "The average response time is 500ms"
+      - id: d
+        label: "99% of requests take longer than 500ms"
+    correctOptionIds: [b]
+    explanation: "p99 is the boundary below which 99% of sorted measurements fall, meaning the remaining 1% are slower than that value."
+  - id: q6
+    prompt: "In an architecture where a single request fires many backend calls in parallel (fan-out), why does tail latency get amplified as the number of parallel calls grows?"
+    type: single
+    options:
+      - id: a
+        label: "Because there's a law stating that overall system throughput drops as the number of parallel calls increases"
+      - id: b
+        label: "Because the overall request's response time matches whichever call is slowest, and the probability of drawing at least one slow outlier rises as the number of calls grows"
+      - id: c
+        label: "Because parallel calls always make p50 larger than p99"
+      - id: d
+        label: "Because fan-out physically lengthens the latency of each individual call"
+    correctOptionIds: [b]
+    explanation: "The overall request's response time matches whichever of the parallel calls is slowest, so as the number of calls grows, the probability that at least one draws a slow outlier increases, worsening the distribution of experienced latency."
+  - id: q7
+    prompt: "Which of the following best describes the difference between 'simplicity' and 'evolvability' as components of maintainability?"
+    type: single
+    options:
+      - id: a
+        label: "Simplicity focuses on reducing the complexity of the current code and architecture, while evolvability focuses on being able to respond to future requirement changes safely and cheaply"
+      - id: b
+        label: "Simplicity and evolvability are exactly the same concept, so there's no point distinguishing them"
+      - id: c
+        label: "Simplicity refers only to hardware redundancy, and evolvability refers only to software version control"
+      - id: d
+        label: "Evolvability refers only to how easy a system is to monitor during operation"
+    correctOptionIds: [a]
+    explanation: "Simplicity focuses on reducing accidental complexity to keep the current system easy to follow, while evolvability focuses on being able to change the system safely and cheaply as requirements shift — the two are complementary properties."

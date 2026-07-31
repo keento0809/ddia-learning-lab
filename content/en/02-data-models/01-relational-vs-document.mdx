@@ -1,0 +1,102 @@
+---
+title: Choosing Between the Relational and Document Models
+order: 1
+minutes: 12
+sourceHash: 8623aa4b0937ade176be8208f33f1e500ce284155f060d77ce65b721a8a38f79
+---
+
+# Choosing Between the Relational and Document Models
+
+One of the first design decisions you have to make when building an application is
+how to represent your data. This lesson compares two data models widely used in
+practice — the relational model and the document model — and looks at what kinds of
+data structures and access patterns each one suits.
+
+## How the relational model thinks
+
+The
+<Term slug="relational-model">relational model</Term>
+represents data as tables, each a set of rows (tuples). When a row in one table needs
+to reference a row in another table, it does so with a foreign key (a column holding
+the referenced identifier). Tables have a fixed, predefined schema (column names and
+types), and reading data that spans multiple tables in a single query means joining
+those tables together, as with SQL's JOIN.
+
+The strength of this design is that the same data doesn't need to be duplicated in
+multiple places, and you can write queries that flexibly recombine relationships
+between tables after the fact. The trade-off is that when the "single coherent
+object" an application wants to work with is spread across multiple tables,
+assembling it incurs the cost of a join.
+
+## How the document model thinks
+
+The
+<Term slug="document-model">document model</Term>
+stores related data together as a single, self-contained structured document (JSON
+or a similar format). Because nested objects and arrays can be represented directly
+as a single record, it's easy to fetch "everything related to one entity" in a
+single read.
+
+Consider data like a résumé, for example. The fact that one user has multiple work
+experiences and multiple periods of education can be represented in the document
+model by embedding arrays of work history and education directly inside that user's
+document. Because all the related information lives in the same document, this
+model fits access patterns like displaying a profile page, where you want to fetch
+everything about that user in one go.
+
+## The problem behind it: impedance mismatch
+
+The reason the document model is preferred in some situations traces back to a
+problem called
+<Term slug="impedance-mismatch">impedance mismatch</Term>
+. Inside application code, data is often handled as objects or nested structures —
+something close to a tree. But rows in the relational model can only represent flat
+structures, so application-side objects have to be decomposed into rows across
+multiple tables to be stored, then reassembled on read (a conversion often handled
+by a mapping layer such as an ORM). This gap between "how the application represents
+data" and "how the persistence layer represents data," and the conversion cost of
+bridging it, is what impedance mismatch really refers to.
+
+Because the document model can store something close to the application's
+tree-shaped representation almost as-is, this conversion overhead tends to be
+smaller.
+
+<Callout type="info">
+Impedance mismatch shrinks only when the "unit the application works with" and the
+"unit of the document" actually line up. Cramming too much data that should really
+be updated and read independently into a single document can end up making things
+harder to work with (we'll look at this in more detail in the next lesson).
+</Callout>
+
+## Which model handles one-to-many better
+
+A one-to-many relationship, like a user and the multiple work experiences that
+belong to them, can be represented in either model, but the approaches differ.
+
+- Relational model: split into a users table and a work-experience table, with the
+  work-experience table holding a foreign key to the user's ID. Fetching a user
+  together with their work history requires a JOIN.
+- Document model: embed an array of work experiences directly inside the user
+  document. The user and their work history can always be fetched together in a
+  single read.
+
+For this access pattern — "always want them together, and never need to look up work
+experience independently of any other entity" — embedding in the document model is
+a natural fit. Conversely, if you need to search or aggregate work-experience data
+independently of the user (for example, finding everyone across all users who held a
+particular job title), embedding becomes awkward.
+
+<QuizInline
+  id="rvd-embedding-fit"
+  prompt="Which of the following data structures is best suited to being embedded together in a single document in the document model?"
+  options={[
+    { id: "a", label: "Small shared data referenced in common by many users, such as a \"list of states/prefectures\" master table" },
+    { id: "b", label: "Data like a single user's multiple shipping addresses, which is usually read and written together with that user" },
+    { id: "c", label: "A many-directional, tangled relationship, such as users following each other" },
+    { id: "d", label: "Standalone data you want to search and aggregate across all users" }
+  ]}
+  correctOptionId="b"
+  explanation="Data that's read and written together with a single parent entity, and rarely needs to be looked up independently, fits well as an embedded document. Shared master data and many-directional relationships tend to suffer from duplication and scattered updates when embedded, making them a poor fit."
+/>
+
+<BookRef chapter={2} />

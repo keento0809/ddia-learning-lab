@@ -1,0 +1,101 @@
+---
+title: When the Graph Data Model Fits
+order: 4
+minutes: 10
+sourceHash: e5592f1891ca192d49b0a6d6fd04deec91255b8d89f6f0663f03e627d019386c
+---
+
+# When the Graph Data Model Fits
+
+The approach we saw in the previous lessons — representing many-to-many
+relationships through a junction table — works well as long as there are only one or
+two kinds of many-to-many relationship. But once the number of relationship types
+grows, and queries centered on traversing those relationships themselves become the
+norm, the relational and document models start to become unwieldy. This lesson
+introduces the graph data model, which becomes an option in situations like this.
+
+## When relationships take center stage
+
+Consider data where several different kinds of relationships are tangled together —
+things like "users following each other," "users and the interest tags they care
+about," and "products that tend to be bought together" — and where you also need
+queries that traverse relationships multiple hops deep, such as "people among
+Alice's followers who are interested in tag B." Trying to represent this in the
+relational model means adding a new junction table for every kind of relationship,
+and the number of joins grows with every additional hop you traverse. Trying to
+represent it in the document model isn't easy either — maintaining consistency for
+bidirectional, many-to-many relationships using embedding alone is hard.
+
+In situations like this, where "the way elements connect to each other" is itself
+the star of the data, the option that becomes available is the
+<Term slug="graph-data-model">graph data model</Term>
+.
+
+## The basic building blocks of the graph data model
+
+The graph data model represents data as a set of vertices (nodes) and the edges that
+connect them. The elements themselves (users, products, and so on) become vertices,
+and the relationships between elements (following, purchased, related-to, and so on)
+become edges. The key difference from the relational model, where a "relationship"
+can only be represented indirectly through a foreign key, is that in the graph data
+model the relationship itself is treated as first-class data.
+
+## The property graph model
+
+Among graph data models, one widely used form is the
+<Term slug="property-graph">property graph</Term>
+model. In a property graph, both vertices and edges can carry an arbitrary set of
+key-value pairs (properties). Vertices are typically given a label indicating their
+type (e.g., "user," "product"), and edges are typically given a direction (which way
+the relationship points) and a type (e.g., "follows," "purchased").
+
+<Callout type="info">
+Because edges in a property graph have a direction and a type, "A follows B" and "B
+follows A" can be represented as distinct edges. The same pair of vertices can also
+carry multiple edges of different types at once — for example, "follows" and
+"blocks" between the same two vertices.
+</Callout>
+
+## How queries differ in feel
+
+For queries that traverse relationships multiple hops deep, the graph data model and
+the relational model feel very different to write. In the relational model, every
+additional hop means stacking on another join, and a query where the number of hops
+isn't known in advance ("I don't know how many hops it takes, but follow the
+relationship as far as it goes") is hard to express in plain SQL. Most graph
+databases support traversing from a vertex along edges as a first-class operation in
+the query language, which often makes queries like "starting from this vertex,
+collect every vertex reachable by repeatedly following edges of a certain type"
+much more concise to express than writing out join after join.
+
+## When to reach for the graph model
+
+Not all data needs to live in a graph model. It's worth considering when the
+following conditions come together:
+
+- There are many kinds of relationships, and that number is likely to keep growing
+- Queries like "I don't know how many hops it takes, but follow the relationship as
+  far as it goes" are a central use case
+- The value lies more in how records connect to each other than in the structure of
+  any individual record
+
+Conversely, for data where the number of relationship types is small and fixed, and
+aggregation or transaction processing is the main workload, the relational or
+document model often fits more naturally. Choosing a data model is fundamentally
+about working backward from "what queries do I actually want to run against this
+data" — and that's been a consistent theme throughout this module.
+
+<QuizInline
+  id="graph-model-fit"
+  prompt="Which of the following is the best motivation for adopting the graph data model?"
+  options={[
+    { id: "a", label: "A simple case where you just want to fetch everything about one entity in a single read" },
+    { id: "b", label: "There are many kinds of relationships, and queries that traverse paths of unknown length are the central use case" },
+    { id: "c", label: "You just want to save storage space by having fewer tables" },
+    { id: "d", label: "A batch aggregation job where write throughput is the top priority" }
+  ]}
+  correctOptionId="b"
+  explanation="The graph model shows its strength when there are many kinds of relationships and path-traversal queries (including ones where the number of hops isn't known in advance) are central to the workload. If the main goal is simple embedding or saving storage, another model is often enough."
+/>
+
+<BookRef chapter={2} />

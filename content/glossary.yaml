@@ -350,6 +350,110 @@
     ja: 頂点と辺のそれぞれが任意のキーと値の組(プロパティ)を持てるグラフデータモデルの一形態。頂点にはラベル、辺には向きとタイプを持たせられることが多い。
     en: A form of graph data model in which both vertices and edges can carry arbitrary key-value properties. Vertices are often given labels, and edges a direction and a type.
 
+- slug: reliability
+  term:
+    ja: 信頼性
+    en: reliability
+  definition:
+    ja: システムが期待どおりに正しく動作し続け、障害が起きても致命的な影響を最小限に抑えられる性質。
+    en: The quality of a system continuing to behave correctly as expected, and containing the impact of faults so they do not become catastrophic.
+
+- slug: fault
+  term:
+    ja: フォールト
+    en: fault
+  definition:
+    ja: システムを構成する一部のコンポーネントが仕様どおりに動作しなくなること。フォールト自体は個別の構成要素の異常であり、システム全体が利用者への提供を止める「障害」とは区別して扱う。
+    en: A single component of a system deviating from its specification. A fault is distinct from an overall system failure — the goal of fault-tolerant design is to prevent individual faults from turning into a failure that affects users.
+
+- slug: fault-tolerance
+  term:
+    ja: フォールトトレランス
+    en: fault tolerance
+  definition:
+    ja: 一部のコンポーネントにフォールトが発生しても、システム全体としては利用者へのサービス提供を継続できるように設計する考え方。冗長化・分離・監視などを組み合わせて実現する。
+    en: A design approach that keeps a system serving users even when some of its components experience faults, typically achieved through a combination of redundancy, isolation, and monitoring.
+
+- slug: cascading-failure
+  term:
+    ja: 連鎖障害
+    en: cascading failure
+  definition:
+    ja: 1つのコンポーネントの遅延・停止が、リトライの増加や依存先の過負荷を通じて別のコンポーネントにも波及し、局所的な不調がシステム全体の障害へと連鎖的に拡大していく現象。
+    en: A phenomenon in which the slowdown or outage of one component spreads to others — through increased retries or overloaded dependencies — turning a localized problem into a system-wide failure.
+
+- slug: load-parameter
+  term:
+    ja: 負荷パラメータ
+    en: load parameter
+  definition:
+    ja: システムにかかる負荷の大きさを表すために選ぶ指標。リクエスト数/秒、同時接続数、読み書き比率など、システムのアーキテクチャに応じて意味のある指標を選定する必要がある。
+    en: A metric chosen to describe the load placed on a system, such as requests per second, concurrent connections, or the ratio of reads to writes. Which parameters are meaningful depends on the system's architecture.
+
+- slug: throughput
+  term:
+    ja: スループット
+    en: throughput
+  definition:
+    ja: 単位時間あたりに処理できるリクエストやレコードの件数。処理能力そのものを表す指標で、個々のリクエストがどれだけ速く完了するかを表す応答時間とは別の観点。
+    en: The number of requests or records a system can process per unit of time. It measures processing capacity, which is a different concern from how quickly any single request completes.
+
+- slug: response-time
+  term:
+    ja: 応答時間
+    en: response time
+  definition:
+    ja: クライアントがリクエストを送信してから応答を受け取るまでにかかる時間。ネットワーク遅延やキューでの待ち時間も含む、利用者が体感する時間そのもの。
+    en: The time a client experiences from sending a request to receiving a response, including network delay and any time spent waiting in a queue — the time users actually perceive.
+
+- slug: latency
+  term:
+    ja: レイテンシ
+    en: latency
+  definition:
+    ja: リクエストが処理を待っている(まだ処理されていない)時間。応答時間の内訳の1つとして使われることが多いが、文脈によっては応答時間とほぼ同義に使われることもある。
+    en: The time a request spends waiting to be handled. It is often discussed as one component of response time, though in casual usage the two terms are sometimes used interchangeably.
+
+- slug: percentile
+  term:
+    ja: パーセンタイル
+    en: percentile
+  definition:
+    ja: 測定値を昇順に並べたときに、指定した割合の値がそれ以下に収まる境界値。p95なら「全体の95%のリクエストがその値以下で完了した」ことを表す。
+    en: The boundary value below which a given proportion of sorted measurements fall. The p95, for example, is the value at or under which 95% of requests completed.
+
+- slug: tail-latency-amplification
+  term:
+    ja: テールレイテンシの増幅
+    en: tail latency amplification
+  definition:
+    ja: 1件のリクエストが複数のバックエンド呼び出しを並列に発行する構成(ファンアウト)で、全体の応答時間が並列呼び出しのうち最も遅いものに支配されるため、並列呼び出しの数が増えるほど遅い外れ値に遭遇する確率が高まり、利用者が体感する遅延が個々の呼び出し単体のパーセンタイルより悪化する現象。
+    en: In systems where a single request fans out to multiple parallel backend calls, overall response time is dominated by the slowest of those calls. As the number of parallel calls grows, the chance of hitting a slow outlier rises, so the latency users actually experience is worse than any individual call's percentile would suggest.
+
+- slug: operability
+  term:
+    ja: 運用性
+    en: operability
+  definition:
+    ja: 日々の運用作業(監視・障害対応・設定変更など)をしやすくするシステムの性質。予測可能な挙動、十分な可観測性、自動化しやすい手順が運用性を高める。
+    en: The quality of a system that makes day-to-day operations — monitoring, incident response, configuration changes — easier to carry out. Predictable behavior, good observability, and automatable procedures all contribute to it.
+
+- slug: simplicity
+  term:
+    ja: 単純性
+    en: simplicity
+  definition:
+    ja: システムの複雑さのうち、問題領域そのものに起因しない「偶発的複雑性」を減らし、コードやアーキテクチャを見通しやすく保つ性質。適切な抽象化によって実現される。
+    en: The quality of keeping a system's code and architecture easy to understand by reducing "accidental complexity" — complexity that comes from the implementation rather than from the problem itself. Good abstractions are the main tool for achieving it.
+
+- slug: evolvability
+  term:
+    ja: 発展性
+    en: evolvability
+  definition:
+    ja: 将来の要件変化に応じてシステムを安全かつ低コストで変更し続けられる性質。疎結合なモジュール構成やテストの充実度が、変更のしやすさを左右する。
+    en: The quality of being able to keep changing a system safely and cheaply as requirements evolve. Loosely coupled modules and solid test coverage are the main levers that make change easier.
+
 - slug: encoding
   term:
     ja: エンコーディング(シリアライズ)

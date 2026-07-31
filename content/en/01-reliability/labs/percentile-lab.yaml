@@ -1,0 +1,131 @@
+slug: 01-reliability/percentile-lab
+language: js
+entry: percentile
+template: |
+  // Given an array of request latencies (in milliseconds) and a percentile (0-100),
+  // return the latency value corresponding to that percentile.
+  // - First sort the array in ascending order (do not mutate the original array)
+  // - Compute the index as Math.floor((p / 100) * (n - 1)) (n is the element count, 0-based)
+  export function percentile(values, p) {
+    // TODO: implement
+  }
+
+  // When a single request fires multiple backend calls in parallel (fan-out), the
+  // request's overall latency matches whichever of those parallel calls was slowest.
+  // Given callLatenciesPerRequest (an array where each element is the array of parallel
+  // call latencies for one request), return an array of each request's effective
+  // latency (= the max of each inner array).
+  export function worstOfConcurrentCalls(callLatenciesPerRequest) {
+    // TODO: implement
+  }
+tests:
+  - id: t1
+    name:
+      ja: "p50は中央値になる(要素数が奇数の基本ケース)"
+      en: "p50 equals the median for a basic odd-length array"
+    call: { fn: "percentile", args: [[1, 2, 3, 4, 5], 50] }
+    assert: { type: "equals", value: 3 }
+  - id: t2
+    name:
+      ja: "未ソートの配列でもp50を正しく計算できる"
+      en: "p50 is computed correctly even when the input array is not sorted"
+    call:
+      fn: "percentile"
+      args:
+        - [240, 95, 60, 45, 38, 33, 29, 27, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 15, 14, 13, 13, 12, 11]
+        - 50
+    assert: { type: "equals", value: 21 }
+  - id: t3
+    name:
+      ja: "個々の呼び出しのp95は60msになる"
+      en: "The p95 of individual call latencies is 60ms"
+    call:
+      fn: "percentile"
+      args:
+        - [240, 95, 60, 45, 38, 33, 29, 27, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 15, 14, 13, 13, 12, 11]
+        - 95
+    assert: { type: "equals", value: 60 }
+  - id: t4
+    name:
+      ja: "個々の呼び出しのp99は95msになる"
+      en: "The p99 of individual call latencies is 95ms"
+    call:
+      fn: "percentile"
+      args:
+        - [240, 95, 60, 45, 38, 33, 29, 27, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 15, 14, 13, 13, 12, 11]
+        - 99
+    assert: { type: "equals", value: 95 }
+  - id: t5
+    name:
+      ja: "境界値: p100は最大値と一致する"
+      en: "Boundary: p100 equals the maximum value"
+    call:
+      fn: "percentile"
+      args:
+        - [240, 95, 60, 45, 38, 33, 29, 27, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 15, 14, 13, 13, 12, 11]
+        - 100
+    assert: { type: "equals", value: 240 }
+  - id: t6
+    name:
+      ja: "worstOfConcurrentCallsは各リクエストの並列呼び出しの最大値を返す(小規模ケース)"
+      en: "worstOfConcurrentCalls returns the max of each request's parallel calls (small case)"
+    call:
+      fn: "worstOfConcurrentCalls"
+      args:
+        - - [10, 50, 20]
+          - [5, 5, 5]
+          - [100, 1, 1]
+    assert: { type: "deepEquals", value: [50, 5, 100] }
+  - id: t7
+    name:
+      ja: "ファンアウト(3並列呼び出し)後のリクエスト実効レイテンシを正しく計算できる"
+      en: "Correctly computes each request's effective latency after a 3-way fan-out"
+    call:
+      fn: "worstOfConcurrentCalls"
+      args:
+        - - [11, 16, 22]
+          - [12, 17, 23]
+          - [13, 18, 24]
+          - [13, 19, 25]
+          - [14, 20, 27]
+          - [15, 21, 29]
+          - [15, 22, 33]
+          - [16, 23, 38]
+          - [17, 24, 45]
+          - [18, 25, 60]
+          - [19, 27, 95]
+          - [20, 29, 240]
+          - [21, 33, 11]
+          - [22, 38, 12]
+          - [23, 45, 13]
+          - [24, 60, 13]
+          - [25, 95, 14]
+          - [27, 240, 15]
+          - [29, 11, 15]
+          - [33, 12, 16]
+          - [38, 13, 17]
+          - [45, 13, 18]
+          - [60, 14, 19]
+          - [95, 15, 20]
+          - [240, 15, 21]
+    assert:
+      type: deepEquals
+      value: [22, 23, 24, 25, 27, 29, 33, 38, 45, 60, 95, 240, 33, 38, 45, 60, 95, 240, 29, 33, 38, 45, 60, 95, 240]
+  - id: t8
+    name:
+      ja: "テールレイテンシの増幅: リクエスト単位のp95(240ms)は個々の呼び出しのp95(60ms、t3参照)より大きい"
+      en: "Tail latency amplification: the request-level p95 (240ms) is larger than any single call's p95 (60ms, see t3)"
+    call:
+      fn: "percentile"
+      args:
+        - [22, 23, 24, 25, 27, 29, 33, 38, 45, 60, 95, 240, 33, 38, 45, 60, 95, 240, 29, 33, 38, 45, 60, 95, 240]
+        - 95
+    assert: { type: "equals", value: 240 }
+timeoutMs: 3000
+hints:
+  - ja: "percentileはまず配列をソートし、Math.floor((p / 100) * (n - 1)) でインデックスを求めます"
+    en: "percentile should sort the array first, then compute the index with Math.floor((p / 100) * (n - 1))"
+  - ja: "worstOfConcurrentCallsは各内側配列にMath.max(...calls)を適用するだけです"
+    en: "worstOfConcurrentCalls just applies Math.max(...calls) to each inner array"
+  - ja: "t3とt8を見比べると、個々の呼び出し単体のp95(60ms)より、3並列でファンアウトした後のp95(240ms)の方が大きいことが分かります"
+    en: "Compare t3 and t8: the fan-out (3 parallel calls) p95 (240ms) is larger than any single call's p95 (60ms)"

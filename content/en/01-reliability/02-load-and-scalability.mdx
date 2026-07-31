@@ -1,0 +1,110 @@
+---
+title: Load Parameters and Scalability
+order: 2
+minutes: 13
+sourceHash: e46151e94aed9632abb007d836112a633c190840bf87e8ab1587e5f59e62045b
+---
+
+# Load Parameters and Scalability
+
+The previous chapter covered reliability as "resistance to breaking." From here, we
+move on to <Term slug="load-parameter">scalability</Term> — how a system copes with
+growth in users and data volume. To discuss scalability meaningfully, we first need a
+way to express "how big is the load" as a concrete number.
+
+## Choosing a metric that describes load
+
+The phrase "the load is high" is, on its own, not something you can act on as a design
+decision. Which metric actually matters depends on your system's architecture, so you
+first need to pick load parameters that fit your particular system. Common candidates
+include:
+
+- Requests per second (overall, or broken down by operation type)
+- Number of connections or sessions being handled concurrently
+- The ratio of reads to writes
+- Cache hit rate
+- The number of downstream operations a single operation triggers (fan-out)
+
+The same number — "1,000 requests per second" — calls for a very different design
+depending on whether that traffic arrives at a roughly steady pace or is concentrated
+into short bursts.
+
+## A concrete example: fan-out in a notification service
+
+Consider a notification service where, when a creator goes live, an update is delivered
+to every user who follows them. Here, the load parameter that matters is not "how often
+does a go-live event happen" but "how many notifications does a single event generate."
+If most creators have few followers, a single event is cheap to process. But if a
+creator with millions of followers goes live, that one event alone can generate
+millions of writes.
+
+<Callout type="info">
+In systems like this, where "the number of downstream operations triggered by one
+action" varies wildly from user to user, looking only at average load parameters makes
+it easy to misjudge actual peak-time behavior. Design needs to account for the most
+extreme case (a user with an outsized number of followers, for instance).
+</Callout>
+
+## <Term slug="throughput">Throughput</Term> and <Term slug="response-time">response time</Term> are different things
+
+When evaluating how a system behaves as load increases, the word "performance" often
+lumps together two distinct concerns that are worth separating.
+
+- **Throughput**: the number of operations that can be processed per unit of time (raw
+  processing capacity)
+- **Response time**: how long a single request takes to complete (what the user
+  actually experiences)
+
+These two move independently of each other. Throughput can look like it has plenty of
+headroom while response time still worsens because requests are spending more time
+waiting in a queue. Conversely, judging a system as "fast" based on response time alone
+doesn't guarantee that speed holds up under high load. It's important to be explicit
+about which of the two metrics you're talking about whenever you discuss performance.
+
+## Scaling up versus scaling out
+
+There are broadly two ways to deal with increased load.
+
+- **Scaling up (vertical scaling)**: replace a machine with a more powerful one
+- **Scaling out (horizontal scaling)**: add more machines to spread the load
+
+Scaling up keeps the architecture simple, but performance gains have a physical
+ceiling. Scaling out has a much higher theoretical ceiling, but it takes on the
+complexity of coordinating across multiple machines — exactly the theme of replication
+and partitioning that this course covers. In practice, teams often combine both: scale
+up first and see how far that gets you, then move to a scale-out architecture once it's
+actually needed.
+
+<Callout type="tip">
+An "elastic" setup that automatically adds and removes resources based on load is
+appealing, but if your load pattern is predictable (for example, traffic that only
+picks up during the day), manually provisioning resources ahead of time can sometimes
+be simpler and easier to operate.
+</Callout>
+
+## What does "good enough performance" actually mean?
+
+We've discussed throughput and response time as separate concerns, but judging whether
+"this level of performance is good enough" in practice takes more than looking at
+averages. Two distributions can share the same average response time and still feel
+completely different to users — one where most requests complete at roughly the same
+speed, and one where most requests are fast but a few are extremely slow. The next
+chapter digs into this question of "which part of the distribution matters" using a
+tool called the <Term slug="percentile">percentile</Term>.
+
+Continue to [Latency and Percentiles](./03-latency-and-percentiles).
+
+<QuizInline
+  id="load-throughput-vs-response-time"
+  prompt="Which statement best describes the relationship between throughput and response time?"
+  options={[
+    { id: "a", label: "Higher throughput always means shorter response time" },
+    { id: "b", label: "Throughput is processing capacity and response time is how long a single request takes to complete — they need to be treated as separate metrics" },
+    { id: "c", label: "Response time is defined as throughput multiplied by two" },
+    { id: "d", label: "Throughput and response time mean the same thing and don't need to be distinguished" }
+  ]}
+  correctOptionId="b"
+  explanation="Throughput is the number of operations processed per unit of time, while response time is how long a single request takes to complete — they are independent metrics that can move separately."
+/>
+
+<BookRef chapter={1} />

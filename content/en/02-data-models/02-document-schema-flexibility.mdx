@@ -1,0 +1,95 @@
+---
+title: Schema Flexibility and Data Locality in the Document Model
+order: 2
+minutes: 14
+sourceHash: f49e7bd45ee0e51a531952eb666c9f563a05884cd1743634479767ca8ef67c39
+---
+
+# Schema Flexibility and Data Locality in the Document Model
+
+The previous lesson showed that the document model fits data you want to read and
+write together. This lesson digs into another characteristic of the document
+model — schema flexibility — and how it plays out in the day-to-day work of reading
+and writing data.
+
+## Schema-on-write and schema-on-read
+
+<Term slug="schema-on-write">Schema-on-write</Term>
+is an approach where the schema (which columns or fields exist, and what types they
+hold) is fixed at the point data is written, and all subsequent writes are required
+to conform to it. Table definitions in relational databases — where adding or
+changing a column requires a migration — are the classic example.
+
+<Term slug="schema-on-read">Schema-on-read</Term>
+, on the other hand, is an approach where the schema isn't fixed at write time, and
+the structure of the data is instead interpreted by the reading code each time it's
+read. Many document-oriented databases work this way. Because there's no schema
+enforced at write time, documents of differing shapes can coexist within the same
+collection (the unit roughly corresponding to a table).
+
+## Where schema flexibility helps, and where it doesn't
+
+The benefit of schema-on-read is that it copes well with data whose shape changes
+over time. For example, say you want to add a new field to a "user profile" (a link
+to a social media account, say). In a schema-on-write world, this tends to require a
+migration across every existing row, whereas in a schema-on-read world, you can just
+start writing documents that include the new field, and older documents simply
+remain without it.
+
+<Callout type="tip">
+"No migration required" doesn't mean "you don't have to decide anything about the
+shape of your data." In practice, the reading code always needs branches that
+handle "what do we do when this field is missing," so you could say the
+responsibility for enforcing structure has simply moved from the database to the
+application code.
+</Callout>
+
+Conversely, if you need to strictly validate that data has the same shape across
+many places (rejecting malformed records right at write time), or many different
+clients write code that assumes a shared data structure, schema-on-write catches
+"bad data slipping in" earlier.
+
+## Locality: the benefit of storing things together, and its cost
+
+Another characteristic of the document model is that it stores related data
+physically close together — typically as one contiguous region representing a
+single document. This property is called
+<Term slug="locality">locality</Term>
+.
+
+Locality pays off for access patterns that read or write an entire document
+together in a single request. Because related data isn't scattered across multiple
+tables, it reduces round trips to disk or over the network.
+
+That said, locality comes with a cost.
+
+- **Waste on partial reads**: even when you only need a few fields from a document,
+  many implementations end up reading the whole document, and the bigger the
+  document, the more wasteful this becomes.
+- **Cost of partial updates**: even when you only want to update part of a document,
+  some implementations require rewriting the entire document. If a small,
+  frequently updated field is embedded inside a large document, every update ends
+  up rewriting a lot of data along with it.
+
+<Callout type="warn">
+Designing everything to be crammed into a single document because it's "related"
+does simplify reads, but it also risks letting documents grow without bound, or
+mixing together data that should really be updated independently, inviting update
+conflicts. A good rule of thumb for deciding what belongs in one document is "how
+often is this data read or written together?"
+</Callout>
+
+<QuizInline
+  id="schema-flexibility-tradeoff"
+  prompt="When a team adopts schema-on-read, what new responsibility do they take on?"
+  options={[
+    { id: "a", label: "None — the database automatically detects every structural inconsistency for you" },
+    { id: "b", label: "Writing branching logic in the reading code that accounts for fields that may or may not be present, and variation in types" },
+    { id: "c", label: "The responsibility of always running a migration at write time" },
+    { id: "d", label: "The responsibility of giving up document locality entirely" }
+  ]}
+  correctOptionId="b"
+  explanation="Because schema-on-read has no format enforcement at write time, the responsibility for interpreting the shape of the data shifts to the reading code. It has to be written with branches that assume old and new data shapes can coexist."
+/>
+
+<BookRef chapter={2} />

@@ -1,0 +1,99 @@
+questions:
+  - id: q1
+    prompt: "What does impedance mismatch refer to?"
+    type: single
+    options:
+      - id: a
+        label: "Data drift between replicas caused by network latency"
+      - id: b
+        label: "The gap between an application's tree-like object representation and the relational model's flat row representation, and the cost of converting between them"
+      - id: c
+        label: "SQL dialect differences between database products"
+      - id: d
+        label: "Data skew caused by partitioning"
+    correctOptionIds: [b]
+    explanation: "Impedance mismatch refers to the structural gap between an application's (tree-like) object representation and the relational model's flat row representation, and the conversion effort needed to bridge it."
+  - id: q2
+    prompt: "A user has multiple shipping addresses, and those addresses are always read and written together with the user. What's the most natural representation in the document model?"
+    type: single
+    options:
+      - id: a
+        label: "Create an independent document for each address, with no association to the user document at all"
+      - id: b
+        label: "Embed an array of shipping addresses inside the user document"
+      - id: c
+        label: "Store addresses in a different database product and always join them manually in the application"
+      - id: d
+        label: "Store addresses under a different collection name per user"
+    correctOptionIds: [b]
+    explanation: "Data that's usually read and written together with its parent entity fits well as an embedded array within a document."
+  - id: q3
+    prompt: "Which of the following best describes schema-on-read?"
+    type: single
+    options:
+      - id: a
+        label: "Fixes the schema at write time and requires all subsequent writes to conform to it"
+      - id: b
+        label: "Doesn't fix the schema at write time; the reading code interprets the structure of the data each time"
+      - id: c
+        label: "A data model where the concept of a schema doesn't exist at all"
+      - id: d
+        label: "A mechanism that always runs a migration on every read"
+    correctOptionIds: [b]
+    explanation: "Schema-on-read doesn't enforce a format at write time, and the responsibility for interpreting the data's structure shifts to the reading code."
+  - id: q4
+    prompt: "What's the biggest downside of denormalization?"
+    type: single
+    options:
+      - id: a
+        label: "Reads always require joining multiple tables"
+      - id: b
+        label: "When copied data needs to be updated, every copy must be updated without exception or inconsistency results"
+      - id: c
+        label: "Storage usage is always lower than with normalization"
+      - id: d
+        label: "Many-to-many relationships can no longer be represented at all"
+    correctOptionIds: [b]
+    explanation: "Denormalization trades read cost for the responsibility of consistently updating every copy of the data whenever it changes."
+  - id: q5
+    prompt: "What's the best way to safely represent a many-to-many relationship (e.g., users and groups, where each can belong to multiple of the other)?"
+    type: single
+    options:
+      - id: a
+        label: "Embed a list of groups in the user document and a list of users in the group document, maintained independently as duplicate bookkeeping"
+      - id: b
+        label: "Represent it with a junction table holding only pairs of user ID and group ID, or an equivalent reference structure"
+      - id: c
+        label: "Always merge users and groups into a single document rather than handling them separately"
+      - id: d
+        label: "Give up representing the many-to-many relationship and drop one side of the information"
+    correctOptionIds: [b]
+    explanation: "Embedding on just one side leads to duplicate bookkeeping and easy inconsistency, so representing many-to-many relationships with a junction table (or an equivalent reference structure) holding just the ID pairs is the safer approach."
+  - id: q6
+    prompt: "What's the best motivation for adopting the graph data model?"
+    type: single
+    options:
+      - id: a
+        label: "You want to handle data with few, fixed relationship types, centered on aggregation"
+      - id: b
+        label: "There are many kinds of relationships, and queries that traverse paths of unknown length are the central use case"
+      - id: c
+        label: "You just want to fetch one entity's information together in a single read"
+      - id: d
+        label: "You want to run a batch aggregation job where write throughput is the top priority"
+    correctOptionIds: [b]
+    explanation: "The graph model shows its strength when there are many kinds of relationships and path-traversal queries (including ones where the number of hops isn't known in advance) are central to the workload."
+  - id: q7
+    prompt: "Which statement correctly describes how the relational model represents a \"relationship\"?"
+    type: single
+    options:
+      - id: a
+        label: "The relationship itself is treated as first-class data, just like vertices and edges"
+      - id: b
+        label: "It can only be represented indirectly, through a foreign key"
+      - id: c
+        label: "Relationships are always represented by embedding into a document"
+      - id: d
+        label: "The relational model can't represent relationships at all"
+    correctOptionIds: [b]
+    explanation: "In the relational model, a relationship between tables can only be represented indirectly, via a foreign key (a referenced identifier). In the graph data model, by contrast, the relationship itself becomes first-class data as an edge."
