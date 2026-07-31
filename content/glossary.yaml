@@ -615,6 +615,76 @@
   definition:
     ja: HTTPのメソッドやURLを使ってリソースへの操作を表現する、RPCの一種として広く使われるAPIスタイル。
     en: A widely used API style, a form of RPC, that expresses operations on resources using HTTP methods and URLs.
+- slug: batch-processing
+  term:
+    ja: バッチ処理
+    en: batch processing
+  definition:
+    ja: 蓄積された有限のデータ集合をまとめて読み込み、集計・変換した結果を後で使えるように書き出す処理形態。個々の処理への即時応答は求められない代わりに、大規模な入力を扱えるスループットが重視される。
+    en: A processing style that reads in a finite, already-accumulated set of data, transforms or aggregates it, and writes out results for later use. Individual operations need not respond instantly, but the system must handle high-throughput, large-scale input.
+- slug: mapreduce
+  term:
+    ja: MapReduce
+    en: MapReduce
+  definition:
+    ja: 分散バッチ処理を「map」「シャッフル」「reduce」の3段階に定式化するプログラミングモデル。各レコードを独立に変換するmapと、キーごとに値を集約するreduceに役割を分けることで、大規模な並列実行と障害からの再実行を扱いやすくする。
+    en: A programming model that formulates distributed batch processing as three stages — map, shuffle, and reduce. Splitting the work into an independent per-record transformation (map) and a per-key aggregation (reduce) makes large-scale parallel execution and recovery from failed tasks easier to manage.
+- slug: shuffle-phase
+  term:
+    ja: シャッフルフェーズ
+    en: shuffle phase
+  definition:
+    ja: MapReduceにおいて、map段階が出力したキー・値ペアを、同じキーの値同士が同じreduceタスクに集まるようクラスタ全体でネットワーク越しに再配置する段階。
+    en: The stage in MapReduce that redistributes the key-value pairs emitted by the map stage across the cluster's network so that all values sharing a key arrive at the same reduce task.
+- slug: reduce-side-join
+  term:
+    ja: リデュース側結合
+    en: reduce-side join
+  definition:
+    ja: 結合対象の複数の入力からキーを揃えたペアを出力し、シャッフル段階で同じキーの値を1つのreduceタスクへ集約したうえで結合結果を組み立てる戦略。入力サイズに関わらず動作するが、全データがシャッフルを経由するため通信コストが大きくなりやすい。
+    en: A join strategy in which multiple inputs emit pairs keyed by the join key, the shuffle stage gathers same-key values into a single reduce task, and the reduce task assembles the joined output. It works regardless of input size, but routing all data through the shuffle tends to be costly in network traffic.
+- slug: sort-merge-join
+  term:
+    ja: ソートマージ結合
+    en: sort-merge join
+  definition:
+    ja: 結合対象の入力をあらかじめ結合キーでソートしておき、ソート済みの2つのストリームを先頭から一度だけ突き合わせて結合する手法。MapReduceのシャッフル段階がキー順でデータを届ける性質を利用している。
+    en: A join technique that sorts both inputs by the join key ahead of time, then merges the two sorted streams in a single pass from the start. It relies on the property that MapReduce's shuffle stage delivers data to reducers in key order.
+- slug: broadcast-hash-join
+  term:
+    ja: ブロードキャストハッシュ結合
+    en: broadcast hash join
+  definition:
+    ja: 結合対象の一方が全マシンのメモリに収まるほど小さいとき、その入力を全マシンへ配布してハッシュテーブルとして保持し、大きい方の入力を読みながらその場で結合する戦略。シャッフル段階そのものを省略できる。
+    en: "A join strategy usable when one input is small enough to fit in memory on every machine: that input is broadcast to all machines and kept as a hash table, and the larger input is joined against it on the fly as it is read. This avoids the shuffle stage entirely."
+- slug: skewed-key
+  term:
+    ja: スキューしたキー
+    en: skewed key
+  definition:
+    ja: 結合や集計の対象データにおいて、他のキーに比べて著しく多くのレコードが紐づいているキー。シャッフル段階は同じキーの値を1つのタスクへ集約するため、スキューしたキーがあるとそのタスクだけが突出して重くなりジョブ全体のボトルネックになりやすい。
+    en: A key that has a disproportionately large number of records associated with it compared to other keys, in a join or aggregation workload. Because the shuffle stage funnels all values for a key into a single task, a skewed key can make that one task a severe bottleneck for the whole job.
+- slug: dataflow-engine
+  term:
+    ja: データフローエンジン
+    en: dataflow engine
+  definition:
+    ja: 計算全体を固定のmap・reduce2段階ではなく、任意個数のオペレータからなる有向非巡回グラフ(DAG)として表現し実行するバッチ処理の仕組み。段階間のデータをディスクへ完全に書き出さずメモリ上でパイプライン的に受け渡せる場合があり、多段階パイプラインを効率化する。
+    en: A batch-processing mechanism that expresses an entire computation as a directed acyclic graph (DAG) of arbitrarily many operators rather than a fixed two-stage map/reduce, and executes it accordingly. It can sometimes pipeline data between stages in memory instead of fully materializing it to disk, making multi-stage pipelines more efficient.
+- slug: materialization
+  term:
+    ja: マテリアライズ
+    en: materialization
+  definition:
+    ja: 処理の途中結果を、次の処理段階が読み始める前に永続ストレージへ完全に書き出すこと。耐障害性に寄与する一方、書き込み・読み込みのI/Oコストがかかり、多段階パイプラインの速度を落とす要因になる。
+    en: Writing an intermediate processing result completely to persistent storage before the next stage begins reading it. This helps with fault tolerance, but the write/read I/O cost can slow down multi-stage pipelines.
+- slug: idempotent-output
+  term:
+    ja: 冪等な出力
+    en: idempotent output
+  definition:
+    ja: 同じタスクが再実行されたり重複して実行されたりしても、最終的な出力結果が変わらない性質。決定的な計算に加え、出力の書き込み自体をアトミックに行うことで実現される。
+    en: The property that a task's final output stays the same even if the task is retried or executed more than once. Achieved through a combination of deterministic computation and writing output atomically.
 - slug: event-stream
   term:
     ja: イベントストリーム

@@ -1,0 +1,105 @@
+questions:
+  - id: q1-map-independence
+    type: single
+    prompt: "Why can MapReduce's map function freely split up the input and run it in parallel across many machines?"
+    options:
+      - id: a
+        label: "Because the map function doesn't depend on other records' state or processing order, and can decide its output from a single record alone"
+      - id: b
+        label: "Because the reduce function doesn't support parallel execution, so map has to be responsible for parallelizing the work"
+      - id: c
+        label: "Because the map function never writes to disk, which makes it fast"
+      - id: d
+        label: "Because a version of MapReduce without a shuffle stage doesn't need parallelization"
+    correctOptionIds: ["a"]
+    explanation: "The map function can decide its output from a single record alone, without depending on the results of processing other records. This independence is what lets the input be split as finely as desired and run in parallel across machines."
+
+  - id: q2-shuffle-role
+    type: single
+    prompt: "Which of the following correctly describes the role of MapReduce's shuffle stage?"
+    options:
+      - id: a
+        label: "Writing the reduce function's output to its final storage location"
+      - id: b
+        label: "Redistributing the key-value pairs emitted by the map stage over the network so that pairs with the same key are gathered onto the same reduce task"
+      - id: c
+        label: "Pre-compressing the input data to reduce disk usage"
+      - id: d
+        label: "Telling the scheduler what order to execute each map task in"
+    correctOptionIds: ["b"]
+    explanation: "The shuffle stage redistributes the large volume of key-value pairs emitted by map across the whole cluster, so that all values sharing a key arrive together at a single reduce task."
+
+  - id: q3-join-strategy-choice
+    type: single
+    prompt: "Which join strategy is best suited to the case where one input dataset is small and fits in memory on every machine in the cluster?"
+    options:
+      - id: a
+        label: "A reduce-side join that runs a full shuffle every time"
+      - id: b
+        label: "A broadcast hash join that distributes the smaller input to every machine and uses it as an in-memory hash table"
+      - id: c
+        label: "A sort-merge join that re-sorts both inputs every time"
+      - id: d
+        label: "A join that ignores the join key and emits every possible combination"
+    correctOptionIds: ["b"]
+    explanation: "When one input is small enough to fit in memory, a broadcast hash join has the advantage: distribute it to every machine as an in-memory hash table and join without any shuffle at all."
+
+  - id: q4-skewed-key-problem
+    type: single
+    prompt: "In a reduce-side join, what problem tends to occur when records are heavily skewed toward a particular key?"
+    options:
+      - id: a
+        label: "The reduce task handling that key ends up with a wildly disproportionate load, and the whole job's completion is delayed even though every other task has finished"
+      - id: b
+        label: "The map stage becomes completely unable to run and the job fails with an error"
+      - id: c
+        label: "Data for the skewed key is automatically discarded"
+      - id: d
+        label: "The shuffle stage is skipped entirely"
+    correctOptionIds: ["a"]
+    explanation: "Because values for the same key are gathered into a single reduce task, a key with a disproportionately large number of records overloads that one task — and it becomes the bottleneck dragging out the whole job, even after every other task has finished."
+
+  - id: q5-dataflow-engine-benefits
+    type: multiple
+    prompt: "Compared to chaining multiple MapReduce jobs together, select all of the improvements a DAG-based dataflow engine can offer."
+    options:
+      - id: a
+        label: "Data between stages doesn't have to be fully written to disk, and can be pipelined in memory when possible"
+      - id: b
+        label: "A variety of operators — filtering, joining, aggregating, and more — can be expressed and optimized as a single computation graph"
+      - id: c
+        label: "Disk writes required for the computation are always reduced all the way to zero"
+      - id: d
+        label: "Data reused across iterations in an iterative computation can be kept in memory and reused more easily"
+    correctOptionIds: ["a", "b", "d"]
+    explanation: "Dataflow engines make multi-stage processing more efficient through pipelining, expressing diverse operators as a graph, and reusing memory across iterations of iterative computation. However, spilling to disk still happens when data doesn't fit in memory, so disk writes aren't always reduced to zero."
+
+  - id: q6-determinism-for-retry
+    type: single
+    prompt: "Why does it matter for task re-execution that the map and reduce functions be deterministic (always returning the same output for the same input)?"
+    options:
+      - id: a
+        label: "Without determinism, a re-run of a failed task could produce a different result than the original task, making it impossible to consistently combine that result with the results of other successful tasks"
+      - id: b
+        label: "Deterministic functions are always faster to execute"
+      - id: c
+        label: "Determinism is just an optimization for reducing traffic in the shuffle stage"
+      - id: d
+        label: "Non-deterministic functions can't be implemented in JavaScript"
+    correctOptionIds: ["a"]
+    explanation: "Because tasks are assumed to be re-run on a different machine on failure, if the same input didn't always yield the same output, the re-run's result couldn't be safely combined with the results of other tasks that already succeeded."
+
+  - id: q7-idempotent-output-write
+    type: single
+    prompt: "What is the design of atomically renaming a task's output into its final storage location before publishing it meant to prevent?"
+    options:
+      - id: a
+        label: "A failed run's half-finished output getting mixed into or duplicated in the final result when the task is re-run"
+      - id: b
+        label: "The map function taking a long time to run"
+      - id: c
+        label: "Network bandwidth consumption during the shuffle stage"
+      - id: d
+        label: "Key skew in join processing"
+    correctOptionIds: ["a"]
+    explanation: "By only ever reflecting output at the final path once a task has actually completed, half-finished or duplicate output from a re-run or a duplicate execution never leaks into the final result."

@@ -1,0 +1,130 @@
+---
+title: "Batch Processing and the Basic MapReduce Model"
+order: 1
+minutes: 13
+sourceHash: "7ffa87f4b68942e4faeb8b15a8b128657633f7e39c40dde74a2e2b8c0a589229"
+---
+
+# Batch Processing and the Basic MapReduce Model
+
+The modules so far have mostly dealt with online systems (service-style
+systems) that respond immediately to user requests. But real-world data
+systems have another important family: <Term slug="batch-processing">batch
+processing</Term>, which reads in a large volume of data all at once,
+aggregates or transforms it, and writes out the result for later use.
+
+## Batch processing versus online processing
+
+Online systems need to respond to every incoming request with low latency,
+and any single slow request directly hurts the user experience. Batch
+processing instead runs over an entire input dataset that has already
+accumulated (or that spans some fixed period), processing it all at once.
+
+- Individual requests don't need an immediate response, but the system needs
+  enough throughput to handle inputs on the scale of hundreds of gigabytes to
+  terabytes
+- Processing time is often measured in minutes to hours rather than seconds
+- Typical uses: daily sales aggregation, generating reports from logs,
+  rebuilding a search index, recomputing machine learning features or models,
+  and so on
+
+<Callout type="info">
+  "Batch" and "stream" are both processing styles distinct from the
+  immediate-response world of online systems, but batch operates over a
+  finite input (a dataset bounded at some point in time), while stream
+  processing continuously handles a never-ending sequence of events. Stream
+  processing is covered in a later module.
+</Callout>
+
+## Why one machine isn't enough
+
+Once the data a batch job needs to process outgrows a single machine's
+memory or disk I/O bandwidth, the work has to be spread across multiple
+machines. Simply distributing the work — "split the input up somehow and
+throw pieces at each machine" — sounds fine in theory, but in practice the
+same set of problems keeps coming up:
+
+- How to split the input data into meaningful units and assign them to
+  machines
+- How to combine the per-machine results into a single final answer
+- On a cluster with hundreds of machines, some machine is bound to fail
+  partway through (how to build in fault tolerance)
+
+<Term slug="mapreduce">MapReduce</Term> is a programming model that gives a
+common answer to these problems by formulating this kind of distributed
+batch processing as three general-purpose stages: map, shuffle, and reduce.
+
+## The three stages: map, shuffle, reduce
+
+1. **Map stage**: reads the input data record by record (e.g., a single log
+   line, a single document) and produces zero or more key-value pairs from
+   each record. Because a map function can process each record independently
+   without needing state from any other record, the input can be split as
+   finely as you like and run in parallel across machines
+2. **<Term slug="shuffle-phase">Shuffle phase</Term>**: redistributes the
+   large volume of key-value pairs emitted by map across the network across
+   the whole cluster, so that pairs sharing the same key end up on the same
+   machine (reduce task)
+3. **Reduce stage**: receives all the values for a given key together, and
+   aggregates them to produce the final output
+
+This split lets map and reduce each run independently in massive parallel,
+carving out the genuinely hard part — "gather all the values for the same
+key in one place" — into its own shuffle phase.
+
+## A concrete example: counting word occurrences
+
+Let's look at word count, the classic example for explaining MapReduce.
+Given several documents as input, we want to count how many times each word
+occurs.
+
+```
+Input documents:
+  doc1: "the cat sat"
+  doc2: "the cat ran"
+
+Map stage output (emit (word, 1) for each word in each document):
+  ("the", 1) ("cat", 1) ("sat", 1)
+  ("the", 1) ("cat", 1) ("ran", 1)
+
+Shuffle stage (gather values for the same key together):
+  "the" -> [1, 1]
+  "cat" -> [1, 1]
+  "sat" -> [1]
+  "ran" -> [1]
+
+Reduce stage (sum the values for each key):
+  "the" -> 2
+  "cat" -> 2
+  "sat" -> 1
+  "ran" -> 1
+```
+
+The map function only does something simple — emit (word, 1) for each word —
+and it's the reduce function that actually does the aggregating. This
+division of labor is the heart of MapReduce: map can be parallelized as much
+as you like while reading the input, and reduce can start its work already
+knowing that the shuffle has gathered every value for a key together.
+
+<Callout type="tip">
+  This module's exercise, "Mini MapReduce implementation," has you implement
+  the map, shuffle, and reduce stages of this word-count example as actual
+  JavaScript functions and run them against multiple documents.
+</Callout>
+
+## Properties that map and reduce must satisfy
+
+MapReduce works well in a distributed environment because it imposes the
+following constraints on map and reduce functions:
+
+- **No dependency on other records' state**: map can decide its output by
+  looking at a single record alone (which is exactly what lets the input be
+  freely split up and parallelized)
+- **Deterministic**: the same input always produces the same output (why
+  this property matters is covered in detail in the fault-tolerance lesson
+  later in this module)
+- **No side effects**: the function doesn't mutate state outside itself,
+  such as writing to an external database (output is instead written to a
+  location the framework manages)
+
+<BookRef chapter={10} />
