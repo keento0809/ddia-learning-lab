@@ -1,0 +1,114 @@
+---
+title: "Join Strategies in Batch Processing"
+order: 2
+minutes: 13
+sourceHash: "696c73b5cfc05a0290a634760fdf887a35a98e23f55c432e7169082829864209"
+---
+
+# Join Strategies in Batch Processing
+
+Last time we looked at word count as the basic shape of MapReduce. Just as
+common in real batch processing is "join" — matching up records across
+multiple input datasets. For example, joining order data with a customer
+master table to work out "which customer bought which product." On an
+online database, a single SQL `JOIN` handles this, but joining inputs on the
+scale of hundreds of gigabytes to terabytes in a distributed environment
+means understanding a few different strategies and their tradeoffs.
+
+## Why joins are hard
+
+The two records you want to join aren't guaranteed to live on the same
+machine. When order data and the customer master table are spread across
+hundreds of machines as separate sets of files, the essential difficulty of
+a join is: "how do you get records sharing the same customer ID to meet up?"
+The different answers to that question are what give us our different join
+strategies.
+
+## Reduce-side join
+
+The MapReduce shuffle phase was, from the start, a mechanism for "gathering
+data with the same key in one place." We can apply that directly to joins.
+
+1. In the map stage, both inputs (orders and customers) emit pairs shaped
+   like `(customer ID, record)`, putting the join key (e.g., customer ID)
+   first
+2. In the shuffle stage, pairs sharing the same customer ID — from both the
+   order side and the customer side — are gathered into the same reduce task
+3. In the reduce stage, the customer record is picked out from the values
+   gathered under a given key, and used to fill in the corresponding order
+   records in the output
+
+This is called a <Term slug="reduce-side-join">reduce-side join</Term>. Its
+advantage is that it works no matter how large either input is (even if both
+are huge), but its drawback is that every record involved in the join passes
+through the shuffle and over the network once, which tends to make the
+communication cost large.
+
+<Callout type="info">
+  A technique where both inputs are pre-sorted by the join key, and the two
+  sorted streams are then merged in a single pass from the start, is called a
+  <Term slug="sort-merge-join">sort-merge join</Term>. Because the shuffle
+  phase already delivers data to reduce tasks in key-sorted order, a
+  reduce-side join is essentially built on top of the sort-merge mechanism.
+</Callout>
+
+## Map-side join (broadcast hash join)
+
+When one side of a join is small enough to fit in memory on a single machine
+in the cluster (e.g., a customer master table with a few million rows), a
+completely different strategy becomes available.
+
+1. Distribute the smaller input to every machine ahead of time, and keep it
+   in memory on each machine as a hash table
+2. Split the larger input across map tasks. Each map task looks up its join
+   partner for each record it handles in the in-memory hash table, and emits
+   the joined result on the spot
+
+This approach eliminates the need for a <Term slug="shuffle-phase">shuffle
+phase</Term> entirely. Because the join completes with just a single read of
+the larger input, the most costly part — reordering and redistributing data
+over the network — can be skipped altogether. This is called a
+<Term slug="broadcast-hash-join">broadcast hash join</Term>. It does,
+however, assume the smaller input actually fits in memory on every machine;
+if it turns out larger than expected, the join fails with an out-of-memory
+error.
+
+## Which one to choose
+
+| Situation | Suitable strategy |
+| --- | --- |
+| Both inputs are large; neither fits in memory | Reduce-side join (sort-merge join) |
+| One input is small enough to fit in memory on every machine | Broadcast hash join |
+| Inputs are already partitioned and sorted by the join key | A sort-merge join variant that can skip most of the shuffle |
+
+Neither strategy is "always correct" — the choice is a tradeoff based on
+estimated input sizes and available memory. Get this call wrong, and a join
+that could have been a broadcast ends up running a full shuffle every time,
+continuously burning network bandwidth and disk I/O for no reason.
+
+## Skew: records piling onto specific keys
+
+Things get even trickier for reduce-side joins when a
+<Term slug="skewed-key">skewed key</Term> (a key with a disproportionate
+share of the data) shows up. For example, a special customer ID standing in
+for "unknown organization" (something like a NULL value) that ends up
+attached to the bulk of the records. Because the shuffle phase gathers all
+values for a given key into a single reduce task, an especially heavy key
+produces a reduce task with a wildly outsized load — and even after every
+other task has long finished, that one task becomes the bottleneck dragging
+out the whole job.
+
+<Callout type="warn">
+  A common way to deal with skew is to detect hot (frequently occurring)
+  keys and deliberately spread them across multiple reduce tasks (a
+  technique often called salting), then combine the partial results in a
+  later stage. Which keys will turn out to be skewed often isn't known in
+  advance, so production systems need to keep monitoring the data
+  distribution on an ongoing basis.
+</Callout>
+
+This module's exercise, "Mini MapReduce implementation (join edition),"
+has you implement a join between order data and a customer master table
+using the reduce-side join approach (map, shuffle, reduce).
+
+<BookRef chapter={10} />
