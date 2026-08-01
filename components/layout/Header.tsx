@@ -7,11 +7,10 @@ import { AccountMenu } from "@/components/layout/AccountMenu";
 /**
  * 01§7.2 ヘッダー仕様: ロゴ / カリキュラム / 用語集 / 検索 / 言語トグル /
  * ダーク・ライト切替 / アカウントメニュー。
- * /search は後続タスク(T-306)で未実装のため、本番ビルドでのビューポート内
- * 自動prefetchによる404 consoleエラー(qa-evaluatorで検出)を避けるため
- * prefetch={false}を維持する。/learn(T-101)・/glossary(T-305)・
- * /settings(T-308)・/auth/signin(T-005)は実装済みのためprefetch制限を
- * 外している(T-007決定事項ログに明記済みの、実装完了時の除去対象)。
+ * /learn(T-101)・/glossary(T-305)・/search(T-306)・/settings(T-308)・
+ * /auth/signin(T-005)はいずれも実装済みのため、本番ビルドでのビューポート内
+ * 自動prefetchによる404 consoleエラー(T-007 qa-evaluatorで検出、STATUS.md
+ * 決定事項ログ)を避けるためのprefetch={false}は外している。
  * isAuthenticatedはアカウントメニューの表示切替用。呼び出し元のlayout.tsxが
  * 既にGuestProgressImportGate向けに`auth()`結果を保持しているため、ここでは
  * 二重にセッション取得せずpropsで受け取る。
@@ -31,7 +30,7 @@ export function Header({ locale, isAuthenticated }: { locale: Locale; isAuthenti
         <Link href="/glossary" className="hover:underline">
           {t.glossary}
         </Link>
-        <Link href="/search" prefetch={false} className="hover:underline">
+        <Link href="/search" className="hover:underline">
           {t.search}
         </Link>
       </nav>
