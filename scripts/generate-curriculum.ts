@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { marked } from "marked";
 import { loadAllModules } from "../lib/content";
 import { loadGlossary, type GlossaryEntry } from "../lib/glossaryContent";
 import { loadQuiz } from "../lib/quiz/content";
@@ -17,6 +18,7 @@ import {
   exportSearchIndex,
   type SearchIndexExport,
 } from "../lib/search/flexIndex";
+import { buildLessonPreviewMarkdown } from "../lib/lessonPreview";
 
 /**
  * S-02 カリキュラム一覧(T-101)/ S-03 モジュール詳細(T-102)向けの
@@ -157,6 +159,37 @@ export function generateSearchIndex(root: string): Record<Locale, SearchIndexExp
   return result;
 }
 
+/** module.yamlのorder(ADR-009 §3.1: Free Tier境界。lib/contracts/access.tsと同じ定数値) */
+const FREE_TIER_MODULE_ORDER = 1;
+/** モジュール内でPreview対象になるレッスンのorder(各モジュール第1レッスンのみ) */
+const PREVIEW_LESSON_ORDER = 1;
+
+/**
+ * T-602(ADR-009 §3.1 Preview階層): モジュール2〜12の第1レッスンの冒頭
+ * (lib/lessonPreview.ts、見出し2つ分または約30%)をビルド時にHTML化する。
+ * キーは`{moduleSlug}/{lessonId}`(lib/moduleDetail.tsのtocItemSlugと同形式)。
+ * Free Tier(モジュール1)は対象外(常に全文が未認証でも見えるためプレビュー不要)。
+ */
+export function generateLessonPreview(root: string): Record<Locale, Record<string, string>> {
+  const result = {} as Record<Locale, Record<string, string>>;
+  for (const locale of LOCALES) {
+    const byLessonSlug: Record<string, string> = {};
+    for (const mod of loadAllModules(root, locale)) {
+      if (mod.meta.order === FREE_TIER_MODULE_ORDER) continue;
+      const firstLesson = mod.lessons.find(
+        (lesson) => lesson.frontmatter.order === PREVIEW_LESSON_ORDER,
+      );
+      if (!firstLesson) continue;
+      const previewMarkdown = buildLessonPreviewMarkdown(firstLesson.body);
+      const previewHtml = marked.parse(previewMarkdown, { async: false });
+      const lessonId = path.basename(firstLesson.filePath).replace(/\.mdx$/, "");
+      byLessonSlug[`${mod.slug}/${lessonId}`] = previewHtml;
+    }
+    result[locale] = byLessonSlug;
+  }
+  return result;
+}
+
 /** 02§12-4「インデックス>5MBでサーバ検索移行を検討」の目安。ビルドは失敗させず警告のみ行う。 */
 const SEARCH_INDEX_WARN_BYTES = 5 * 1024 * 1024;
 
@@ -177,6 +210,7 @@ function main(): void {
   const glossary = generateGlossary(root);
   const scenario = generateScenario(root);
   const searchIndex = generateSearchIndex(root);
+  const lessonPreview = generateLessonPreview(root);
 
   fs.mkdirSync(outDir, { recursive: true });
 
@@ -228,6 +262,16 @@ function main(): void {
           `超えています。静的FlexSearchからサーバ検索への移行を検討してください。`,
       );
     }
+
+    const lessonPreviewOutPath = path.join(outDir, `lesson-preview.${locale}.json`);
+    fs.writeFileSync(
+      lessonPreviewOutPath,
+      `${JSON.stringify(lessonPreview[locale], null, 2)}\n`,
+      "utf-8",
+    );
+    console.log(
+      `レッスンプレビューデータを書き出しました: ${lessonPreviewOutPath}(${Object.keys(lessonPreview[locale]).length}件)`,
+    );
   }
 }
 

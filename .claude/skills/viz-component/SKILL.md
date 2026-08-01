@@ -134,6 +134,11 @@ MDXコンテンツからは `<Viz name="<slug>">` で遅延ロードされる
 - **任意長テキスト(key/value等)を埋め込む祖先要素には`break-words`を置く**:
   子要素個別の`truncate`だけでは、自由長の文章(イベントログ等)に埋め込まれた
   長い文字列がページを横オーバーフローさせる。
+- **言語切替でVizのローカル状態(SimEngine)が消える**: レッスン本文はロケール
+  ごとに別々のコンパイル済みMDXコンポーネントのため、言語トグル(同一ルートへの
+  クライアント側遷移)でもReactはVizのサブツリーをアンマウント→再マウントする。
+  `VizPersistenceScopeProvider`(`lib/lesson/vizPersistenceContext.tsx`)でスコープ
+  キーを渡し、SimEngineをモジュールスコープのキャッシュへ退避して復元する。
 
 ## 9. references/ 一覧
 

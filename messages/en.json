@@ -168,7 +168,11 @@
     "notesSavedLabel": "Saved",
     "notesErrorLabel": "Failed to save your note. Please try again.",
     "notesSignInPrompt": "Sign in to save notes.",
-    "notesSignInLinkLabel": "Sign in"
+    "notesSignInLinkLabel": "Sign in",
+    "accessLockedTitle": "Sign in to continue this lesson",
+    "accessLockedBody": "Sign in or create a free account to read the rest of this lesson.",
+    "accessSignInLinkLabel": "Sign in",
+    "accessPreviewNotice": "Sign in to read the rest of this lesson."
   },
   "lab": {
     "run": "Run",

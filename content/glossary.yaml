@@ -22,6 +22,14 @@
     ja: "実際には正常に稼働しているノードを、タイムアウトなどの検出基準によって誤って「停止した」と判定してしまうこと。"
     en: "Mistakenly classifying a node that is actually still running as failed, based on a detection heuristic such as a timeout."
 
+- slug: wall-clock-time
+  term:
+    ja: "壁時計時刻"
+    en: "wall-clock time"
+  definition:
+    ja: "OSが提供する、実世界のカレンダー時刻(現在の日時)を返すクロック。NTPなどによる同期補正で値が前後に飛ぶことがあるため経過時間の計測には向かず、時刻そのものの記録・表示に用途を限るべきとされる。"
+    en: "A clock, provided by the operating system, that returns real-world calendar time (the current date and time). Because periodic NTP synchronization can make its value jump forward or backward, it is unsuited to measuring elapsed time and should be reserved for recording or displaying the time itself."
+
 - slug: clock-drift
   term:
     ja: "クロックドリフト"
@@ -45,6 +53,14 @@
   definition:
     ja: "ガベージコレクションの実行中にアプリケーションのスレッドが一時的に停止する現象。停止時間はヒープサイズや実装により数ミリ秒から数秒以上に及ぶことがある。"
     en: "A pause during which application threads are suspended while the garbage collector runs; the duration can range from milliseconds to several seconds or more depending on heap size and implementation."
+
+- slug: fencing-token
+  term:
+    ja: "フェンシングトークン"
+    en: "fencing token"
+  definition:
+    ja: "リースや分散ロックを取得するたびに発行される単調増加するトークン。資源側(ストレージなど)がそのトークンを検証し、より新しいトークンを持つ保持者の書き込みだけを受け付けることで、一時停止から復帰した古いリース保持者による誤った書き込みを防ぐ。"
+    en: "A monotonically increasing token issued each time a lease or distributed lock is acquired. The protected resource (such as storage) checks this token and accepts writes only from the holder presenting the newest one, preventing an old lease holder that resumes after a pause from writing incorrectly."
 
 - slug: byzantine-fault
   term:
@@ -117,6 +133,14 @@
   definition:
     ja: 異なるリーダーが同じデータへほぼ同時に別々の書き込みを受け付けてしまい、伝搬後に矛盾が発覚する状態のこと。
     en: A situation where different leaders accept conflicting writes to the same data at roughly the same time, with the contradiction surfacing only after propagation.
+- slug: lww
+  term:
+    ja: "Last-Write-Wins(LWW)"
+    en: "Last-write-wins (LWW)"
+  definition:
+    ja: "複数リーダー・リーダーレスなレプリケーションで競合する書き込みを解決する戦略の1つ。各書き込みにタイムスタンプを付け、最も新しいものだけを機械的に採用する。実装は単純だが、負けた側の書き込みは黙って破棄されるため、クロックのずれがある環境では「新しい」の判定自体が不正確になりうる。"
+    en: "A strategy for resolving conflicting writes in multi-leader or leaderless replication that attaches a timestamp to each write and mechanically keeps only the newest one. Simple to implement, but the losing write is silently discarded, and clock skew across machines can make the notion of \"newest\" unreliable."
+
 - slug: leaderless-replication
   term:
     ja: リーダーレスレプリケーション
@@ -727,6 +751,14 @@
   definition:
     ja: 同じタスクが再実行されたり重複して実行されたりしても、最終的な出力結果が変わらない性質。決定的な計算に加え、出力の書き込み自体をアトミックに行うことで実現される。
     en: The property that a task's final output stays the same even if the task is retried or executed more than once. Achieved through a combination of deterministic computation and writing output atomically.
+- slug: stream-processing
+  term:
+    ja: "ストリーム処理"
+    en: "stream processing"
+  definition:
+    ja: "区切りのない(無限に続きうる)イベント列を、発生するたびに少しずつ読み込み、変換・集計した結果をそのつど反映していく処理形態。大規模な入力をまとめて処理するスループットよりも、個々のイベントに対する低いレイテンシでの反映が重視される。"
+    en: "A processing style that reads an unbounded, potentially endless sequence of events a little at a time as they occur, transforming or aggregating them and reflecting the results right away. Compared to batch processing, it emphasizes low per-event latency over throughput on large, already-accumulated input."
+
 - slug: event-stream
   term:
     ja: イベントストリーム
