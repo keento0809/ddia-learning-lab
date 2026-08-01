@@ -108,7 +108,10 @@
     "submittingLabel": "結果を送信しています…",
     "submittedLabel": "結果を記録しました",
     "submitErrorLabel": "結果の送信に失敗しました",
-    "emptyLabel": "クイズは準備中です"
+    "emptyLabel": "クイズは準備中です",
+    "accessLockedTitle": "このクイズはログインが必要です",
+    "accessLockedBody": "このクイズに回答するにはログインまたは登録が必要です。",
+    "accessSignInLinkLabel": "ログイン"
   },
   "demo": {
     "pageTitle": "Walking Skeleton デモレッスン",
@@ -194,7 +197,10 @@
     "resultFail": "不合格",
     "resultError": "エラー",
     "resultTimeout": "タイムアウトしました(強制停止)",
-    "durationLabel": "実行時間: {ms}ms"
+    "durationLabel": "実行時間: {ms}ms",
+    "accessLockedTitle": "この演習はログインが必要です",
+    "accessLockedBody": "この演習を実行するにはログインまたは登録が必要です。",
+    "accessSignInLinkLabel": "ログイン"
   },
   "sqlLab": {
     "run": "SQLを実行",
