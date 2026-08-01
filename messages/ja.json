@@ -152,7 +152,11 @@
     "notesSavedLabel": "保存済み",
     "notesErrorLabel": "ノートの保存に失敗しました。もう一度お試しください。",
     "notesSignInPrompt": "ノートを保存するにはログインしてください。",
-    "notesSignInLinkLabel": "ログイン"
+    "notesSignInLinkLabel": "ログイン",
+    "accessLockedTitle": "このレッスンはログインが必要です",
+    "accessLockedBody": "続きを読むにはログインまたは登録が必要です。",
+    "accessSignInLinkLabel": "ログイン",
+    "accessPreviewNotice": "ここから先はログインすると読めます。"
   },
   "lab": {
     "run": "実行",

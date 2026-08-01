@@ -1,9 +1,13 @@
-import type { ComponentType } from "react";
+import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LessonLayout } from "@/components/lesson/LessonLayout";
+import { LessonAccessNotice } from "@/components/lesson/LessonAccessNotice";
 import { getModuleDetail } from "@/lib/moduleDetail";
 import { buildLessonPageData } from "@/lib/lessonPage";
+import { loadLessonContent } from "@/lib/lessonContentLoader";
+import { resolveLessonAccessTier, getLessonPreviewHtml } from "@/lib/lessonAccess";
+import { isLessonFullyVisibleUnauthenticated, isLessonPreviewOnlyUnauthenticated } from "@/lib/contracts/access";
 import { routing, type AppLocale } from "@/lib/i18n/routing";
 import { buildLanguageAlternates } from "@/lib/i18n/alternates";
 import { auth } from "@/lib/auth/config";
@@ -24,26 +28,9 @@ function isAppLocale(value: string): value is AppLocale {
  * 常時動的レンダリング)に合わせた。content/にレッスンが投入され次第SSG化を
  * 検討する場合は、このnotFound()衝突を再度wrangler devで確認すること。
  *
- * content/{locale}/{module}/{lesson}.mdxをビルド時に解決する(@next/mdxの
- * webpackローダによるcontext module化。lib/content.tsの`node:fs`直接importを
- * 避ける既存パターン(T-101/T-102決定事項ログ)と同じ理由: Cloudflare Workers
- * のリクエスト処理経路にfs読み込みを持ち込まないため)。該当ファイルが存在しない
- * 場合はnotFound()。
+ * MDX本文の解決自体はlib/lessonContentLoader.tsへ委譲する(T-602で切り出し、
+ * 同ファイルのコメント参照)。
  */
-async function loadLessonContent(
-  locale: string,
-  moduleSlug: string,
-  lessonId: string,
-): Promise<ComponentType> {
-  try {
-    const mod: { default: ComponentType } = await import(
-      `@/content/${locale}/${moduleSlug}/${lessonId}.mdx`
-    );
-    return mod.default;
-  } catch {
-    notFound();
-  }
-}
 
 export async function generateMetadata({
   params,
@@ -86,8 +73,33 @@ export default async function LessonPage({
     notFound();
   }
 
-  const Content = await loadLessonContent(locale, moduleSlug, lessonId);
+  const tier = resolveLessonAccessTier(locale, moduleSlug, lessonId);
+  if (!tier) {
+    notFound();
+  }
+
   const session = await auth();
+  const isAuthenticated = Boolean(session?.user?.id);
+
+  /**
+   * T-602(ADR-009 §5 層1)。gated/previewかつ未認証の場合はMDX本文を
+   * importすらしない(loadLessonContentを呼ばない)。RSCペイロード/HTMLに
+   * 本文が一切含まれないことがこのタスクの受入基準(未認証時に本文コンポーネント
+   * がツリーに含まれないことを証明するテスト、tests/unit/lesson/accessGate.test.ts
+   * 参照)。ソフトウォールの装飾UI(フェードアウト・CTA群)はT-603のスコープ、
+   * ここではLessonAccessNotice(最小プレースホルダ)で代替する。
+   */
+  let lessonBody: ReactNode;
+  if (isAuthenticated || isLessonFullyVisibleUnauthenticated(tier)) {
+    const Content = await loadLessonContent(locale, moduleSlug, lessonId);
+    lessonBody = <Content />;
+  } else if (isLessonPreviewOnlyUnauthenticated(tier)) {
+    lessonBody = (
+      <LessonAccessNotice locale={locale} previewHtml={getLessonPreviewHtml(locale, moduleSlug, lessonId)} />
+    );
+  } else {
+    lessonBody = <LessonAccessNotice locale={locale} />;
+  }
 
   return (
     <LessonLayout
@@ -101,9 +113,9 @@ export default async function LessonPage({
       currentKey={data.currentKey}
       prevHref={data.prevHref}
       nextHref={data.nextHref}
-      isAuthenticated={Boolean(session?.user?.id)}
+      isAuthenticated={isAuthenticated}
     >
-      <Content />
+      {lessonBody}
     </LessonLayout>
   );
 }
