@@ -108,7 +108,10 @@
     "submittingLabel": "Submitting your result…",
     "submittedLabel": "Result saved",
     "submitErrorLabel": "Failed to submit your result",
-    "emptyLabel": "The quiz is coming soon"
+    "emptyLabel": "The quiz is coming soon",
+    "accessLockedTitle": "Sign in to take this quiz",
+    "accessLockedBody": "Sign in or create a free account to answer this quiz.",
+    "accessSignInLinkLabel": "Sign in"
   },
   "demo": {
     "pageTitle": "Walking Skeleton Demo Lesson",
@@ -194,7 +197,10 @@
     "resultFail": "Fail",
     "resultError": "Error",
     "resultTimeout": "Timed out (force-terminated)",
-    "durationLabel": "Duration: {ms}ms"
+    "durationLabel": "Duration: {ms}ms",
+    "accessLockedTitle": "Sign in to run this exercise",
+    "accessLockedBody": "Sign in or create a free account to run this exercise.",
+    "accessSignInLinkLabel": "Sign in"
   },
   "sqlLab": {
     "run": "Run SQL",
