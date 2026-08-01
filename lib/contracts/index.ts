@@ -5,6 +5,7 @@
  * T-010完了以降、このディレクトリ配下の変更は専用タスクでのみ許可(CLAUDE.md)。
  */
 export * from "./common";
+export * from "./access";
 export * from "./api";
 export * from "./exercise";
 export * from "./module";
