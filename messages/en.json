@@ -55,7 +55,8 @@
     },
     "minutesLabel": "{minutes} min",
     "lessonCountLabel": "{count} lessons",
-    "progressAriaLabel": "{percent}% complete"
+    "progressAriaLabel": "{percent}% complete",
+    "moduleLockedLabel": "Locked (sign-up required)"
   },
   "glossary": {
     "pageTitle": "Glossary",
@@ -92,7 +93,8 @@
     "itemStatus": {
       "done": "Done",
       "inProgress": "In progress"
-    }
+    },
+    "moduleLockedLabel": "Locked (sign-up required)"
   },
   "quiz": {
     "heading": "{module} Quiz",
@@ -169,10 +171,18 @@
     "notesErrorLabel": "Failed to save your note. Please try again.",
     "notesSignInPrompt": "Sign in to save notes.",
     "notesSignInLinkLabel": "Sign in",
-    "accessLockedTitle": "Sign in to continue this lesson",
-    "accessLockedBody": "Sign in or create a free account to read the rest of this lesson.",
-    "accessSignInLinkLabel": "Sign in",
-    "accessPreviewNotice": "Sign in to read the rest of this lesson."
+    "contentWall": {
+      "lockIconLabel": "Locked",
+      "heading": "Sign up for free to keep reading",
+      "valueProps": {
+        "allModules": "Unlimited access to all 12 modules",
+        "exercises": "Run exercises with automatic grading",
+        "progress": "Saved progress and badges"
+      },
+      "signUpCtaLabel": "Sign up for free",
+      "signInCtaLabel": "Sign in",
+      "freeTierLinkLabel": "Module 1 is free to read in full, no sign-up needed →"
+    }
   },
   "lab": {
     "run": "Run",

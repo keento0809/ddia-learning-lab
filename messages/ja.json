@@ -55,7 +55,8 @@
     },
     "minutesLabel": "{minutes}分",
     "lessonCountLabel": "レッスン{count}件",
-    "progressAriaLabel": "進捗 {percent}%"
+    "progressAriaLabel": "進捗 {percent}%",
+    "moduleLockedLabel": "ロック中(登録が必要です)"
   },
   "glossary": {
     "pageTitle": "用語集",
@@ -92,7 +93,8 @@
     "itemStatus": {
       "done": "完了",
       "inProgress": "進行中"
-    }
+    },
+    "moduleLockedLabel": "ロック中(登録が必要です)"
   },
   "quiz": {
     "heading": "{module} クイズ",
@@ -169,10 +171,18 @@
     "notesErrorLabel": "ノートの保存に失敗しました。もう一度お試しください。",
     "notesSignInPrompt": "ノートを保存するにはログインしてください。",
     "notesSignInLinkLabel": "ログイン",
-    "accessLockedTitle": "このレッスンはログインが必要です",
-    "accessLockedBody": "続きを読むにはログインまたは登録が必要です。",
-    "accessSignInLinkLabel": "ログイン",
-    "accessPreviewNotice": "ここから先はログインすると読めます。"
+    "contentWall": {
+      "lockIconLabel": "ロック中",
+      "heading": "続きを読むには無料登録が必要です",
+      "valueProps": {
+        "allModules": "全12モジュールの教材が読み放題",
+        "exercises": "演習の実行と自動採点",
+        "progress": "学習進捗の保存とバッジ"
+      },
+      "signUpCtaLabel": "無料で登録",
+      "signInCtaLabel": "サインイン",
+      "freeTierLinkLabel": "モジュール1は登録なしで全部読めます →"
+    }
   },
   "lab": {
     "run": "実行",

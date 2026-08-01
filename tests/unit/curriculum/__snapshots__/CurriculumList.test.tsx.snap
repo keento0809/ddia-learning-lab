@@ -26,6 +26,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={1}
         locale="en"
+        locked={false}
         meta={
           {
             "minutes": 45,
@@ -40,6 +41,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="en"
+        locked={true}
         meta={
           {
             "minutes": 50,
@@ -54,6 +56,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="en"
+        locked={true}
         meta={
           {
             "minutes": 55,
@@ -68,6 +71,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="en"
+        locked={true}
         meta={
           {
             "minutes": 40,
@@ -97,6 +101,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="en"
+        locked={true}
         meta={
           {
             "minutes": 50,
@@ -111,6 +116,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="en"
+        locked={true}
         meta={
           {
             "minutes": 45,
@@ -125,6 +131,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="en"
+        locked={true}
         meta={
           {
             "minutes": 60,
@@ -139,6 +146,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="en"
+        locked={true}
         meta={
           {
             "minutes": 50,
@@ -153,6 +161,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="en"
+        locked={true}
         meta={
           {
             "minutes": 55,
@@ -182,6 +191,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="en"
+        locked={true}
         meta={
           {
             "minutes": 45,
@@ -196,6 +206,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="en"
+        locked={true}
         meta={
           {
             "minutes": 45,
@@ -210,6 +221,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="en"
+        locked={true}
         meta={
           {
             "minutes": 60,
@@ -251,6 +263,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={1}
         locale="ja"
+        locked={false}
         meta={
           {
             "minutes": 45,
@@ -265,6 +278,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="ja"
+        locked={true}
         meta={
           {
             "minutes": 50,
@@ -279,6 +293,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="ja"
+        locked={true}
         meta={
           {
             "minutes": 55,
@@ -293,6 +308,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="ja"
+        locked={true}
         meta={
           {
             "minutes": 40,
@@ -322,6 +338,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="ja"
+        locked={true}
         meta={
           {
             "minutes": 50,
@@ -336,6 +353,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="ja"
+        locked={true}
         meta={
           {
             "minutes": 45,
@@ -350,6 +368,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="ja"
+        locked={true}
         meta={
           {
             "minutes": 60,
@@ -364,6 +383,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="ja"
+        locked={true}
         meta={
           {
             "minutes": 50,
@@ -378,6 +398,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="ja"
+        locked={true}
         meta={
           {
             "minutes": 55,
@@ -407,6 +428,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="ja"
+        locked={true}
         meta={
           {
             "minutes": 45,
@@ -421,6 +443,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="ja"
+        locked={true}
         meta={
           {
             "minutes": 45,
@@ -435,6 +458,7 @@ exports[`CurriculumList > renders 12 fixture modules grouped by Part, in order (
       <ModuleCard
         lessonCount={0}
         locale="ja"
+        locked={true}
         meta={
           {
             "minutes": 60,

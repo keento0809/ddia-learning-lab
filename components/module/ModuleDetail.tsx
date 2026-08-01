@@ -10,6 +10,7 @@ import {
   type ModuleDetailSummary,
   type ModuleTocItem,
 } from "@/lib/moduleDetail";
+import { isModuleFullyFree } from "@/lib/uiAccessTier";
 import type { ProgressRecord, ProgressStatus } from "@/lib/contracts";
 
 /**
@@ -23,15 +24,21 @@ import type { ProgressRecord, ProgressStatus } from "@/lib/contracts";
  * 関数のまま保つ(tests/unit/module/ModuleDetail.test.tsxの「フックを使わない
  * 関数コンポーネントを直接呼び出す」パターンとの整合、実データ取得は
  * components/module/ModuleDetailWithProgress.tsxが担う)。
+ *
+ * `isAuthenticated`省略時はfalse(未認証)として扱い、Free Tier以外のモジュールで
+ * 見出しに鍵アイコンを表示する(T-603、ADR-009 §3.2)。認証済みユーザーには
+ * 一切表示しない。
  */
 export function ModuleDetail({
   locale,
   detail,
   progress = [],
+  isAuthenticated = false,
 }: {
   locale: Locale;
   detail: ModuleDetailSummary;
   progress?: readonly ProgressRecord[];
+  isAuthenticated?: boolean;
 }) {
   const messages = getMessages(locale);
   const t = messages.moduleDetail;
@@ -43,11 +50,27 @@ export function ModuleDetail({
   const nextHref = nextItemHref(detail.meta.slug, toc, doneSlugs);
   const doneCount = toc.filter((item) => doneSlugs.has(tocItemSlug(detail.meta.slug, item))).length;
   const progressPercent = toc.length > 0 ? Math.round((doneCount / toc.length) * 100) : 0;
+  const locked = !isAuthenticated && !isModuleFullyFree(detail.meta.order);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <div className="mb-2 flex items-center gap-3">
-        <h1 className="text-2xl font-semibold">{detail.meta.title}</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-semibold">
+          {detail.meta.title}
+          {locked ? (
+            <span
+              role="img"
+              aria-label={t.moduleLockedLabel}
+              title={t.moduleLockedLabel}
+              data-testid="module-detail-lock"
+              className="shrink-0 text-neutral-400 dark:text-neutral-600"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                <path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5Zm-3 8V6a3 3 0 1 1 6 0v3Zm3 3a2 2 0 0 1 1 3.73V18a1 1 0 1 1-2 0v-2.27A2 2 0 0 1 12 12Z" />
+              </svg>
+            </span>
+          ) : null}
+        </h1>
         {toc.length > 0 ? (
           <ProgressRing
             percent={progressPercent}

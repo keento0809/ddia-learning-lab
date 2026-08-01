@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { loadAllModules } from "@/lib/content";
 import type { Locale } from "@/lib/contracts/common";
 import {
+  getFreeTierModuleSlug,
   groupModulesByPart,
   partForOrder,
   type CurriculumModuleSummary,
@@ -62,4 +63,18 @@ describe("12-module fixture loads in order for both locales", () => {
     expect(summaries[0].lessonCount).toBe(1);
     expect(summaries.slice(1).every((m) => m.lessonCount === 0)).toBe(true);
   });
+});
+
+/**
+ * T-603(ADR-009 §3.2「モジュール1は登録なしで全部読めます」導線)。
+ * ビルド生成物(lib/generated/curriculum.*.json)に対して検証する
+ * (tests/unit/lessonAccess.test.tsと同じ、実データ依存ロジックのため)。
+ */
+describe("getFreeTierModuleSlug", () => {
+  it.each([["ja"], ["en"]] as const)(
+    "returns the slug of the order-1 module (01-reliability, locale=%s)",
+    (locale) => {
+      expect(getFreeTierModuleSlug(locale)).toBe("01-reliability");
+    },
+  );
 });
