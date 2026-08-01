@@ -1,4 +1,14 @@
 {
+  "gatingSpike": {
+    "wall": {
+      "title": "続きを読むには無料登録が必要です",
+      "body": "T-601スパイク: この続きはゲート対象です(サインインで解除)。",
+      "signInCta": "サインイン"
+    },
+    "loadingLabel": "本文を取得しています…",
+    "methodALabel": "方式A: 動的レンダリング",
+    "methodBLabel": "方式B: 静的プレビュー + 認証付きフェッチ"
+  },
   "home": {
     "pageTitle": "DDIA Learning Lab",
     "heroTitle": "分散データシステムを、手を動かして学ぶ",

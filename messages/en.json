@@ -1,4 +1,14 @@
 {
+  "gatingSpike": {
+    "wall": {
+      "title": "Sign in to keep reading",
+      "body": "T-601 spike: the rest of this lesson is gated (unlocks on sign-in).",
+      "signInCta": "Sign in"
+    },
+    "loadingLabel": "Loading lesson body…",
+    "methodALabel": "Method A: dynamic rendering",
+    "methodBLabel": "Method B: static preview + authenticated fetch"
+  },
   "home": {
     "pageTitle": "DDIA Learning Lab",
     "heroTitle": "Learn distributed data systems by building",

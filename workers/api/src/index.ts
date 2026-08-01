@@ -12,6 +12,7 @@ import { guestProgressImportRoute } from "./routes/guestProgressImport";
 import { notesRoute } from "./routes/notes";
 import { accountRoute } from "./routes/account";
 import { internalAuthRoute } from "./routes/internalAuth";
+import { spikeContentRoute } from "./routes/spikeContent";
 import { captureWorkerError } from "@/lib/sentry/toucan";
 
 /**
@@ -122,6 +123,11 @@ app.route("/api/notes", notesRoute);
 
 app.use("/api/account", requireSession);
 app.route("/api/account", accountRoute);
+
+// T-601スパイク(方式B最小プロトタイプ、上記spikeContent.tsのコメント参照)。
+// 本実装ではない。T-602で置き換え・削除される前提。
+app.use("/api/spike-content/*", requireSession);
+app.route("/api/spike-content", spikeContentRoute);
 
 app.notFound((c) => {
   const problem: ProblemDetails = {
