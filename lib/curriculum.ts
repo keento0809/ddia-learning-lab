@@ -60,3 +60,15 @@ const GENERATED_CURRICULUM: Record<Locale, CurriculumModuleSummary[]> = {
 export function getCurriculumModules(locale: Locale): CurriculumModuleSummary[] {
   return GENERATED_CURRICULUM[locale];
 }
+
+/**
+ * T-603(ADR-009 §3.2「モジュール1は登録なしで全部読めます」導線用)。
+ * Free Tierはorder最小のモジュール(ADR-009 §3.1、現状はモジュール1)なので、
+ * 階層判定ロジック(lib/contracts/access.ts)を複製せずorder最小値で求める。
+ * カリキュラム未投入(空配列)の場合はundefined。
+ */
+export function getFreeTierModuleSlug(locale: Locale): string | undefined {
+  const modules = getCurriculumModules(locale);
+  const sorted = [...modules].sort((a, b) => a.meta.order - b.meta.order);
+  return sorted[0]?.meta.slug;
+}

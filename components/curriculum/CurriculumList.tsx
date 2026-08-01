@@ -4,6 +4,7 @@ import {
   groupModulesByPart,
   type CurriculumModuleSummary,
 } from "@/lib/curriculum";
+import { isModuleFullyFree } from "@/lib/uiAccessTier";
 import type { DashboardModuleProgress } from "@/lib/contracts/api";
 import { ModuleCard } from "./ModuleCard";
 import { OrderConnector } from "./OrderConnector";
@@ -11,18 +12,22 @@ import { OrderConnector } from "./OrderConnector";
 /**
  * S-02 カリキュラム一覧(02§4.3, 03文書T-101)。
  * 3部(Part I〜III)へのセクション分割、module.yamlスキーマ(lib/contracts/module.ts)
- * に基づくカード描画、ロック無し+推奨順の矢印表示。
+ * に基づくカード描画、推奨順の矢印表示。
  * 進捗リングはprops注入のみ(`progress`省略時は全モジュール0%)。実データ接続は
  * T-105(GET /api/progressのZustandキャッシュからのオーバーレイ)で行う。
+ * `isAuthenticated`省略時はfalse(未認証)として扱い、Free Tier以外のモジュールに
+ * 鍵アイコンを表示する(T-603、ADR-009 §3.2)。認証済みユーザーには一切表示しない。
  */
 export function CurriculumList({
   locale,
   modules,
   progress = [],
+  isAuthenticated = false,
 }: {
   locale: Locale;
   modules: readonly CurriculumModuleSummary[];
   progress?: readonly DashboardModuleProgress[];
+  isAuthenticated?: boolean;
 }) {
   const t = getMessages(locale).curriculum;
   const grouped = groupModulesByPart(modules);
@@ -51,6 +56,7 @@ export function CurriculumList({
                     meta={mod.meta}
                     lessonCount={mod.lessonCount}
                     progressPercent={progressBySlug.get(mod.meta.slug) ?? 0}
+                    locked={!isAuthenticated && !isModuleFullyFree(mod.meta.order)}
                   />
                 );
                 if (index === 0) {

@@ -1,4 +1,6 @@
 import { fileURLToPath } from "node:url";
+import { renderToStaticMarkup } from "react-dom/server";
+import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it } from "vitest";
 import { loadAllModules } from "@/lib/content";
 import type { Locale } from "@/lib/contracts/common";
@@ -34,4 +36,34 @@ describe("CurriculumList", () => {
       expect(result).toMatchSnapshot();
     },
   );
+
+  /**
+   * T-603(ADR-009 §3.2)。未認証時はFree Tier(モジュール1、order===1)以外に
+   * 鍵アイコンが表示され、認証済みでは一切表示されないこと(受入基準(4)(5))を
+   * DOM出力で検証する。
+   */
+  it("shows a lock icon only on non-Free-Tier modules when unauthenticated", () => {
+    const modules = loadFixtureSummaries("ja");
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider locale="ja" messages={{}}>
+        {CurriculumList({ locale: "ja", modules, isAuthenticated: false })}
+      </NextIntlClientProvider>,
+    );
+
+    expect(html).not.toContain('data-testid="curriculum-module-lock-01-reliability"');
+    for (const slug of modules.map((m) => m.meta.slug).filter((slug) => slug !== "01-reliability")) {
+      expect(html).toContain(`data-testid="curriculum-module-lock-${slug}"`);
+    }
+  });
+
+  it("shows no lock icons at all when authenticated", () => {
+    const modules = loadFixtureSummaries("ja");
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider locale="ja" messages={{}}>
+        {CurriculumList({ locale: "ja", modules, isAuthenticated: true })}
+      </NextIntlClientProvider>,
+    );
+
+    expect(html).not.toContain("curriculum-module-lock-");
+  });
 });

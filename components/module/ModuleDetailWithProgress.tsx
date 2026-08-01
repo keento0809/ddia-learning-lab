@@ -21,5 +21,12 @@ export function ModuleDetailWithProgress({
   isAuthenticated: boolean;
 }) {
   const query = useProgressQuery({ enabled: isAuthenticated });
-  return <ModuleDetail locale={locale} detail={detail} progress={query.data?.progress ?? []} />;
+  return (
+    <ModuleDetail
+      locale={locale}
+      detail={detail}
+      progress={query.data?.progress ?? []}
+      isAuthenticated={isAuthenticated}
+    />
+  );
 }

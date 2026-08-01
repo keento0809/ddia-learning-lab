@@ -99,4 +99,41 @@ describe("ModuleDetail", () => {
     // 4アイテム(lesson×2, quiz, exercise)中1件done = 25%
     expect(html).toContain('aria-label="進捗 25%"');
   });
+
+  /**
+   * T-603(ADR-009 §3.2)。未認証時はFree Tier(モジュール1)以外で見出しに
+   * 鍵アイコンが表示され、認証済みでは一切表示されないこと(受入基準(4)(5))。
+   */
+  it("shows a lock icon next to the heading for non-Free-Tier modules when unauthenticated", () => {
+    const detail = loadDetail("ja", "02-empty");
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider locale="ja" messages={{}}>
+        {ModuleDetail({ locale: "ja", detail, isAuthenticated: false })}
+      </NextIntlClientProvider>,
+    );
+
+    expect(html).toContain('data-testid="module-detail-lock"');
+  });
+
+  it("shows no lock icon for the Free Tier module (order 1) even when unauthenticated", () => {
+    const detail = loadDetail("ja", "01-reliability");
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider locale="ja" messages={{}}>
+        {ModuleDetail({ locale: "ja", detail, isAuthenticated: false })}
+      </NextIntlClientProvider>,
+    );
+
+    expect(html).not.toContain('data-testid="module-detail-lock"');
+  });
+
+  it("shows no lock icon when authenticated, even for a non-Free-Tier module", () => {
+    const detail = loadDetail("ja", "02-empty");
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider locale="ja" messages={{}}>
+        {ModuleDetail({ locale: "ja", detail, isAuthenticated: true })}
+      </NextIntlClientProvider>,
+    );
+
+    expect(html).not.toContain('data-testid="module-detail-lock"');
+  });
 });

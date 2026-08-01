@@ -24,5 +24,12 @@ export function CurriculumListWithProgress({
 }) {
   const query = useProgressQuery({ enabled: isAuthenticated });
   const progress = computeCurriculumProgress(modules, query.data?.progress ?? []);
-  return <CurriculumList locale={locale} modules={modules} progress={progress} />;
+  return (
+    <CurriculumList
+      locale={locale}
+      modules={modules}
+      progress={progress}
+      isAuthenticated={isAuthenticated}
+    />
+  );
 }
