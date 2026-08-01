@@ -1,0 +1,7 @@
+- slug: network-partition
+  term:
+    ja: "ネットワーク分断"
+    en: "network partition"
+  definition:
+    ja: "ノード群が複数のグループに分かれて相互に通信できなくなる状態(架空の説明、テスト用フィクスチャ)。"
+    en: "A state in which nodes split into groups that cannot communicate with each other (fictional description, test fixture only)."

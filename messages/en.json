@@ -66,6 +66,22 @@
     "noResults": "No matching terms found.",
     "otherLocaleTermLabel": "Japanese: {term}"
   },
+  "search": {
+    "pageTitle": "Search",
+    "inputLabel": "Search keywords",
+    "inputPlaceholder": "Search lessons and terms",
+    "loadingLabel": "Loading the search index…",
+    "loadErrorLabel": "Failed to load the search index.",
+    "promptLabel": "Type a keyword to search.",
+    "resultCount": "{count} results",
+    "resultCountOne": "{count} result",
+    "noResults": "No matching results found.",
+    "kindLabel": {
+      "module": "Module",
+      "lesson": "Lesson",
+      "glossary": "Glossary"
+    }
+  },
   "moduleDetail": {
     "totalMinutesLabel": "Total time: {minutes} min",
     "tocHeading": "Contents",

@@ -66,6 +66,22 @@
     "noResults": "一致する用語が見つかりませんでした。",
     "otherLocaleTermLabel": "英語表記: {term}"
   },
+  "search": {
+    "pageTitle": "検索",
+    "inputLabel": "検索キーワード",
+    "inputPlaceholder": "レッスンや用語を検索",
+    "loadingLabel": "検索インデックスを読み込んでいます…",
+    "loadErrorLabel": "検索インデックスの読み込みに失敗しました。",
+    "promptLabel": "キーワードを入力してください。",
+    "resultCount": "{count}件ヒット",
+    "resultCountOne": "{count}件ヒット",
+    "noResults": "一致する結果が見つかりませんでした。",
+    "kindLabel": {
+      "module": "モジュール",
+      "lesson": "レッスン",
+      "glossary": "用語集"
+    }
+  },
   "moduleDetail": {
     "totalMinutesLabel": "所要時間合計 {minutes}分",
     "tocHeading": "目次",

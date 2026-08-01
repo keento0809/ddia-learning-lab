@@ -11,6 +11,13 @@ import type { CurriculumModuleSummary } from "../lib/curriculum";
 import type { ModuleDetailSummary } from "../lib/moduleDetail";
 import { loadScenario } from "../lib/scenario/content";
 import type { ScenarioDefinition } from "../lib/scenario/schema";
+import { buildSearchDocuments } from "../lib/search/buildDocuments";
+import {
+  addSearchDocument,
+  createSearchIndex,
+  exportSearchIndex,
+  type SearchIndexExport,
+} from "../lib/search/flexIndex";
 import { buildLessonPreviewMarkdown } from "../lib/lessonPreview";
 
 /**
@@ -133,6 +140,25 @@ export function generateScenario(root: string): ScenarioDefinition {
   return loadScenario(root);
 }
 
+/**
+ * S-09 検索(T-306, 02§9「検索インデックス(ロケール別 FlexSearch、静的JSON分割)」)向けの
+ * ロケール別FlexSearchインデックス生成。`lib/search/buildDocuments.ts`が抽出した
+ * モジュール/レッスン/用語集ドキュメントを`lib/search/flexIndex.ts`と全く同じスキーマの
+ * Documentインデックスへ投入し、`export`したチャンクをそのままJSONとして書き出す
+ * (ブラウザ側は`lib/search/flexIndex.ts`のloadSearchIndexで同一スキーマから復元する)。
+ */
+export function generateSearchIndex(root: string): Record<Locale, SearchIndexExport> {
+  const result = {} as Record<Locale, SearchIndexExport>;
+  for (const locale of LOCALES) {
+    const index = createSearchIndex(locale);
+    for (const doc of buildSearchDocuments(root, locale)) {
+      addSearchDocument(index, locale, doc);
+    }
+    result[locale] = exportSearchIndex(index);
+  }
+  return result;
+}
+
 /** module.yamlのorder(ADR-009 §3.1: Free Tier境界。lib/contracts/access.tsと同じ定数値) */
 const FREE_TIER_MODULE_ORDER = 1;
 /** モジュール内でPreview対象になるレッスンのorder(各モジュール第1レッスンのみ) */
@@ -164,6 +190,9 @@ export function generateLessonPreview(root: string): Record<Locale, Record<strin
   return result;
 }
 
+/** 02§12-4「インデックス>5MBでサーバ検索移行を検討」の目安。ビルドは失敗させず警告のみ行う。 */
+const SEARCH_INDEX_WARN_BYTES = 5 * 1024 * 1024;
+
 function resolveArg(flag: string, fallback: string): string {
   const index = process.argv.indexOf(flag);
   const value = index !== -1 ? process.argv[index + 1] : undefined;
@@ -180,6 +209,7 @@ function main(): void {
   const exercises = generateExercises(root);
   const glossary = generateGlossary(root);
   const scenario = generateScenario(root);
+  const searchIndex = generateSearchIndex(root);
   const lessonPreview = generateLessonPreview(root);
 
   fs.mkdirSync(outDir, { recursive: true });
@@ -218,6 +248,20 @@ function main(): void {
     console.log(
       `演習データを書き出しました: ${exercisesOutPath}(${Object.keys(exercises[locale]).length}件)`,
     );
+
+    const searchIndexOutPath = path.join(outDir, `search-index.${locale}.json`);
+    const searchIndexJson = JSON.stringify(searchIndex[locale]);
+    fs.writeFileSync(searchIndexOutPath, searchIndexJson, "utf-8");
+    const searchIndexBytes = Buffer.byteLength(searchIndexJson, "utf-8");
+    console.log(
+      `検索インデックスを書き出しました: ${searchIndexOutPath}(${(searchIndexBytes / 1024).toFixed(1)}KB)`,
+    );
+    if (searchIndexBytes > SEARCH_INDEX_WARN_BYTES) {
+      console.warn(
+        `検索インデックス警告(${locale}): ${(searchIndexBytes / (1024 * 1024)).toFixed(2)}MBが02§12-4の目安5MBを` +
+          `超えています。静的FlexSearchからサーバ検索への移行を検討してください。`,
+      );
+    }
 
     const lessonPreviewOutPath = path.join(outDir, `lesson-preview.${locale}.json`);
     fs.writeFileSync(
