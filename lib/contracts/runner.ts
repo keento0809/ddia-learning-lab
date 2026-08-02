@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ExerciseAssertSchema } from "./exercise";
 
 /**
  * harness.worker.ts ⇄ jsRunner.ts(メインスレッド)間の postMessage コントラクト。
@@ -25,6 +26,20 @@ export type RunLogEntry = z.infer<typeof RunLogEntrySchema>;
  * メインスレッド → Worker。02 §7.1 手順1〜3。
  * 演習定義(lib/contracts/exercise.ts の ExerciseDefinition)から
  * code(ユーザー入力)・entry・tests・timeoutMsを合成して送信する。
+ *
+ * `tests[].fn`(任意): 02§5.3の演習定義における`call.fn`(テストごとの呼び出し対象
+ * export名)を伝搬するための追加フィールド。未指定時は`entry`を呼び出す
+ * (既存呼び出し元との後方互換性のため必須にはしない)。
+ * 演習の中には`entry`とは異なる補助関数をテスト対象にするものがあり
+ * (例: percentile-labのworstOfConcurrentCalls)、このフィールドが無いと
+ * harness.worker.tsは常に`entry`のみを呼び出してしまい誤判定になる。
+ *
+ * `tests[].assert`(任意): 02§5.3の演習定義における`assert`(equals/deepEquals/
+ * oneOf/matches)をそのまま伝搬するための追加フィールド。未指定時は既存の
+ * `expected`との単純deepEquals判定にフォールバックする(既存呼び出し元との
+ * 後方互換性のため必須にはしない)。指定時、harness.worker.tsは
+ * `lib/runner/grader.ts`の`evaluateAssert`で判定する(oneOf/matchesは
+ * `expected`単純比較では判定できないため)。
  */
 export const RunRequestSchema = z.object({
   code: z.string(),
@@ -32,8 +47,10 @@ export const RunRequestSchema = z.object({
   tests: z.array(
     z.object({
       id: z.string(),
+      fn: z.string().min(1).optional(),
       args: z.array(z.unknown()),
       expected: z.unknown(),
+      assert: ExerciseAssertSchema.optional(),
     }),
   ),
   timeoutMs: z.number().int().positive(),
