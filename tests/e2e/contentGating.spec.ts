@@ -18,23 +18,15 @@ import { test, expect, type Page } from "@playwright/test";
  * - 構造化データ(JSON-LD)の検証。リポジトリ全体を検索したがJSON-LD生成は
  *   どこにも実装されていない(ADR-009 §6/§7が言及する成果物が未着手)。存在しない
  *   ものを「検証済み」と報告することはできないため、この観点は対象外とする。
- * - モジュール1演習(percentile-lab)の「合格」判定。本ファイル執筆中に発見した
- *   既存バグにより対象外とする: `lib/runner/harness.worker.ts`の`runHarness`は
- *   `RunRequest.entry`(演習1個につき固定の単一関数名)を全テストケースに対して
- *   一律に呼び出す(`moduleExports[request.entry](...test.args)`、テストごとの
- *   関数名指定は見ない)。一方`content/ja/01-reliability/labs/percentile-lab.yaml`
- *   はt1-t5/t8が`percentile`、t6-t7が`worstOfConcurrentCalls`という2つの異なる
- *   関数を`call.fn`で呼び分ける設計になっており、模範解答
- *   (`labs/__solutions__/percentile-lab.solution.ts`)をそのままエディタに入力して
- *   実行しても、実際のブラウザ実行経路ではt6/t7が`percentile(...)`に誤った引数を
- *   渡す形になり必ず不合格になる(6/8）。`lib/lab/buildRunRequest.ts`のコメントが
- *   指す「grader.ts(oneOf/matches/property対応の完全な採点器)がharness.worker.tsに
- *   配線されていない」という既知ギャップ(T-107c決定事項ログ)の具体的な実害であり、
- *   content-authoring側のテスト(`percentile-lab.solution.test.ts`、`gradeExercise`
- *   経由でテストごとに正しい関数を解決する)は正しく合格するため、これまで気づかれて
- *   いなかった。テストファイルのみの変更に限定されるT-605のスコープでは修正できない
- *   (`lib/runner/harness.worker.ts`または`lib/contracts/runner.ts`、
- *   percentile-lab.yamlのいずれかの変更が必要)ため、別タスクとして報告する。
+ *
+ * 追記(2026-08-02): 本ファイル初回執筆時に発見した`lib/runner/harness.worker.ts`の
+ * バグ(`runHarness`が`RunRequest.entry`固定の単一関数のみを全テストケースに対して
+ * 呼び出し、`content/ja/01-reliability/labs/percentile-lab.yaml`のt6/t7が使う
+ * `worstOfConcurrentCalls`を無視していたため、模範解答を入力しても必ず6/8で
+ * 不合格になっていた問題)は、別タスクのPR #103(dispatch each test case to its own
+ * call.fn)・PR #105(wire grader.ts's oneOf/matches evaluation)でmainにマージ済み。
+ * 本ファイルもorigin/mainへのrebase後に実ブラウザ経由で8/8合格を再確認し、
+ * 以下の演習合格アサーションを復元した。
  */
 
 const MODULE_1_SLUG = "01-reliability";
@@ -131,13 +123,7 @@ test("未認証: モジュール1のレッスン4本を完走し、クイズに�
   expect(consoleErrors).toEqual([]);
 });
 
-test("未認証: モジュール1の演習ページはアクセス可能で、ドラフト自動保存が動作する", async ({ page }) => {
-  // 「演習に合格できる」までは検証しない: ファイル冒頭のコメントに記載した
-  // 既存バグ(harness.worker.tsが常にexercise.entryのみを呼び出し、
-  // percentile-lab.yamlのt6/t7が使う`worstOfConcurrentCalls`を無視する)により、
-  // 模範解答をそのまま入力しても実行結果は必ず6/8("不合格")になる。ここでは
-  // このバグの影響を受けない範囲(未認証でもページ・エディタ・自動保存・
-  // 未提出バナーが正しく機能すること)のみを検証する。
+test("未認証: モジュール1の演習に模範解答で合格できる(ドラフト自動保存を含む)", async ({ page }) => {
   await page.goto(`/ja/learn/${MODULE_1_SLUG}/lab/percentile-lab`);
   await expect(page.getByTestId("lab-workspace")).toBeVisible();
   await expect(page.getByTestId("content-wall")).toHaveCount(0);
@@ -150,16 +136,20 @@ test("未認証: モジュール1の演習ページはアクセス可能で、�
   );
 
   await page.getByTestId("lab-run-button").click();
-  // 上記の既知バグにより結果は「不合格」になるため合否は断定しない
-  // (components/lab/LabWorkspace.tsxのlab-submission-bannerはstatus==="passed"の
-  // 時のみ描画されるため、ここでは表示アサーションを行わない)。
-  // lab-status-message(components/lab/ResultPanel.tsx)は実行結果を受け取った後
-  // にのみ描画される(未実行時は`t.notRunYet`のプレースホルダのみ)ため、これが
-  // 表示されることをもって実行自体がエラーにならず完了したことを確認する。
-  // 未認証では`recordOutcome`(components/lab/LabWorkspace.tsx)がPOST
+  // percentile-lab.yamlはt1-t5/t8が`percentile`、t6-t7が`worstOfConcurrentCalls`を
+  // call.fnで呼び分ける(PR #103/#105でharness.worker.tsに配線済み)。8件全問を
+  // 明示的に確認することで、この配線が実ブラウザ経路で機能していることを保証する。
+  await expect(page.getByTestId("lab-status-message")).toHaveText("合格");
+  await expect(page.getByText("8/8 件のテストに合格")).toBeVisible();
+  // status==="passed"になるとlab-submission-bannerは認証状態に関わらず描画される
+  // (components/lab/LabWorkspace.tsx)。未認証時は`recordOutcome`がPOST
   // /api/submissions(worker-api経由Service Binding)を`if (!isAuthenticated) return;`
-  // で早期returnして一切呼ばないため、next dev下でも503を踏まずここまで到達できる。
-  await expect(page.getByTestId("lab-status-message")).toBeVisible();
+  // で早期returnし提出APIを一切呼ばない(=`submissionPhase`が"recorded"/"error"へ
+  // 遷移しない)ため、バナーは「サインインすると提出結果と進捗が記録されます」の
+  // ままとなり、next dev下でも503を踏まずここまで到達できる。
+  await expect(page.getByTestId("lab-submission-banner")).toHaveText(
+    "サインインすると提出結果と進捗が記録されます",
+  );
 });
 
 test("未認証: モジュール2の1レッスン目(Preview階層)は冒頭のみ表示しソフトウォールへフェードする", async ({
