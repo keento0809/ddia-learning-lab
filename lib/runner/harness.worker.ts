@@ -1,4 +1,5 @@
 import type { RunLogEntry, RunPerTestResult, RunRequest, RunResult } from "@/lib/contracts/runner";
+import { evaluateAssert } from "./grader";
 
 /**
  * サンドボックス実行ハーネス(T-107a)。
@@ -15,6 +16,14 @@ import type { RunLogEntry, RunPerTestResult, RunRequest, RunResult } from "@/lib
  * `call.fn`が`RunRequest.tests[].fn`として伝搬される、fix/grader-call-fn参照)。
  * `entry`自体は「モジュールが正しくロードできたか」を検証するチェックとして
  * 引き続き使う。
+ *
+ * 失敗→恒久対策(verify/grader-assert-wiring): `RunRequest.tests[].assert`が
+ * 指定されている場合、`lib/runner/grader.ts`の`evaluateAssert`(equals/deepEquals/
+ * oneOf/matches)で判定する。従来の内蔵`deepEquals`+`expected`比較はequals/
+ * deepEquals相当の判定しかできず、oneOf/matchesは`lib/lab/buildRunRequest.ts`が
+ * `UnsupportedExerciseTestCaseError`を投げて弾いていた(=採点器`grader.ts`の
+ * oneOf/matches実装が実Workerパスに一切配線されていなかった)。`assert`未指定時は
+ * 既存の`expected`ベース判定に完全フォールバックする(後方互換)。
  */
 
 // tsconfig の lib に webworker を含めていない(dom libとの型衝突を避けるため)ので
@@ -261,6 +270,15 @@ export async function runHarness(request: RunRequest, deps: HarnessDeps = {}): P
       }
       try {
         const actual = (fn as (...args: unknown[]) => unknown)(...test.args);
+        if (test.assert) {
+          const outcome = evaluateAssert(test.assert, actual);
+          return {
+            id: test.id,
+            pass: outcome.pass,
+            actual: safeStringify(actual),
+            error: outcome.error ?? outcome.diff,
+          };
+        }
         const pass = deepEquals(actual, test.expected);
         return { id: test.id, pass, actual: safeStringify(actual) };
       } catch (e) {
