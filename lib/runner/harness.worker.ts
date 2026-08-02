@@ -10,6 +10,11 @@ import type { RunLogEntry, RunPerTestResult, RunRequest, RunResult } from "@/lib
  * 純粋関数として検証できる(禁止トークン検出/console上限/結果サイズ上限/
  * import失敗時のエラー返送)。実運用の worker スコープ配線は末尾の
  * `ctx.onmessage` のみが担う。
+ *
+ * テストごとの呼び出し対象は`test.fn`(省略時は`entry`)で決まる(02§5.3の
+ * `call.fn`が`RunRequest.tests[].fn`として伝搬される、fix/grader-call-fn参照)。
+ * `entry`自体は「モジュールが正しくロードできたか」を検証するチェックとして
+ * 引き続き使う。
  */
 
 // tsconfig の lib に webworker を含めていない(dom libとの型衝突を避けるため)ので
@@ -238,8 +243,8 @@ export async function runHarness(request: RunRequest, deps: HarnessDeps = {}): P
       });
     }
 
-    const fn = moduleExports[request.entry];
-    if (typeof fn !== "function") {
+    const entryFn = moduleExports[request.entry];
+    if (typeof entryFn !== "function") {
       return truncateResult({
         result: "error",
         error: `エクスポート関数 "${request.entry}" が見つかりません`,
@@ -249,6 +254,11 @@ export async function runHarness(request: RunRequest, deps: HarnessDeps = {}): P
     }
 
     const perTest: RunPerTestResult[] = request.tests.map((test) => {
+      const fnName = test.fn ?? request.entry;
+      const fn = fnName === request.entry ? entryFn : moduleExports[fnName];
+      if (typeof fn !== "function") {
+        return { id: test.id, pass: false, error: `エクスポート関数 "${fnName}" が見つかりません` };
+      }
       try {
         const actual = (fn as (...args: unknown[]) => unknown)(...test.args);
         const pass = deepEquals(actual, test.expected);

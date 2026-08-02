@@ -25,6 +25,13 @@ export type RunLogEntry = z.infer<typeof RunLogEntrySchema>;
  * メインスレッド → Worker。02 §7.1 手順1〜3。
  * 演習定義(lib/contracts/exercise.ts の ExerciseDefinition)から
  * code(ユーザー入力)・entry・tests・timeoutMsを合成して送信する。
+ *
+ * `tests[].fn`(任意): 02§5.3の演習定義における`call.fn`(テストごとの呼び出し対象
+ * export名)を伝搬するための追加フィールド。未指定時は`entry`を呼び出す
+ * (既存呼び出し元との後方互換性のため必須にはしない)。
+ * 演習の中には`entry`とは異なる補助関数をテスト対象にするものがあり
+ * (例: percentile-labのworstOfConcurrentCalls)、このフィールドが無いと
+ * harness.worker.tsは常に`entry`のみを呼び出してしまい誤判定になる。
  */
 export const RunRequestSchema = z.object({
   code: z.string(),
@@ -32,6 +39,7 @@ export const RunRequestSchema = z.object({
   tests: z.array(
     z.object({
       id: z.string(),
+      fn: z.string().min(1).optional(),
       args: z.array(z.unknown()),
       expected: z.unknown(),
     }),

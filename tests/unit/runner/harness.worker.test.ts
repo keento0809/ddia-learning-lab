@@ -160,6 +160,89 @@ describe("runHarness: pass/fail 判定", () => {
   });
 });
 
+describe("runHarness: test.fnによる呼び出し先の振り分け(02§5.3 call.fn)", () => {
+  it("各テストがtest.fnで指定した別々のexport関数を呼び出す(entry以外への振り分け)", async () => {
+    const loadModule = async () => ({
+      percentile: (values: number[]) => Math.max(...values),
+      worstOfConcurrentCalls: (values: number[]) => Math.min(...values),
+    });
+
+    const result = await runHarness(
+      baseRequest({
+        entry: "percentile",
+        tests: [
+          { id: "t1", fn: "percentile", args: [[1, 5, 9]], expected: 9 },
+          { id: "t2", fn: "worstOfConcurrentCalls", args: [[1, 5, 9]], expected: 1 },
+        ],
+      }),
+      { loadModule },
+    );
+
+    expect(result.result).toBe("pass");
+    if (result.result === "pass" || result.result === "fail") {
+      expect(result.perTest).toEqual([
+        { id: "t1", pass: true, actual: "9" },
+        { id: "t2", pass: true, actual: "1" },
+      ]);
+    }
+  });
+
+  it("test.fn省略時はentryを呼び出す(後方互換)", async () => {
+    const result = await runHarness(
+      baseRequest({
+        entry: "f",
+        tests: [{ id: "t1", args: [2], expected: 4 }],
+      }),
+      { loadModule: async () => ({ f: (n: number) => n * 2 }) },
+    );
+
+    expect(result.result).toBe("pass");
+  });
+
+  it("誤ってentryを呼んでいたら失敗するはずのテストが、正しいfnにより合格する(バグ再現の反例)", async () => {
+    // entryは"percentile"だが、このテストはentryではなく"worstOfConcurrentCalls"を
+    // 対象にしている。もしharnessが(修正前のように)常にentryだけを呼んでいたら、
+    // percentile([1,5,9]) === 9 になり expected(1) と一致せず fail するはず。
+    const loadModule = async () => ({
+      percentile: (values: number[]) => Math.max(...values),
+      worstOfConcurrentCalls: (values: number[]) => Math.min(...values),
+    });
+
+    const result = await runHarness(
+      baseRequest({
+        entry: "percentile",
+        tests: [{ id: "t1", fn: "worstOfConcurrentCalls", args: [[1, 5, 9]], expected: 1 }],
+      }),
+      { loadModule },
+    );
+
+    expect(result.result).toBe("pass");
+  });
+
+  it("test.fnが指す関数が存在しない場合、そのテストだけpass:falseになり他のテストは継続する", async () => {
+    const result = await runHarness(
+      baseRequest({
+        entry: "f",
+        tests: [
+          { id: "t1", fn: "missingHelper", args: [], expected: 1 },
+          { id: "t2", fn: "f", args: [2], expected: 4 },
+        ],
+      }),
+      { loadModule: async () => ({ f: (n: number) => n * 2 }) },
+    );
+
+    expect(result.result).toBe("fail");
+    if (result.result === "pass" || result.result === "fail") {
+      expect(result.perTest[0]).toEqual({
+        id: "t1",
+        pass: false,
+        error: 'エクスポート関数 "missingHelper" が見つかりません',
+      });
+      expect(result.perTest[1]).toEqual({ id: "t2", pass: true, actual: "4" });
+    }
+  });
+});
+
 describe("truncateResult: 結果サイズ上限", () => {
   it("returns the result unchanged when within the size limit", () => {
     const result: RunResult = {
