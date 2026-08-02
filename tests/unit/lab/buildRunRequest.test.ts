@@ -30,11 +30,35 @@ describe("buildRunRequest", () => {
       code: "code",
       entry: "percentile",
       tests: [
-        { id: "t1", args: [[1, 2, 3, 4, 5], 50], expected: 3 },
-        { id: "t2", args: [[1, 2], 100], expected: 2 },
+        { id: "t1", fn: "percentile", args: [[1, 2, 3, 4, 5], 50], expected: 3 },
+        { id: "t2", fn: "percentile", args: [[1, 2], 100], expected: 2 },
       ],
       timeoutMs: 3000,
     });
+  });
+
+  it("passes through call.fn even when it targets a helper function other than entry", () => {
+    const exercise: ExerciseDefinition = {
+      ...BASE,
+      tests: [
+        {
+          id: "t1",
+          call: { fn: "percentile", args: [[1, 2, 3], 50] },
+          assert: { type: "equals", value: 2 },
+        },
+        {
+          id: "t2",
+          call: { fn: "worstOfConcurrentCalls", args: [[10, 20, 30]] },
+          assert: { type: "equals", value: 30 },
+        },
+      ],
+    };
+
+    const request = buildRunRequest(exercise, "code");
+    expect(request.tests).toEqual([
+      { id: "t1", fn: "percentile", args: [[1, 2, 3], 50], expected: 2 },
+      { id: "t2", fn: "worstOfConcurrentCalls", args: [[10, 20, 30]], expected: 30 },
+    ]);
   });
 
   it("throws UnsupportedExerciseTestCaseError for oneOf assert test cases", () => {

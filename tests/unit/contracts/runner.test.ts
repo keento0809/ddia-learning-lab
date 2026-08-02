@@ -21,6 +21,36 @@ describe("RunRequestSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("accepts an optional per-test fn that differs from entry (02§5.3 call.fn dispatch)", () => {
+    const result = RunRequestSchema.safeParse({
+      code: "export function put(k, v) {} export function get(k) {}",
+      entry: "put",
+      tests: [{ id: "t1", fn: "get", args: ["a"], expected: 1 }],
+      timeoutMs: 3000,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("still parses tests without fn (backward-compatible default to entry)", () => {
+    const result = RunRequestSchema.safeParse({
+      code: "export function put(k, v) { return v; }",
+      entry: "put",
+      tests: [{ id: "t1", args: ["a", 1], expected: 1 }],
+      timeoutMs: 3000,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an empty-string fn", () => {
+    const result = RunRequestSchema.safeParse({
+      code: "export function put() {}",
+      entry: "put",
+      tests: [{ id: "t1", fn: "", args: [], expected: 1 }],
+      timeoutMs: 3000,
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("RunResultSchema", () => {

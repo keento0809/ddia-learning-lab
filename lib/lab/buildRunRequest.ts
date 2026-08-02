@@ -3,7 +3,7 @@ import type { RunRequest } from "@/lib/contracts/runner";
 
 /**
  * `ExerciseDefinition.tests`(02§5.3、equals/deepEquals/oneOf/matches/property)を
- * `RunRequest.tests`(02§7.1、{id,args,expected}による単純deepEquals)へ変換する。
+ * `RunRequest.tests`(02§7.1、{id,fn?,args,expected}による単純deepEquals)へ変換する。
  *
  * **既知の制約(設計との差異)**: `harness.worker.ts`(T-107a)/`RunRequestSchema`
  * (T-010,契約のため変更禁止)は現時点で `expected` との単純deepEquals判定のみを
@@ -13,6 +13,12 @@ import type { RunRequest } from "@/lib/contracts/runner";
  * このため本関数は`equals`/`deepEquals`のテストケースのみをサポートし、
  * 対応できないテストケース(oneOf/matches/property)が含まれる演習を渡された
  * 場合は、合否を偽装せず`UnsupportedExerciseTestCaseError`を投げる。
+ *
+ * `call.fn`は`RunRequest.tests[].fn`にそのまま伝搬する(`RunRequestSchema`の
+ * 追加フィールド、fix/grader-call-fn参照)。`entry`と同名の場合も明示的に渡す
+ * (呼び出し側`harness.worker.ts`が`fn ?? entry`でフォールバックするため、
+ * 一致時に省略しても動作は変わらないが、`call.fn`が採点対象を一意に指定する
+ * という契約をここで曖昧にしないため常に渡す)。
  */
 export class UnsupportedExerciseTestCaseError extends Error {
   constructor(public readonly unsupportedTestIds: string[]) {
@@ -36,7 +42,12 @@ export function buildRunRequest(exercise: ExerciseDefinition, code: string): Run
       unsupported.push(testCase.id);
       continue;
     }
-    tests.push({ id: testCase.id, args: testCase.call.args, expected: testCase.assert.value });
+    tests.push({
+      id: testCase.id,
+      fn: testCase.call.fn,
+      args: testCase.call.args,
+      expected: testCase.assert.value,
+    });
   }
 
   if (unsupported.length > 0) {
