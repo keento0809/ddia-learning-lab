@@ -67,3 +67,4 @@ Thumbs.db
 *.swo
 lib/generated/
 .worker-dryrun/
+docs/security/findings.md
