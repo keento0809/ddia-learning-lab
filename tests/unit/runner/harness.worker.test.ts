@@ -498,8 +498,12 @@ describe("createOnMessageHandler: タイムアウトの二重化(内部協調タ
 
   it("タイムアウト: request.timeoutMs以内にrunHarnessが解決しない場合、自発的にtimeout結果を1回だけpostMessageする", async () => {
     const postMessage = vi.fn();
-    const neverResolves = new Promise<Record<string, unknown>>(() => {});
-    const handler = createOnMessageHandler({ loadModule: () => neverResolves }, postMessage);
+    // 恒久的に未解決のPromiseではなく、テスト末尾で明示的に解決させる(下記参照)。
+    let resolveLoadModule: ((value: Record<string, unknown>) => void) | undefined;
+    const stalledUntilResolved = new Promise<Record<string, unknown>>((resolve) => {
+      resolveLoadModule = resolve;
+    });
+    const handler = createOnMessageHandler({ loadModule: () => stalledUntilResolved }, postMessage);
 
     handler({ data: baseRequest({ timeoutMs: 3000 }) });
 
@@ -513,6 +517,15 @@ describe("createOnMessageHandler: タイムアウトの二重化(内部協調タ
     // ハングしていたPromiseがその後解決しても、二重postMessageされないこと。
     await vi.advanceTimersByTimeAsync(10_000);
     expect(postMessage).toHaveBeenCalledTimes(1);
+
+    // T-705(恒久対策): このPromiseを解決しないまま放置すると、バックグラウンドで
+    // 待機し続けているrunHarness()のfinallyブロック(disableDangerousGlobalsの復元)が
+    // 永久に実行されず、危険グローバルの無効化状態が本テストプロセス内の以降の
+    // テストへリークする(実運用ではWorkerごと使い捨てのため無害だが、本テストは
+    // in-processでrunHarnessを呼ぶため影響が残る)。テスト末尾で解決させ、
+    // 保留中だったrunHarnessを正常終了させてグローバルを復元させる。
+    resolveLoadModule?.({ f: () => 1 });
+    await vi.runAllTimersAsync();
   });
 
   it("タイムアウト後にrunHarnessが遅れて解決しても、後発の結果でtimeout結果が上書きされない", async () => {

