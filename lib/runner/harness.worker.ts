@@ -34,10 +34,6 @@ import { evaluateAssert } from "./grader";
 type WorkerScope = {
   postMessage: (message: RunResult) => void;
   onmessage: ((event: { data: RunRequest }) => void) | null;
-  fetch?: unknown;
-  XMLHttpRequest?: unknown;
-  WebSocket?: unknown;
-  importScripts?: unknown;
 };
 
 const ctx = globalThis as unknown as WorkerScope;
@@ -46,14 +42,29 @@ const ctx = globalThis as unknown as WorkerScope;
  * 禁止トークン検出(02§7.1 手順1)。
  * 単純な部分一致ではなく呼び出し形/単語境界で判定する(※テンプレ許可制:
  * `prefetchData` のような無関係な識別子や、コメント中の言及を誤検知しない)。
+ *
+ * T-705(findings.md Critical/High対応): 静的検出は多層防御の1層目に過ぎず、
+ * 単独では回避可能(ブラケット表記・間接呼び出し等)なため、真の防御は
+ * `disableDangerousGlobals`のプロトタイプチェーン走査と
+ * `neutralizeFunctionConstructorBacklinks`が担う。ここでの追加ルールは
+ * 既知の回避パターンを早期に拒否し利用者に明確なエラーを返すための
+ * 補助的なレイヤー。
  */
 const FORBIDDEN_TOKEN_RULES: { token: string; pattern: RegExp }[] = [
   { token: "importScripts", pattern: /\bimportScripts\b/ },
   { token: "fetch", pattern: /\bfetch\s*\(/ },
   { token: "XMLHttpRequest", pattern: /\bXMLHttpRequest\b/ },
+  { token: "WebSocket", pattern: /\bWebSocket\b/ },
+  { token: "indexedDB", pattern: /\bindexedDB\b/ },
   { token: "Atomics.wait", pattern: /\bAtomics\s*\.\s*wait\b/ },
   { token: "eval", pattern: /\beval\s*\(/ },
+  { token: "indirect eval", pattern: /\(\s*0\s*,\s*eval\s*\)/ },
   { token: "new Function", pattern: /\bnew\s+Function\b/ },
+  { token: "Function", pattern: /\bFunction\s*\(/ },
+  { token: "constructor.constructor", pattern: /\.constructor\s*\.\s*constructor\b/ },
+  { token: "new Worker", pattern: /\bnew\s+Worker\b/ },
+  { token: "Worker", pattern: /\bWorker\s*\(/ },
+  { token: "import()", pattern: /\bimport\s*\(/ },
 ];
 
 export function checkForbiddenTokens(code: string): string | null {
@@ -65,30 +76,124 @@ export function checkForbiddenTokens(code: string): string | null {
   return null;
 }
 
-/** 危険なグローバルの無効化(02§7.1 手順2「self.fetch等をundefinedに上書き」)。復元関数を返す。 */
-function disableDangerousGlobals(): () => void {
-  const original = {
-    fetch: ctx.fetch,
-    XMLHttpRequest: ctx.XMLHttpRequest,
-    WebSocket: ctx.WebSocket,
-    importScripts: ctx.importScripts,
-  };
-  const keys = Object.keys(original) as (keyof typeof original)[];
-  for (const key of keys) {
-    try {
-      ctx[key] = undefined;
-    } catch {
-      // read-only環境では無視(既定でundefinedの場合もある)
+/**
+ * 無効化対象のグローバルキー(T-705、findings.md Critical SB-1/SB-2/SB-4対応)。
+ * fetch/XMLHttpRequest/WebSocket/importScriptsに加え、`new Worker(...)`による
+ * ネストWorker経由の回避(findings.md #1関連事項)を塞ぐためWorkerも対象にし、
+ * ADR-010 §3.1の記述誤り(findings.md #6, SB-7)を是正するためindexedDBも追加する。
+ * eval/Functionもここで一元的に扱うことで、`(0, eval)(...)`や
+ * `Function("return this")()`のような識別子解決経由の回避(findings.md #2, SB-3)も
+ * 同じ機構(下記`neutralizeGlobalKey`)で閉じる。
+ */
+const DANGEROUS_GLOBAL_KEYS = [
+  "fetch",
+  "XMLHttpRequest",
+  "WebSocket",
+  "importScripts",
+  "Worker",
+  "indexedDB",
+  "eval",
+  "Function",
+] as const;
+
+/**
+ * `[].constructor.constructor(...)`のようにグローバル識別子を一切参照せず
+ * Function相当のコンストラクタへ到達する経路(findings.md #2)を閉じるため、
+ * 4つの関数系統(通常関数/ジェネレータ/async関数/asyncジェネレータ)の
+ * prototype.constructorバックリンクを無効化する。ユーザーコード実行**前**に
+ * (=まだ何も無効化していない状態で)構文で直接取得するため、globalThisの
+ * `Function`識別子ルックアップに依存しない。
+ */
+const FUNCTION_SPECIES_PROTOTYPES: object[] = [
+  Object.getPrototypeOf(function () {}) as object,
+  Object.getPrototypeOf(function* () {}) as object,
+  Object.getPrototypeOf(async function () {}) as object,
+  Object.getPrototypeOf(async function* () {}) as object,
+];
+
+function collectPrototypeChain(root: object): object[] {
+  const chain: object[] = [];
+  let current: object | null = root;
+  while (current) {
+    chain.push(current);
+    current = Object.getPrototypeOf(current) as object | null;
+  }
+  return chain;
+}
+
+/**
+ * `chain`中の**全ての階層**で`key`をown propertyとして無効化し、復元関数を返す。
+ * 従来実装(`ctx[key] = undefined`)は`ctx`自身にshadowing用のown propertyを
+ * 新規作成するだけで、prototype上(実ブラウザのWorkerGlobalScope.prototype等)に
+ * 残る元の実装には触れられなかった(findings.md #1の原因そのもの)。
+ * ここでは`Object.getOwnPropertyDescriptor`で実際に定義されている階層を特定し、
+ * その階層自体を書き換える。
+ */
+function neutralizeGlobalKey(chain: object[], key: string): () => void {
+  const restorers: (() => void)[] = [];
+  for (const target of chain) {
+    const descriptor = Object.getOwnPropertyDescriptor(target, key);
+    if (!descriptor) continue;
+    if (descriptor.configurable) {
+      Object.defineProperty(target, key, {
+        configurable: true,
+        enumerable: descriptor.enumerable,
+        writable: true,
+        value: undefined,
+      });
+      restorers.push(() => Object.defineProperty(target, key, descriptor));
+    } else if (descriptor.writable) {
+      const original = (target as Record<string, unknown>)[key];
+      (target as Record<string, unknown>)[key] = undefined;
+      restorers.push(() => {
+        (target as Record<string, unknown>)[key] = original;
+      });
     }
+    // configurable:false かつ writable:false は通常発生しない(組み込みグローバルは
+    // 通常configurable)。この場合は無効化不能だが、そのようなプロパティは存在しない。
   }
   return () => {
-    for (const key of keys) {
-      try {
-        ctx[key] = original[key];
-      } catch {
-        // noop
-      }
-    }
+    for (const restore of restorers.reverse()) restore();
+  };
+}
+
+function neutralizeFunctionConstructorBacklinks(): () => void {
+  const restorers: (() => void)[] = [];
+  for (const proto of FUNCTION_SPECIES_PROTOTYPES) {
+    const descriptor = Object.getOwnPropertyDescriptor(proto, "constructor");
+    if (!descriptor || !descriptor.configurable) continue;
+    Object.defineProperty(proto, "constructor", {
+      configurable: true,
+      enumerable: descriptor.enumerable,
+      writable: true,
+      value: undefined,
+    });
+    restorers.push(() => Object.defineProperty(proto, "constructor", descriptor));
+  }
+  return () => {
+    for (const restore of restorers.reverse()) restore();
+  };
+}
+
+/**
+ * 危険なグローバルの無効化(02§7.1 手順2)。
+ * T-705(findings.md Critical #1/#2対応、恒久対策): 単純なown property上書きは
+ * 「prototypeチェーン上の元の実装は無傷のまま残る」という穴があった
+ * (実ブラウザのWorkerGlobalScope.prototype.fetch等)。`globalThis`自身を起点に
+ * プロトタイプチェーン全体を辿り、各対象キーが実際に定義されている**その階層**を
+ * 直接書き換えることで、`Object.getPrototypeOf(self).fetch`・
+ * `self.constructor.prototype.fetch`・`Reflect.get`等どの経路で参照しても
+ * 元の実装へ到達できないようにする。加えてFunctionコンストラクタへの
+ * `.constructor.constructor`経由の到達(識別子`Function`/`eval`を一切使わない
+ * 回避)も同時に閉じる。復元関数を返す。
+ */
+function disableDangerousGlobals(): () => void {
+  const chain = collectPrototypeChain(ctx as unknown as object);
+  const restoreKeys = DANGEROUS_GLOBAL_KEYS.map((key) => neutralizeGlobalKey(chain, key));
+  const restoreConstructorBacklinks = neutralizeFunctionConstructorBacklinks();
+  return () => {
+    restoreConstructorBacklinks();
+    for (const restore of restoreKeys.reverse()) restore();
   };
 }
 
