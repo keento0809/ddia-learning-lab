@@ -27,6 +27,8 @@
     "test:integration": "bash scripts/test-integration.sh",
     "pretest:workers": "npm run generate:curriculum -- --root tests/fixtures/content/valid && npm run validate:content -- --root tests/fixtures/content/valid",
     "test:workers": "bash scripts/test-workers.sh",
+    "pretest:security": "npm run generate:curriculum && npm run validate:content",
+    "test:security": "bash scripts/test-security.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
