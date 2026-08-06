@@ -110,6 +110,48 @@ jobs:
       - run: npm ci
       - run: npm run validate:content
 
+  # T-701(ADR-011 §3.5 DP-1): 依存関係の既知脆弱性スキャン。high/critical検出時に
+  # 失敗させる(検出ゼロを目指して閾値を緩めることは禁止、ADR-011 §4)。
+  npm-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - run: npm audit --audit-level=high
+
+  # T-701(ADR-011 §3.5 DP-2): リポジトリ全履歴のシークレットスキャン。fetch-depth: 0で
+  # 全コミット履歴を取得しないとgitleaksが浅いチェックアウトしか見られない。
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # T-701(ADR-011 §3.5): GitHub Actions公式CodeQLによるJavaScript/TypeScript静的解析。
+  # build-mode: noneはJS/TS解析がコンパイル不要なため(GitHub公式のデフォルト設定に準拠)。
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          build-mode: none
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
   # ADR-008(09) §2・T-504: worker-apiが「service binding経由のみ到達可能な非公開Worker」
   # であることの恒常検証。workers_devの既定値はtrue(未指定でも公開されてしまう)なので、
   # 設定ミスの再発を防ぐガードレールとして毎回(push/PR問わず)実行する。ビルド不要の
