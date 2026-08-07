@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "@/lib/i18n/routing";
 import { getClientIp, isRateLimited } from "@/lib/auth/rateLimit";
+import { buildMainPageCsp } from "@/lib/security/csp";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -35,7 +36,14 @@ export default function middleware(request: NextRequest) {
     }
     return NextResponse.next();
   }
-  return intlMiddleware(request);
+  const response = intlMiddleware(request);
+  // T-704(ADR-010 §3.4 CF-1): この分岐は`config.matcher`によりページルートのみに
+  // 絞られている(/api(/api/authを除く)・_next・拡張子付き静的アセットは対象外)ため、
+  // ここでCSPを付与すれば実質的に全ページに適用される。演習実行Worker
+  // (harness.worker.ts等)には別の、より厳格なCSP(connect-src 'none')を
+  // `_headers`経由で適用する(scripts/generate-worker-csp-headers.mjs)。
+  response.headers.set("Content-Security-Policy", buildMainPageCsp());
+  return response;
 }
 
 export const config = {
