@@ -116,4 +116,19 @@ describe("AU-9: 検索インデックスのGated本文スニペット漏洩", ()
         JSON.stringify(leakingFiles),
     ).toEqual([]);
   });
+
+  it(
+    "情報: middleware.tsのmatcherは`_next/*`を構造的に除外しており、_next/static/chunks/配下への" +
+      "リクエストにはアプリ側の認可ロジック(next-intlミドルウェア含む)が一切実行されない" +
+      "(ソースコード上の事実。Cloudflare Workers Static Assetsの既定動作(run_worker_first未設定)と" +
+      "合わせ、当該チャンクはWorker本体を経由せず配信される=デプロイ後も同じ結論になる。T-703由来のテスト:" +
+      "T-705の修正はこの構造的事実自体を変更するものではなく、認証状態で本文を出し分ける設計を廃止する" +
+      "ことで漏洩経路を断ったものであるため、この事実確認テストは引き続き有効)",
+    () => {
+      const middlewareSource = readFileSync(path.join(repoRoot, "middleware.ts"), "utf-8");
+      expect(middlewareSource).toMatch(/_next/);
+      const appWranglerSource = readFileSync(path.join(repoRoot, "wrangler.jsonc"), "utf-8");
+      expect(appWranglerSource).not.toMatch(/run_worker_first/);
+    },
+  );
 });
