@@ -3,23 +3,23 @@ import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /**
- * T-705 Medium #4(docs/security/findings.md)修正の再侵入テスト(実workerd)。
+ * T-705(docs/security/findings.md 所見1)修正の再侵入テスト(実workerd)。
  *
- * lib/auth/rateLimit.tsのgetClientIp()は`cf-connecting-ip`を最優先で信頼する。
- * 本番Cloudflareのエッジは実クライアント接続元IPでこのヘッダを必ず上書きする
- * (と一般に文書化されている)という前提のもとでは安全なはずだが、`npm run preview`
- * (実workerd)自体がこの前提を満たすローカル環境かどうかは別問題である。
+ * 元の再侵入テスト(所見1発見時点)は、生ヘッダをそのまま返すだけの最小Workerで
+ * 「`cf-connecting-ip`ヘッダが実workerdで一切上書きされずそのまま透過する」ことを
+ * 確認するものだった。本ファイルはT-705ハードニングでこのプローブWorkerを、実際に
+ * アプリが使う`lib/auth/rateLimit.ts`の`getClientIp()`をそのままバンドルして実行する
+ * ものに差し替え、修正で実際に閉じた経路(`x-forwarded-for`フォールバック・非IP値の
+ * 注入)が実workerd上でも防御成立に転じたことを検証する。
  *
- * `npm run preview`(opennextjs-cloudflare preview)はローカルに`.env`が存在すると
- * `scripts/check-no-local-env-for-worker-build.mjs`(T-705の別修正)がビルドを
- * 停止するため、アプリ本体を経由した実機検証が困難な場合がある。本テストは
- * アプリのビルドを経由せず、本プロジェクトが依存する実wrangler(package.jsonの
- * devDependenciesと同一バージョン)でリクエストヘッダをそのまま返す最小Workerを
- * `wrangler dev --local`(実workerd)で起動し、`cf-connecting-ip`ヘッダが
- * クライアント側から上書きされずに透過することを直接確認する。これはNext.js/
- * OpenNextアダプタ層のコードとは独立したworkerdローカルシミュレータ自体の
- * 仕様であるため、アプリ本体でも同様に再現すると判断できる(docs/security/
- * findings.md 所見1参照)。
+ * 一方、`cf-connecting-ip`ヘッダそのものの信頼性(本番Cloudflareエッジが実接続元IPで
+ * 必ず上書きするという保証)は、Workerアプリケーションコード側で代替できる非スプーフ
+ * 可能な識別子がCloudflare Workersランタイムに存在しないため(`request.cf`はIPを含まず、
+ * Rate Limiting APIバインディングの`key`は呼び出し側指定でIP自動抽出機構が無い。
+ * lib/auth/rateLimit.ts getClientIpのコメント参照)、実装修正では解消できない
+ * デプロイトポロジ上の性質である。`wrangler dev --local`はこの保証が成立する対象
+ * (本番Cloudflareエッジ)ではないため、この一点については引き続き透過することを
+ * 「既知の残存挙動」として明示的に記録する(期待値を偽って「防御成立」と主張しない)。
  */
 describe("T-705再侵入テスト(実workerd): cf-connecting-ipヘッダのクライアント偽装可能性", () => {
   const port = 18000 + Math.floor(Math.random() * 2000);
@@ -54,23 +54,42 @@ describe("T-705再侵入テスト(実workerd): cf-connecting-ipヘッダのク�
     child?.kill();
   });
 
-  it("突破: クライアントが送ったcf-connecting-ipが実workerdで一切上書きされずそのまま透過する", async () => {
+  it("防御成立(T-705修正): cf-connecting-ipが無い接続では、X-Forwarded-Forを1リクエストごとに変えてもgetClientIp()の結果は変化しない(実workerdが自ら補う接続元情報のみが使われ、X-Forwarded-Forの値は一切反映されない)", async () => {
+    const resA = await fetch(`http://localhost:${port}/`, {
+      headers: { "x-forwarded-for": "6.6.6.6" },
+    });
+    const resB = await fetch(`http://localhost:${port}/`, {
+      headers: { "x-forwarded-for": "9.9.9.9" },
+    });
+    const bodyA = (await resA.json()) as { clientIp: string };
+    const bodyB = (await resB.json()) as { clientIp: string };
+    expect(bodyA.clientIp).toBe(bodyB.clientIp);
+    expect(bodyA.clientIp).not.toBe("6.6.6.6");
+    expect(bodyA.clientIp).not.toBe("9.9.9.9");
+  });
+
+  it("防御成立(T-705修正): IPとして妥当な形をしていないcf-connecting-ip値(注入・ゴミ値)はgetClientIp()に採用されず固定値unknownを返す", async () => {
+    const res = await fetch(`http://localhost:${port}/`, {
+      headers: { "cf-connecting-ip": "not-an-ip; DROP TABLE users" },
+    });
+    const body = (await res.json()) as { clientIp: string };
+    expect(body.clientIp).toBe("unknown");
+  });
+
+  it("既知の残存挙動(実装では解消不可、デプロイトポロジに依存): 形式上妥当なcf-connecting-ipは実workerdでも透過するため、getClientIp()はそのままこれを採用する。本番Cloudflareエッジはこのヘッダを実接続元IPで上書きするため到達しないが、その保証はローカル実行環境には及ばない(docs/security/findings.md 所見1)", async () => {
     const spoofedIp = "6.6.6.6";
     const res = await fetch(`http://localhost:${port}/`, {
       headers: { "cf-connecting-ip": spoofedIp },
     });
-    const body = (await res.json()) as { cfConnectingIp: string | null };
-    // 本番Cloudflareエッジであればここは実クライアントIPへ上書きされ、spoofedIpとは
-    // 一致しないはずである。実workerd(wrangler dev --local)ではその上書きが
-    // 行われないため、getClientIp()が最優先で信頼するこのヘッダ自体が
-    // クライアント制御下にあることになる。
+    const body = (await res.json()) as { cfConnectingIp: string | null; clientIp: string };
     expect(body.cfConnectingIp).toBe(spoofedIp);
+    expect(body.clientIp).toBe(spoofedIp);
   });
 
-  it("参考: cf-connecting-ipを送らない場合はループバックアドレスが入る(ヘッダ自体は存在する)", async () => {
+  it("参考: ヘッダを一切送らない場合、getClientIp()は実workerdが接続ごとに補うcf-connecting-ip(ループバック)を返す(x-forwarded-forへのフォールバックが無いことの対照確認)", async () => {
     const res = await fetch(`http://localhost:${port}/`);
-    const body = (await res.json()) as { cfConnectingIp: string | null };
-    expect(body.cfConnectingIp).not.toBeNull();
-    expect(body.cfConnectingIp).not.toBe("6.6.6.6");
+    const body = (await res.json()) as { cfConnectingIp: string | null; clientIp: string };
+    expect(body.clientIp).not.toBe("unknown");
+    expect(body.clientIp).toBe(body.cfConnectingIp);
   });
 });
