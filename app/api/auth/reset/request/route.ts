@@ -5,14 +5,16 @@ import { problemResponse } from "@/lib/auth/http";
 /**
  * パスワードリセット要求。メール送信基盤(ADR-007に定義なし、07人間作業
  * チェックリストにもSMTP系の秘密情報記載なし)が本プロジェクトに存在しないため、
- * 「メールを送信した」という偽の成功文言は出さず(CLAUDE.md規則3)、
- * リセットリンクをレスポンスとして直接返す設計とする。
- * 該当ユーザーが存在しない場合もリンクを返さず200を返し(メールアドレス列挙対策)、
- * UI側は常に同一の案内を表示する。
+ * T-705(docs/security/findings.md Critical #1)でworker-api側
+ * (workers/api/src/routes/internalAuth.ts `/internal/auth/reset-request`)が
+ * resetTokenを一切発行・返却しない実装に修正済み(以前はレスポンスへ直接
+ * トークンを返しており、メールアドレスを知るだけの第三者がアカウントを
+ * 乗っ取れる認証バイパスだった)。メール送信基盤が導入されるまでリセット完了
+ * フローは実質的に無効化されている。該当ユーザーの存在有無にかかわらず
+ * 常に同一の応答を返す(メールアドレス列挙対策)。
  *
- * ADR-008(docs/design/09) §2・§4 T-503: ユーザー検索・トークン発行(Prisma操作+
- * AUTH_SECRET署名)はworker-apiの`/internal/auth/reset-request`へ移設した。
- * このRoute Handlerは薄いフォワーダ。
+ * ADR-008(docs/design/09) §2・§4 T-503: ユーザー検索はworker-apiの
+ * `/internal/auth/reset-request`へ移設した。このRoute Handlerは薄いフォワーダ。
  */
 export async function POST(request: NextRequest) {
   let body: unknown;

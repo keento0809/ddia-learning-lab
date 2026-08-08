@@ -45,13 +45,23 @@ export async function verifyCredentialsViaWorkerApi(
   return (await response.json()) as WorkerApiUserSummary;
 }
 
+/**
+ * T-705 Medium #3(docs/security/findings.md): worker-apiの`/internal/auth/
+ * oauth-upsert`は、email一致のみでの既存アカウントへの無条件自動リンクを
+ * 廃止し、リンク不能な場合は409を返すようになった(workers/api/src/routes/
+ * internalAuth.ts参照)。呼び出し元(lib/auth/config.tsのjwtコールバック)が
+ * サインインを失敗させられるよう、200以外はnullを返す。
+ */
 export async function oauthUpsertViaWorkerApi(input: {
   provider: string;
   providerAccountId: string;
   email: string;
   name?: string | null;
-}): Promise<WorkerApiUserSummary> {
+}): Promise<WorkerApiUserSummary | null> {
   const response = await callWorkerApiAuth("/internal/auth/oauth-upsert", input);
+  if (response.status !== 200) {
+    return null;
+  }
   return (await response.json()) as WorkerApiUserSummary;
 }
 

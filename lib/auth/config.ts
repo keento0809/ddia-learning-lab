@@ -97,6 +97,13 @@ export const authConfig: NextAuthConfig = {
             email,
             name: profile?.name ?? user?.name ?? null,
           });
+          // T-705 Medium #3(docs/security/findings.md): oauth-upsertは、
+          // email一致のみでの既存アカウントへの自動リンクを拒否すると409
+          // (=null)を返す。追加確認なしにリンクできない場合はサインイン自体を
+          // 失敗させる(session発行・token.uid設定のいずれも行わない)。
+          if (!upserted) {
+            throw new Error("oauth_account_link_conflict");
+          }
           token.uid = upserted.id;
         }
       } else if (user?.id) {

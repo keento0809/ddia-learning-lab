@@ -48,23 +48,20 @@ function writeStoredQuery(query: string): void {
  * 実検索に使うqueryはIME確定(compositionend)後にのみ更新し、変換中の断片一致による
  * ちらつきを防ぐ。
  *
- * T-604(ADR-009 §6)。検索インデックスは静的アセットとして配信されるため
- * (認証チェックを経由するAPIではない)、認証状態に応じて配信するJSON自体を
- * 切り替える: `isAuthenticated`が偽なら既定(Gated階層のレッスン本文を含まない)
- * `search-index.{locale}.json`を、真なら全文を含む
- * `search-index-authenticated.{locale}.json`を動的importする
- * (両方とも`scripts/generate-curriculum.ts`のgenerateSearchIndexが生成)。
- * `isAuthenticated`は`app/[locale]/search/page.tsx`(Server Component)が
- * `auth()`で解決した結果をpropとして渡す(quiz/labページと同じ既存パターン)。
+ * T-705(docs/security/findings.md High #2)。検索インデックスは静的アセットとして
+ * 配信されるため(認証チェックを経由するAPIではない)、Next.jsのビルドは
+ * どの分岐であっても静的チャンクとして事前出力してしまい、認証状態に応じて
+ * 配信内容を切り替えるという設計そのものが成立しない(未認証でも直接fetch可能)。
+ * そのため`search-index.{locale}.json`(`scripts/generate-curriculum.ts`の
+ * generateSearchIndexが生成、Gated階層のレッスン本文を含まない)1種類のみを
+ * 認証状態によらず全ユーザーへ動的importする。
  */
 export function SearchPage({
   locale,
   initialQuery,
-  isAuthenticated = false,
 }: {
   locale: Locale;
   initialQuery: string;
-  isAuthenticated?: boolean;
 }) {
   const t = getMessages(locale).search;
   const [index, setIndex] = useState<SearchIndex | null>(null);
@@ -95,11 +92,8 @@ export function SearchPage({
     setIndex(null);
     setLoadError(false);
 
-    const importIndex = isAuthenticated
-      ? locale === "ja"
-        ? import("@/lib/generated/search-index-authenticated.ja.json")
-        : import("@/lib/generated/search-index-authenticated.en.json")
-      : locale === "ja"
+    const importIndex =
+      locale === "ja"
         ? import("@/lib/generated/search-index.ja.json")
         : import("@/lib/generated/search-index.en.json");
 
@@ -115,7 +109,7 @@ export function SearchPage({
     return () => {
       cancelled = true;
     };
-  }, [locale, isAuthenticated]);
+  }, [locale]);
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const value = event.target.value;

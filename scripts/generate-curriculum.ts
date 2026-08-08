@@ -11,7 +11,7 @@ import type { CurriculumModuleSummary } from "../lib/curriculum";
 import type { ModuleDetailSummary } from "../lib/moduleDetail";
 import { loadScenario } from "../lib/scenario/content";
 import type { ScenarioDefinition } from "../lib/scenario/schema";
-import { buildSearchDocuments, type BuildSearchDocumentsOptions } from "../lib/search/buildDocuments";
+import { buildSearchDocuments } from "../lib/search/buildDocuments";
 import {
   addSearchDocument,
   createSearchIndex,
@@ -147,18 +147,19 @@ export function generateScenario(root: string): ScenarioDefinition {
  * Documentインデックスへ投入し、`export`したチャンクをそのままJSONとして書き出す
  * (ブラウザ側は`lib/search/flexIndex.ts`のloadSearchIndexで同一スキーマから復元する)。
  *
- * T-604(ADR-009 §6): `docOptions.includeGatedLessonBody`を渡すことで、
- * Gated階層のレッスン本文まで含む「認証済み向け」インデックスも同じロジックで
- * 生成できる(`main()`が既定版と認証済み版の2種類を書き出す、下記参照)。
+ * T-705(docs/security/findings.md High #2)。以前はauth()結果に応じて「既定版」と
+ * 「認証済み向け(Gated階層の本文まで含む)」の2種類を生成していたが、両方とも
+ * Next.jsのビルド時にクライアントバンドルの静的チャンクへ埋め込まれ、認証状態に
+ * 関わらず誰でも直接fetchできてしまう(サーバ側の認可判定を経由しない静的アセット
+ * のため)。したがって生成するインデックスは1種類のみとし、Gated階層のレッスンは
+ * `lib/search/buildDocuments.ts`側で常にタイトルのみに制限する
+ * (buildSearchDocuments参照)。
  */
-export function generateSearchIndex(
-  root: string,
-  docOptions: BuildSearchDocumentsOptions = {},
-): Record<Locale, SearchIndexExport> {
+export function generateSearchIndex(root: string): Record<Locale, SearchIndexExport> {
   const result = {} as Record<Locale, SearchIndexExport>;
   for (const locale of LOCALES) {
     const index = createSearchIndex(locale);
-    for (const doc of buildSearchDocuments(root, locale, docOptions)) {
+    for (const doc of buildSearchDocuments(root, locale)) {
       addSearchDocument(index, locale, doc);
     }
     result[locale] = exportSearchIndex(index);
@@ -200,22 +201,16 @@ export function generateLessonPreview(root: string): Record<Locale, Record<strin
 /** 02§12-4「インデックス>5MBでサーバ検索移行を検討」の目安。ビルドは失敗させず警告のみ行う。 */
 const SEARCH_INDEX_WARN_BYTES = 5 * 1024 * 1024;
 
-/** 検索インデックス1ロケール分を書き出し、サイズ警告を行う(既定版・認証済み版で共用)。 */
-function writeSearchIndexFile(
-  outDir: string,
-  fileNameSuffix: string,
-  locale: Locale,
-  index: SearchIndexExport,
-  labelSuffix: string,
-): void {
-  const outPath = path.join(outDir, `search-index${fileNameSuffix}.${locale}.json`);
+/** 検索インデックス1ロケール分を書き出し、サイズ警告を行う。 */
+function writeSearchIndexFile(outDir: string, locale: Locale, index: SearchIndexExport): void {
+  const outPath = path.join(outDir, `search-index.${locale}.json`);
   const json = JSON.stringify(index);
   fs.writeFileSync(outPath, json, "utf-8");
   const bytes = Buffer.byteLength(json, "utf-8");
-  console.log(`検索インデックス${labelSuffix}を書き出しました: ${outPath}(${(bytes / 1024).toFixed(1)}KB)`);
+  console.log(`検索インデックスを書き出しました: ${outPath}(${(bytes / 1024).toFixed(1)}KB)`);
   if (bytes > SEARCH_INDEX_WARN_BYTES) {
     console.warn(
-      `検索インデックス警告(${locale}${labelSuffix}): ${(bytes / (1024 * 1024)).toFixed(2)}MBが02§12-4の目安5MBを` +
+      `検索インデックス警告(${locale}): ${(bytes / (1024 * 1024)).toFixed(2)}MBが02§12-4の目安5MBを` +
         `超えています。静的FlexSearchからサーバ検索への移行を検討してください。`,
     );
   }
@@ -237,15 +232,7 @@ function main(): void {
   const exercises = generateExercises(root);
   const glossary = generateGlossary(root);
   const scenario = generateScenario(root);
-  /**
-   * T-604(ADR-009 §6)。検索インデックスは2種類生成する:
-   * `searchIndex`(既定、未認証向け)はGated階層のレッスン本文を含まない。
-   * `searchIndexAuthenticated`(認証済み向け)は全レッスンの全文を含む。
-   * `app/[locale]/search/page.tsx`がauth()結果に応じてどちらのファイルを
-   * 動的importするか選択する(components/search/SearchPage.tsx参照)。
-   */
   const searchIndex = generateSearchIndex(root);
-  const searchIndexAuthenticated = generateSearchIndex(root, { includeGatedLessonBody: true });
   const lessonPreview = generateLessonPreview(root);
 
   fs.mkdirSync(outDir, { recursive: true });
@@ -285,14 +272,7 @@ function main(): void {
       `演習データを書き出しました: ${exercisesOutPath}(${Object.keys(exercises[locale]).length}件)`,
     );
 
-    writeSearchIndexFile(outDir, "", locale, searchIndex[locale], "");
-    writeSearchIndexFile(
-      outDir,
-      "-authenticated",
-      locale,
-      searchIndexAuthenticated[locale],
-      "(認証済み向け)",
-    );
+    writeSearchIndexFile(outDir, locale, searchIndex[locale]);
 
     const lessonPreviewOutPath = path.join(outDir, `lesson-preview.${locale}.json`);
     fs.writeFileSync(

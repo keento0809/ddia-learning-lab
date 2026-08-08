@@ -6,23 +6,20 @@ import { callWorkerApi, createTestUser } from "./helpers/workerApi";
  * T-703 AU-8関連の重大所見(docs/design/11_ADR-011 §3.2、パスワードのレート制限・
  * 資格情報回復フローの実効性)。
  *
- * app/api/auth/reset/request/route.ts(worker-apiの/internal/auth/reset-request、
- * workers/api/src/routes/internalAuth.ts)は、メール送信基盤が存在しないという
- * 理由でパスワードリセットトークンをHTTPレスポンスのJSONボディへ直接返す設計に
- * なっている。これは「メールアドレスの所有証明」というリセットフロー本来の
- * 前提を満たさないまま、対象メールアドレスを知っているだけの第三者に有効な
- * リセットトークンを発行してしまう。
+ * 修正前: app/api/auth/reset/request/route.ts(worker-apiの/internal/auth/
+ * reset-request、workers/api/src/routes/internalAuth.ts)は、メール送信基盤が
+ * 存在しないという理由でパスワードリセットトークンをHTTPレスポンスのJSONボディへ
+ * 直接返す設計になっていた。これは「メールアドレスの所有証明」というリセット
+ * フロー本来の前提を満たさないまま、対象メールアドレスを知っているだけの第三者に
+ * 有効なリセットトークンを発行してしまい、完全なアカウント乗っ取りが成立していた
+ * (ADR-011 §5の深刻度基準で「認証バイパス」= Critical、公開不可)。
  *
- * 本テストはこの経路を実際にエンドツーエンドで実行し、被害者のメールアドレスしか
- * 知らない攻撃者が(a)被害者のパスワードを変更し(b)変更後のパスワードで
- * ログインできる、という完全なアカウント乗っ取りが成立することを実証する。
- *
- * ADR-010 §5の深刻度基準に照らすと「認証バイパス」に該当しCritical(公開不可)。
- * CLAUDE.md/goal制約により修正は行わない(T-705のスコープ)。このテストは
- * 安全な期待値(=攻撃者はresetTokenを取得できない)をassertしているため、
- * 現状の実装に対しては失敗(red)する。これは意図的であり、T-705で対策された
- * 時点でgreenに転じる回帰テストとして機能する(ADR-010 §6)。詳細は
- * docs/security/findings.md参照。
+ * T-705修正(docs/security/findings.md): workers/api/src/routes/internalAuth.tsの
+ * `/reset-request`は、メール送信基盤が導入されるまでトークンを一切発行・返却しない
+ * ように変更した(メールアドレスの登録有無にかかわらず常に`resetToken: null`を
+ * 返す)。これにより本ファイルの各テストは「攻撃が成立する」ことを固定する
+ * 回帰テストから、「防御が成立する」ことを検証するテストへ書き換えている
+ * (期待値の書き換えではなく実装修正が先。T-705 sandbox-hardening PR#110と同じ手法)。
  */
 describe("AU-8所見: パスワードリセットトークンの直接開示(認証バイパス相当、Critical)", () => {
   beforeAll(async () => {
@@ -57,9 +54,9 @@ describe("AU-8所見: パスワードリセットトークンの直接開示(認
   );
 
   it(
-    "【突破実証】上記の開示されたresetTokenを使い、攻撃者が被害者のパスワードを" +
-      "変更したうえで新パスワードでログインできてしまう一連の流れ(現状の実装で" +
-      "実際に成立することを示す。修正はT-705のスコープのため行わない)",
+    "防御が効く(T-705修正済み): resetTokenが取得できないため、被害者のメール" +
+      "アドレスしか知らない攻撃者はreset-confirmへ進めず、被害者のパスワードは" +
+      "変更されない(旧パスワードでのログインが引き続き成功する)",
     async () => {
       const victim = await createTestUser();
       const attackerChosenPassword = "attacker-set-this-password-123";
@@ -72,8 +69,10 @@ describe("AU-8所見: パスワードリセットトークンの直接開示(認
         }),
       );
       const { resetToken } = (await resetRequestRes.json()) as { resetToken: string | null };
-      expect(resetToken, "現状の実装ではresetTokenがレスポンスに含まれる").toBeTruthy();
+      expect(resetToken, "修正後はresetTokenがレスポンスに含まれない").toBeNull();
 
+      // 攻撃者はトークンを持たないため、null/欠損トークンでreset-confirmを叩く
+      // しかない。これはinvalid_or_expired_tokenとして拒否される。
       const confirmRes = await callWorkerApi(
         new Request("http://worker-api.internal/internal/auth/reset-confirm", {
           method: "POST",
@@ -81,7 +80,7 @@ describe("AU-8所見: パスワードリセットトークンの直接開示(認
           body: JSON.stringify({ token: resetToken, password: attackerChosenPassword }),
         }),
       );
-      expect(confirmRes.status).toBe(200);
+      expect(confirmRes.status).toBe(400);
 
       const victimLoginWithOldPassword = await callWorkerApi(
         new Request("http://worker-api.internal/internal/auth/verify-credentials", {
@@ -90,36 +89,35 @@ describe("AU-8所見: パスワードリセットトークンの直接開示(認
           body: JSON.stringify({ email: victim.email, password: victim.password }),
         }),
       );
-      expect(victimLoginWithOldPassword.status).toBe(401);
+      expect(victimLoginWithOldPassword.status).toBe(200);
 
-      const attackerLoginWithNewPassword = await callWorkerApi(
+      const attackerLoginWithChosenPassword = await callWorkerApi(
         new Request("http://worker-api.internal/internal/auth/verify-credentials", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: victim.email, password: attackerChosenPassword }),
         }),
       );
-      expect(attackerLoginWithNewPassword.status).toBe(200);
-      const body = (await attackerLoginWithNewPassword.json()) as { id: string };
-      expect(body.id).toBe(victim.id);
+      expect(attackerLoginWithChosenPassword.status).toBe(401);
     },
   );
 
-  it("5req/min/IPのレート制限があっても、攻撃者は1回のリクエストでトークンを取得できるため実効的な緩和にならない", async () => {
-    // middleware.tsのレート制限はPOST /api/auth/*(Next.js層)にのみ適用され、
-    // worker-api(このテストが直接叩いている層)自体には制限がない。仮に
-    // Next.js層を経由しても、この攻撃は1メールアドレスにつき1回のリクエストで
-    // 完結するため、5req/minの制限は実効的な抑止力にならない(ブルートフォースを
-    // 想定した制限であり、既知メールアドレスへの単発攻撃には無力)。
+  it("防御が効く(T-705修正済み): 何回reset-requestを呼んでもresetTokenが漏洩することはない(単発攻撃・連打のいずれも無効)", async () => {
+    // 修正前はメールアドレスを知るだけで1回のリクエストで攻撃が完結し、
+    // 5req/min/IPのレート制限(worker-api自体には掛かっていない)は無力だった。
+    // 修正後はそもそもトークンが発行されないため、リクエスト回数によらず
+    // resetTokenが漏れることはない。
     const victim = await createTestUser();
-    const singleAttemptRes = await callWorkerApi(
-      new Request("http://worker-api.internal/internal/auth/reset-request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: victim.email }),
-      }),
-    );
-    const { resetToken } = (await singleAttemptRes.json()) as { resetToken: string | null };
-    expect(resetToken, "1回のリクエストだけで攻撃が成立する").toBeTruthy();
+    for (let i = 0; i < 3; i += 1) {
+      const res = await callWorkerApi(
+        new Request("http://worker-api.internal/internal/auth/reset-request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: victim.email }),
+        }),
+      );
+      const { resetToken } = (await res.json()) as { resetToken: string | null };
+      expect(resetToken).toBeNull();
+    }
   });
 });
