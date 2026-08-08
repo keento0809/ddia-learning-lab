@@ -1,4 +1,4 @@
-export default {
+const handler = {
   async fetch(request) {
     const h = request.headers;
     return new Response(
@@ -10,3 +10,5 @@ export default {
     );
   },
 };
+
+export default handler;
