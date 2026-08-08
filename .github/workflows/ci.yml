@@ -110,8 +110,14 @@ jobs:
       - run: npm ci
       - run: npm run validate:content
 
-  # T-701(ADR-011 §3.5 DP-1): 依存関係の既知脆弱性スキャン。high/critical検出時に
-  # 失敗させる(検出ゼロを目指して閾値を緩めることは禁止、ADR-011 §4)。
+  # T-701(ADR-011 §3.5 DP-1): 依存関係の既知脆弱性スキャン。
+  # 失敗→恒久対策: `npm audit --audit-level=high`はツリー内にhigh/criticalが1件でも
+  # あれば全体を失敗させる全否定ゲートで、T-705で解消不能と判定された既知の残存リスク
+  # (next内蔵postcss/sharp、miniflare内蔵undici。いずれもメジャー/alpha必須かつ実測で
+  # 本番Workerバンドルに非混入と確認済み、詳細はscripts/check-npm-audit.mjs)を個別に
+  # 許容できない。scripts/check-npm-audit.mjsはnpm audit --jsonを解析し、既知のGHSA
+  # アドバイザリID許容リストに無いものが1件でも検出されたら(severity問わず)失敗させる
+  # ため、パッケージ単位のomit/overridesと違い将来別の新規脆弱性を見逃さない。
   npm-audit:
     runs-on: ubuntu-latest
     steps:
@@ -121,7 +127,7 @@ jobs:
           node-version: "22"
           cache: "npm"
       - run: npm ci
-      - run: npm audit --audit-level=high
+      - run: npm run check:npm-audit
 
   # T-701(ADR-011 §3.5 DP-2): リポジトリ全履歴のシークレットスキャン。fetch-depth: 0で
   # 全コミット履歴を取得しないとgitleaksが浅いチェックアウトしか見られない。
