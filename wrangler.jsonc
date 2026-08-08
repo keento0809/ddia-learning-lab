@@ -14,5 +14,19 @@
   "services": [{ "binding": "API", "service": "ddia-learning-lab-api" }],
   // T-504: workers_devの既定値はtrueだが、worker-api(非公開)との対比を設定上も
   // 明示するため公開Workerであることを明記する。
-  "workers_dev": true
+  "workers_dev": true,
+  // T-705 Medium #4(docs/security/findings.md): 認証系エンドポイントの
+  // レート制限(middleware.ts、既定5req/min/IP)がisolate間で共有されない
+  // 問題への対策。Cloudflare Workers Rate Limiting APIバインディングは
+  // KV/Durable Objectsの新規プロビジョニング無しにエッジ側で状態を共有する
+  // (namespace_idはアカウント内で一意なローカル識別子であり、事前作成は不要)。
+  // このバインディングが到達できない実行環境(next dev単体・vitest)では
+  // lib/auth/rateLimit.tsが既存のisolate単位フォールバックへ委譲する。
+  "ratelimits": [
+    {
+      "name": "AUTH_RATE_LIMITER",
+      "namespace_id": "1",
+      "simple": { "limit": 5, "period": 60 }
+    }
+  ]
 }

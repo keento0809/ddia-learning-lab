@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "@/lib/i18n/routing";
-import { getClientIp, isRateLimited } from "@/lib/auth/rateLimit";
+import { getClientIp, isAuthRateLimited } from "@/lib/auth/rateLimit";
 import { buildMainPageCsp } from "@/lib/security/csp";
 
 const intlMiddleware = createMiddleware(routing);
@@ -19,12 +19,18 @@ const intlMiddleware = createMiddleware(routing);
  * next-auth/reactのsignIn()が1回のサインイン試行で内部的に複数リクエストを
  * 発行するため、正常なユーザーが「パスワードを打ち間違えて2回目を試す」だけで
  * 制限に達し操作不能になる(qa-evaluatorで検出)。
+ *
+ * T-705 Medium #4(docs/security/findings.md): `isAuthRateLimited`
+ * (lib/auth/rateLimit.ts)経由にすることで、実デプロイ環境ではCloudflare
+ * Rate Limiting APIバインディング(isolate間で状態を共有)を優先し、
+ * バインディングに到達できない環境(next dev単体・vitest)ではisolate単位の
+ * インメモリフォールバックへ委譲する。
  */
-export default function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/api/auth")) {
     if (request.method === "POST") {
       const ip = getClientIp(request.headers);
-      if (isRateLimited(ip)) {
+      if (await isAuthRateLimited(ip)) {
         return NextResponse.json(
           { type: "about:blank#rate-limited", title: "rate_limited", status: 429 },
           {

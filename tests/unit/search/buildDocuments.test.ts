@@ -52,7 +52,7 @@ describe("buildSearchDocuments", () => {
     expect(glossaryDoc?.title).toBe("network partition");
   });
 
-  it("T-604(ADR-009 §6): 既定ではGated階層(モジュール1以外)のレッスン本文を索引・要約から除外し、タイトルのみにする", () => {
+  it("T-604/T-705(ADR-009 §6、docs/security/findings.md High #2): Gated階層(モジュール1以外)のレッスン本文は索引・要約から常に除外し、タイトルのみにする(認証状態による分岐はしない)", () => {
     const docs = buildSearchDocuments(FIXTURES_ROOT, "ja");
 
     const freeTierLesson = docs.find((d) => d.id === "lesson:01-reliability/01-fault-tolerance");
@@ -69,18 +69,6 @@ describe("buildSearchDocuments", () => {
     expect(gatedLesson?.excerpt).toBe("秘匿レッスン入門");
     expect(gatedLesson?.body).not.toContain("分散合意プロトコル");
     expect(gatedLesson?.excerpt).not.toContain("分散合意プロトコル");
-  });
-
-  it("T-604: includeGatedLessonBody:trueを指定すると、Gated階層のレッスンも全文を含む(認証済み向けインデックス生成用)", () => {
-    const docs = buildSearchDocuments(FIXTURES_ROOT, "ja", { includeGatedLessonBody: true });
-
-    const gatedLesson = docs.find((d) => d.id === "lesson:02-gated/01-secret-lesson");
-    expect(gatedLesson?.body).toContain("分散合意プロトコル");
-    expect(gatedLesson?.excerpt).not.toBe(gatedLesson?.title);
-
-    // Free Tier(モジュール1)は元々全文が含まれるため、フラグの有無で変化しない
-    const freeTierLesson = docs.find((d) => d.id === "lesson:01-reliability/01-fault-tolerance");
-    expect(freeTierLesson?.body).toContain("フォールトトレランス");
   });
 
   it("en: T-604のGated制限は英語ロケールでも同様に働く", () => {

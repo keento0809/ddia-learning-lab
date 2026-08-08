@@ -31,11 +31,18 @@ describe("AU-7: OAuth state/PKCE設定", () => {
 
 /**
  * OAuthアカウントの自動リンク(workers/api/src/routes/internalAuth.tsの
- * oauth-upsert)は、providerAccountIdでの既存紐付けが無い場合、claimed emailで
- * 既存ユーザーを検索し、確認なしにOAuthアカウントをリンクする。email_verified等の
- * 検証はスキーマ(OAuthUpsertRequestSchema)にもロジックにも存在しない。
- * この挙動を実際のリクエストで再現し、期待される安全な挙動(未確認のリンクを
- * 拒否する、または追加確認を要求する)との差分を明らかにする。
+ * oauth-upsert)は、providerAccountIdでの既存紐付けが無い場合、以前はclaimed
+ * emailで既存ユーザーを検索し、確認なしにOAuthアカウントをリンクしていた
+ * (email_verified等の検証はスキーマ(OAuthUpsertRequestSchema)にもロジックにも
+ * 存在しなかった)。
+ *
+ * T-705修正(docs/security/findings.md Medium #3、CWE-287): email一致のみでの
+ * 既存アカウントへの自動リンクを一律廃止し、409(oauth_account_link_conflict)を
+ * 返すように変更した。新規メールアドレスのOAuthサインインは従来どおり新規
+ * ユーザーとして作成される(この方式を選んだ理由: OAuthUpsertRequestSchemaに
+ * email_verified相当の入力がなく、プロバイダ側の検証状態に依存せず一律で
+ * 安全側に倒せるため。lib/auth/config.tsのjwtコールバックはnull応答時に
+ * サインイン自体を失敗させる)。
  */
 describe("AU-7: OAuthアカウントの自動リンク(email一致のみでの紐付け)", () => {
   beforeAll(async () => {
@@ -45,39 +52,52 @@ describe("AU-7: OAuthアカウントの自動リンク(email一致のみでの�
     await prisma.$disconnect();
   });
 
-  it(
-    "パスワード認証で作成済みの既存アカウントに、確認なしでOAuthアカウントが自動リンクされてはならない" +
-      "(現状は自動リンクされるため、このテストは突破可能な項目として失敗する — T-705で要対応)",
-    async () => {
-      const existingUser = await createTestUser();
-      const providerAccountId = randomUUID();
+  it("防御が効く(T-705修正済み): パスワード認証で作成済みの既存アカウントに、確認なしでOAuthアカウントが自動リンクされない(409を返し、リンクも作成しない)", async () => {
+    const existingUser = await createTestUser();
+    const providerAccountId = randomUUID();
 
-      const res = await callWorkerApi(
-        new Request("http://worker-api.internal/internal/auth/oauth-upsert", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            provider: "github",
-            providerAccountId,
-            // 攻撃者が(GitHub上で未確認、または攻撃者が管理する)メールアドレスとして
-            // 被害者のメールアドレスを騙るシナリオを想定する。
-            email: existingUser.email,
-            name: "Attacker Controlled Display Name",
-          }),
+    const res = await callWorkerApi(
+      new Request("http://worker-api.internal/internal/auth/oauth-upsert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: "github",
+          providerAccountId,
+          // 攻撃者が(GitHub上で未確認、または攻撃者が管理する)メールアドレスとして
+          // 被害者のメールアドレスを騙るシナリオを想定する。
+          email: existingUser.email,
+          name: "Attacker Controlled Display Name",
         }),
-      );
-      expect(res.status).toBe(200);
-      const body = (await res.json()) as { id: string };
+      }),
+    );
+    expect(res.status).toBe(409);
+    const body = (await res.json()) as { title?: string };
+    expect(body.title).toBe("oauth_account_link_conflict");
 
-      // 安全な挙動: 未確認のメール一致だけでは既存アカウントにリンクせず、
-      // (a) 別ユーザーとして扱う、または(b) 追加確認ステップを要求し、
-      // 少なくとも既存ユーザーのidをそのまま返さないことを期待する。
-      expect(body.id).not.toBe(existingUser.id);
+    const account = await prisma.oauthAccount.findUnique({
+      where: { provider_providerAccountId: { provider: "github", providerAccountId } },
+    });
+    expect(account).toBeNull();
+  });
 
-      const account = await prisma.oauthAccount.findUnique({
-        where: { provider_providerAccountId: { provider: "github", providerAccountId } },
-      });
-      expect(account?.userId).not.toBe(existingUser.id);
-    },
-  );
+  it("防御が効く(回帰確認): 新規メールアドレスでのOAuthサインインは従来どおり新規ユーザーとして作成・リンクされる", async () => {
+    const email = `au7-oauth-new-${randomUUID()}@example.com`;
+    const providerAccountId = randomUUID();
+
+    const res = await callWorkerApi(
+      new Request("http://worker-api.internal/internal/auth/oauth-upsert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: "github", providerAccountId, email, name: "New OAuth User" }),
+      }),
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { id: string; email: string };
+    expect(body.email).toBe(email);
+
+    const account = await prisma.oauthAccount.findUnique({
+      where: { provider_providerAccountId: { provider: "github", providerAccountId } },
+    });
+    expect(account?.userId).toBe(body.id);
+  });
 });

@@ -75,11 +75,15 @@ describe("AU-8: 認証エンドポイントのレート制限(lib/auth/rateLimit
   it(
     "情報: isRateLimitedの状態はモジュールスコープのMap(単一isolateメモリ内)であり、" +
       "異なるキー(=異なるIPとみなされた別isolate/別PoPでの計測)には独立してカウントが適用される。" +
-      "これはlib/auth/rateLimit.ts自身のコメントが明記する既知の制約(Cloudflare Workersの" +
-      "isolate分離により複数isolate/エッジロケールをまたいだ厳密な集計は保証されない)であり、" +
-      "単一プロセスのテスト環境ではCloudflare実配備でのisolate分散を再現できないため、" +
-      "本テストは『異なるキーは独立してカウントされる』という設計上の事実のみを固定する" +
-      "(検証不能な項目としてdocs/security/findings.mdに記録する)。",
+      "これはisRateLimited単体(フォールバック経路)の既知の制約であり、単一プロセスの" +
+      "テスト環境ではCloudflare実配備でのisolate分散を再現できないため、本テストは" +
+      "『異なるキーは独立してカウントされる』という設計上の事実のみを固定する。" +
+      "T-705修正(docs/security/findings.md Medium #4): 実デプロイ環境ではisolate間で" +
+      "状態を共有するCloudflare Rate Limiting APIバインディング(lib/auth/rateLimit.tsの" +
+      "isAuthRateLimited、wrangler.jsoncの`AUTH_RATE_LIMITER`)を優先するようになったため、" +
+      "middleware.tsはこのisRateLimited単体の制約に依存しなくなった" +
+      "(tests/unit/auth/rateLimitEdgeBinding.test.ts参照。真のisolate間分散の実証は" +
+      "実デプロイでのペネトレーションテストでのみ確定可能な点は変わらない)。",
     () => {
       const now = Date.now();
       for (let i = 0; i < 5; i++) {

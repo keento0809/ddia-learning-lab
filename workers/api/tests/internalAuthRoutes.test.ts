@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { Miniflare } from "miniflare";
 import { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createResetToken } from "../../../lib/auth/resetToken";
 
 /**
  * ADR-008(docs/design/09) §2・§4 T-503受入基準: `/internal/auth/verify-credentials`
@@ -137,15 +138,12 @@ describe("worker-api: /internal/auth/* (T-503, 実バンドル)", () => {
     expect(result.rows[0]?.count).toBe("1");
   });
 
-  it("reset-request -> reset-confirm: 実際にpasswordHashが更新され、旧トークンは使い切りになる", async () => {
-    const email = `internal-auth-reset-${randomUUID()}@example.com`;
-    const originalPassword = "original-password-1234";
-    const newPassword = "new-password-5678";
-
+  it("reset-request: T-705修正済み、登録済みメールでも200かつresetToken:nullを返す(Critical #1対策、docs/security/findings.md)", async () => {
+    const email = `internal-auth-reset-request-${randomUUID()}@example.com`;
     await mf.dispatchFetch("http://worker-api.internal/internal/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password: originalPassword, displayName: "Reset Test" }),
+      body: JSON.stringify({ email, password: "original-password-1234", displayName: "Reset Test" }),
     });
 
     const resetRequestRes = await mf.dispatchFetch(
@@ -157,8 +155,33 @@ describe("worker-api: /internal/auth/* (T-503, 実バンドル)", () => {
       },
     );
     expect(resetRequestRes.status).toBe(200);
-    const { resetToken } = (await resetRequestRes.json()) as { resetToken: string | null };
-    expect(resetToken).toBeTruthy();
+    const body = (await resetRequestRes.json()) as { resetToken: string | null };
+    expect(body.resetToken).toBeNull();
+  });
+
+  it("reset-confirm: 有効なトークン(将来メール送信基盤経由で配送される想定)であれば実際にpasswordHashが更新され、旧トークンは使い切りになる", async () => {
+    // T-705でreset-requestはresetTokenをレスポンスへ含めなくなったため
+    // (Critical #1対策)、reset-confirm自体の検証・使い切りロジックは
+    // メール等の配送経路を経て正規に受け取った前提のトークンをテスト側で
+    // 直接合成して検証する(lib/auth/resetToken.tsのcreateResetTokenは
+    // 配送経路が実装されればそのまま使われる共有ロジック)。
+    const email = `internal-auth-reset-${randomUUID()}@example.com`;
+    const originalPassword = "original-password-1234";
+    const newPassword = "new-password-5678";
+
+    await mf.dispatchFetch("http://worker-api.internal/internal/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password: originalPassword, displayName: "Reset Test" }),
+    });
+
+    const userRow = await db.query<{ id: string; password_hash: string | null }>(
+      `SELECT id, password_hash FROM users WHERE email = $1`,
+      [email],
+    );
+    const user = userRow.rows[0];
+    expect(user).toBeTruthy();
+    const resetToken = await createResetToken(user.id, user.password_hash, AUTH_SECRET);
 
     const confirmRes = await mf.dispatchFetch(
       "http://worker-api.internal/internal/auth/reset-confirm",

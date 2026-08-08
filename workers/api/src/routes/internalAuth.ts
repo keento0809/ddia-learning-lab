@@ -4,11 +4,7 @@ import { z } from "zod";
 import { Prisma } from "@/lib/generated/prisma-workerd/client";
 import type { PrismaClient } from "@/lib/generated/prisma-workerd/client";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import {
-  createResetToken,
-  decodeUnverifiedSubject,
-  verifyResetToken,
-} from "@/lib/auth/resetToken";
+import { decodeUnverifiedSubject, verifyResetToken } from "@/lib/auth/resetToken";
 import {
   CredentialsSchema,
   ResetConfirmRequestSchema,
@@ -126,13 +122,29 @@ internalAuthRoute.post(
       return c.json(toUserSummary(existingAccount.user), 200);
     }
 
+    // T-705 Medium #3(docs/security/findings.md、CWE-287「不適切な自動アカウント
+    // リンク」)。以前はここでproviderAccountIdの紐付けが無い場合、claimed emailと
+    // 一致する既存ユーザーへ確認なしで即座にOAuthアカウントを自動リンクしていた。
+    // OAuthUpsertRequestSchemaにemail_verified相当の検証もなく、プロバイダが
+    // 返すemailが実際に検証済みかをこちらのコードは確認していないため、パスワード
+    // 認証で作成済みの既存アカウントへ、同じメールアドレスを主張するだけで
+    // アクセスを得られる余地があった(tests/security/au7-oauth.test.ts)。
+    // 対策として、未リンクの(provider, providerAccountId)がemail一致だけで
+    // 既存ユーザーへリンクされることを一律拒否する(自動リンクを行わない)。
+    // 新規メールアドレスの場合のみ新規ユーザーを作成する。
     const existingUser = await prisma.user.findUnique({ where: { email } });
-    const user =
-      existingUser ??
-      (await prisma.user.create({
-        data: { email, displayName: name ?? email.split("@")[0] },
-      }));
+    if (existingUser) {
+      return problemResponse(
+        c,
+        409,
+        "about:blank#oauth-account-link-conflict",
+        "oauth_account_link_conflict",
+      );
+    }
 
+    const user = await prisma.user.create({
+      data: { email, displayName: name ?? email.split("@")[0] },
+    });
     await prisma.oauthAccount.create({ data: { userId: user.id, provider, providerAccountId } });
 
     return c.json(toUserSummary(user), 200);
@@ -191,14 +203,17 @@ internalAuthRoute.post(
       return problemResponse(c, 400, "about:blank#validation-error", "validation_error");
     }
 
-    const prisma = c.get("prisma");
-    const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
-    if (!user || user.deletedAt) {
-      return c.json({ resetToken: null }, 200);
-    }
-
-    const resetToken = await createResetToken(user.id, user.passwordHash, c.env.AUTH_SECRET);
-    return c.json({ resetToken }, 200);
+    // T-705 Critical #1 (docs/security/findings.md, ADR-011 §5「認証バイパス」):
+    // このプロジェクトにはメール送信基盤が存在しない。以前はここでresetTokenを
+    // 発行しレスポンスへ直接含めていたが、それは「対象メールアドレスの所有証明」
+    // というリセットフロー本来の前提を満たさないまま、メールアドレスを知るだけの
+    // 第三者へ有効なトークンを渡してしまう認証バイパスだった
+    // (tests/security/au8-password-reset-token-disclosure.test.ts)。
+    // トークンを配送する経路(実メール送信)が存在しない間は発行自体を行わず、
+    // メールアドレスの登録有無にかかわらず常に同一の汎用レスポンスを返す
+    // (列挙対策は従来どおり維持)。/reset-confirmの検証ロジック自体は、実際の
+    // メール送信基盤が導入された時点でそのまま使えるよう変更していない。
+    return c.json({ resetToken: null }, 200);
   },
 );
 

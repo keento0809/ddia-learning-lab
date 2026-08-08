@@ -1,10 +1,20 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+
 /**
  * 02§3共通仕様「レート制限: 認証系 5req/min/IP」のミドルウェア実装。
  *
- * インメモリのスライディングウィンドウ(モジュールスコープのMap)で実装する。
- * Cloudflare Workers(ADR-007)はisolateごとにメモリが分離されるため、複数
- * isolate/エッジロケールをまたいだ厳密な集計は保証されない(KV/Durable
- * Objects未導入の現段階での既知の制約。docs/tasks/STATUS.md決定事項ログ参照)。
+ * `isRateLimited`はインメモリのスライディングウィンドウ(モジュールスコープの
+ * Map)で実装する。Cloudflare Workers(ADR-007)はisolateごとにメモリが
+ * 分離されるため、複数isolate/エッジロケールをまたいだ厳密な集計は保証
+ * されない(T-703 AU-8所見、docs/security/findings.md Medium #4)。
+ *
+ * T-705修正: 実際のCloudflare Workersランタイム上ではwrangler.jsoncの
+ * Rate Limiting APIバインディング(`AUTH_RATE_LIMITER`、エッジ側で状態を
+ * 共有しisolate分離の影響を受けない)を優先して使う`isAuthRateLimited`を
+ * 呼び出し側(middleware.ts)の入口とする。このバインディングに到達できない
+ * 実行環境(next dev単体・vitestのNode環境等、getCloudflareContext()が
+ * 例外を投げる)では、既存のisolate単位フォールバック(`isRateLimited`)へ
+ * 委譲する(lib/auth/workerApiAuth.tsの各forwarderと同じフォールバック方針)。
  */
 
 const WINDOW_MS = 60_000;
@@ -25,6 +35,16 @@ export function isRateLimited(key: string, now: number = Date.now()): boolean {
 
 export function resetRateLimit(): void {
   requestLog.clear();
+}
+
+export async function isAuthRateLimited(key: string): Promise<boolean> {
+  try {
+    const { env } = await getCloudflareContext({ async: true });
+    const { success } = await env.AUTH_RATE_LIMITER.limit({ key });
+    return !success;
+  } catch {
+    return isRateLimited(key);
+  }
 }
 
 export function getClientIp(headers: Headers): string {
