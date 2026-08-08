@@ -47,10 +47,16 @@ export default defineConfig({
     // git worktreeはリポジトリ内の通常ディレクトリのため対象外にならず、
     // ルートで`npm run test`を実行すると他worktreeの作業中テストまで収集・
     // 実行してしまい、無関係な失敗でexit 1になっていた。
+    // tests/security/** はT-703(docs/design/11_ADR-011セキュリティ診断計画 §3.2・§3.3)の
+    // 攻撃検証テスト。docker-compose.test.ymlのDB・実ビルド成果物(next build)を要する
+    // ものを含み、かつ一部は「防御が破られている」ことを示す意図的な失敗系(突破可能な
+    // 項目)を含むため、`npm run test`(exit 0が絶対規則)には含めない。
+    // 実行は `npm run test:security` / vitest.security.config.ts。
     exclude: [
       ...configDefaults.exclude,
       "tests/e2e/**",
       "tests/integration/**",
+      "tests/security/**",
       "workers/**",
       ".claude/worktrees/**",
     ],
