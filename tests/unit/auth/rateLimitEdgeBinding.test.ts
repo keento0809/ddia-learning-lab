@@ -56,4 +56,22 @@ describe("isAuthRateLimited: Cloudflare Rate Limiting APIバインディング�
     }
     expect(await isAuthRateLimited("203.0.113.97")).toBe(true);
   });
+
+  it("T-705修正: バインディングには到達できるが`.limit()`呼び出し自体が例外を投げる場合、「未到達」とは区別してfail-closed(即ブロック)しログを残す", async () => {
+    resetRateLimit();
+    const limit = vi.fn().mockRejectedValue(new Error("key exceeds maximum length"));
+    vi.mocked(getCloudflareContext).mockResolvedValue({
+      env: { AUTH_RATE_LIMITER: { limit } },
+    } as unknown as Awaited<ReturnType<typeof getCloudflareContext>>);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    // 「未到達」経路(isolateフォールバックの閾値5)とは違い、1回目から即ブロックされる。
+    expect(await isAuthRateLimited("203.0.113.96")).toBe(true);
+    // インメモリフォールバックは消費されていない(fail-closedはバインディング呼び出し
+    // 失敗のみで判定される。フォールバックへ委譲していない証拠)。
+    expect(isRateLimited("203.0.113.96")).toBe(false);
+    expect(errorSpy).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+  });
 });

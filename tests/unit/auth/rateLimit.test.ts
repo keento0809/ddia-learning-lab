@@ -4,7 +4,10 @@ import middleware from "@/middleware";
 import { resetRateLimit } from "@/lib/auth/rateLimit";
 
 function makeAuthRequest(path: string, ip: string, method: "GET" | "POST" = "POST") {
-  const headers = new Headers({ "x-forwarded-for": ip });
+  // T-705ハードニング: `x-forwarded-for`はクライアント制御下にあり信頼できなく
+  // なったため(lib/auth/rateLimit.ts getClientIp参照)、識別子を変えて独立した
+  // レート制限バケットを模擬する目的では`cf-connecting-ip`を使う。
+  const headers = new Headers({ "cf-connecting-ip": ip });
   return new NextRequest(new URL(path, "http://localhost:3000"), { headers, method });
 }
 
