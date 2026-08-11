@@ -15,7 +15,16 @@ export function AccountMenu({
   const t = getMessages(locale).account;
 
   function handleLogout() {
-    void signOut({ callbackUrl: `/${locale}/auth/signin` });
+    // qa-evaluator指摘(PR#127): signOut失敗時に無反応になっていた
+    // (fetch失敗がハンドルされないunhandled rejectionのままメニューだけ閉じる)。
+    // useState等のフックはこのコンポーネントを直接関数呼び出しするテスト
+    // (tests/unit/layout/AccountMenu.test.tsx、レンダラを介さない)と相性が
+    // 悪く、@testing-library/react等の新規依存追加なしには導入できないため
+    // (CLAUDE.md規則1: 未依頼の依存追加禁止)、ユーザー向けUIフィードバックは
+    // 追加せず、少なくとも失敗を握りつぶさずログに残す。
+    signOut({ callbackUrl: `/${locale}/auth/signin` }).catch((error: unknown) => {
+      console.error("AccountMenu: signOut failed", error);
+    });
   }
 
   return (

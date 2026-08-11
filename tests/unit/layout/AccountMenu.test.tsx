@@ -1,6 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactElement } from "react";
 import { AccountMenu } from "@/components/layout/AccountMenu";
+
+/**
+ * PR#127 qa-evaluator指摘: signOut失敗時に無反応(unhandled rejection)に
+ * なっていたため、AccountMenu.tsxのhandleLogoutは.catch()でログを残すように
+ * なった。tests/unit/settings/SettingsWithData.test.tsxと同じくnext-auth/react
+ * をモックして検証する。
+ */
+const signOutMock = vi.fn();
+vi.mock("next-auth/react", () => ({
+  signOut: (...args: unknown[]) => signOutMock(...args),
+}));
 
 /**
  * 回帰テスト: components/layout/AccountMenu.tsx。
@@ -62,5 +73,35 @@ describe("AccountMenu auth-state-dependent items", () => {
     const [settingsItem, logoutItem] = loggedInFragment.props.children;
     expect(settingsItem.props.children.props.children).toBe("設定");
     expect(logoutItem.props.children).toBe("ログアウト");
+  });
+});
+
+describe("AccountMenu logout handler", () => {
+  afterEach(() => {
+    signOutMock.mockReset();
+    vi.restoreAllMocks();
+  });
+
+  it("signOutをcallbackUrl付きで呼ぶ", () => {
+    signOutMock.mockResolvedValue(undefined);
+    const content = getContent(AccountMenu({ locale: "en", isAuthenticated: true }));
+    const [, logoutItem] = (content.props.children as AuthenticatedFragment).props.children;
+
+    logoutItem.props.onSelect();
+
+    expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: "/en/auth/signin" });
+  });
+
+  it("signOut失敗時に無反応(unhandled rejection)にならず、console.errorに記録する", async () => {
+    const failure = new Error("network error");
+    signOutMock.mockRejectedValue(failure);
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const content = getContent(AccountMenu({ locale: "ja", isAuthenticated: true }));
+    const [, logoutItem] = (content.props.children as AuthenticatedFragment).props.children;
+
+    logoutItem.props.onSelect();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith("AccountMenu: signOut failed", failure);
   });
 });
