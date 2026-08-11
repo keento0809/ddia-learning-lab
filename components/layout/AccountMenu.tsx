@@ -1,6 +1,7 @@
 "use client";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { signOut } from "next-auth/react";
 import { Link } from "@/lib/i18n/navigation";
 import { getMessages, type Locale } from "@/lib/i18n/messages";
 
@@ -12,6 +13,19 @@ export function AccountMenu({
   isAuthenticated: boolean;
 }) {
   const t = getMessages(locale).account;
+
+  function handleLogout() {
+    // qa-evaluator指摘(PR#127): signOut失敗時に無反応になっていた
+    // (fetch失敗がハンドルされないunhandled rejectionのままメニューだけ閉じる)。
+    // useState等のフックはこのコンポーネントを直接関数呼び出しするテスト
+    // (tests/unit/layout/AccountMenu.test.tsx、レンダラを介さない)と相性が
+    // 悪く、@testing-library/react等の新規依存追加なしには導入できないため
+    // (CLAUDE.md規則1: 未依頼の依存追加禁止)、ユーザー向けUIフィードバックは
+    // 追加せず、少なくとも失敗を握りつぶさずログに残す。
+    signOut({ callbackUrl: `/${locale}/auth/signin` }).catch((error: unknown) => {
+      console.error("AccountMenu: signOut failed", error);
+    });
+  }
 
   return (
     <DropdownMenu.Root>
@@ -29,16 +43,33 @@ export function AccountMenu({
         >
           {/* 設定(S-10)はログイン必須のため、未ログイン時にリンクを出すと
               クリックのたびにサインイン画面へ押し戻される体験になる。
-              未ログイン時はサインインのみ、ログイン時は設定のみを提示する。 */}
+              未ログイン時はサインインのみ、ログイン時は設定・ログアウトを提示する。
+              ログアウトはnext-auth/reactのsignOut(クライアント安全)を使う:
+              lib/auth/config.tsがexportするsignOutはnext/headers・next/navigation
+              に依存するサーバ専用実装のため、このuse clientコンポーネントからは
+              呼び出せない(DeleteAccountSection.tsxと同じ理由・同じ手段)。
+              遷移はsignOut自身のcallbackUrl・window.location.href任せにし、
+              useRouter等のフックは使わない: tests/unit/layout/AccountMenu.test.tsx
+              がAccountMenu(...)をレンダラを介さず直接関数呼び出しして返り値の
+              要素ツリーを検証する構成のため、本体内でフックを呼ぶと
+              "Invalid hook call"で落ちる(このタスクで実機確認済み)。 */}
           {isAuthenticated ? (
-            <DropdownMenu.Item asChild>
-              <Link
-                href="/settings"
-                className="block cursor-pointer rounded px-2 py-1.5 outline-none data-[highlighted]:bg-neutral-100 dark:data-[highlighted]:bg-neutral-800"
+            <>
+              <DropdownMenu.Item asChild>
+                <Link
+                  href="/settings"
+                  className="block cursor-pointer rounded px-2 py-1.5 outline-none data-[highlighted]:bg-neutral-100 dark:data-[highlighted]:bg-neutral-800"
+                >
+                  {t.settings}
+                </Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                onSelect={handleLogout}
+                className="cursor-pointer rounded px-2 py-1.5 outline-none data-[highlighted]:bg-neutral-100 dark:data-[highlighted]:bg-neutral-800"
               >
-                {t.settings}
-              </Link>
-            </DropdownMenu.Item>
+                {t.logout}
+              </DropdownMenu.Item>
+            </>
           ) : (
             <DropdownMenu.Item asChild>
               <Link

@@ -29,7 +29,8 @@
     "menuLabel": "アカウント",
     "menuAriaLabel": "アカウントメニューを開く",
     "settings": "設定",
-    "signIn": "ログイン"
+    "signIn": "ログイン",
+    "logout": "ログアウト"
   },
   "footer": {
     "navAriaLabel": "フッタナビゲーション",

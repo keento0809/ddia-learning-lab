@@ -29,7 +29,8 @@
     "menuLabel": "Account",
     "menuAriaLabel": "Open account menu",
     "settings": "Settings",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "logout": "Log out"
   },
   "footer": {
     "navAriaLabel": "Footer navigation",
