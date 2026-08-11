@@ -3,10 +3,12 @@
 import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { getMessages, type Locale } from "@/lib/i18n/messages";
+import { useRouter } from "@/lib/i18n/navigation";
 
 export function SignUpForm({ locale }: { locale: Locale }) {
   const messages = getMessages(locale).auth;
   const t = messages.signup;
+  const router = useRouter();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,17 +55,17 @@ export function SignUpForm({ locale }: { locale: Locale }) {
       setStatus("error");
       return;
     }
-    // SignInForm同様、T-007/T-101/T-112未実装のためサインアップ後の
-    // ホーム画面がまだ存在しない。成功状態をこの画面上に表示する。
+    // S-11→S-07(01§7.1/7.2)。redirect: falseで結果を先に検証しているため、
+    // 成功確定後にここで明示的にダッシュボードへ遷移させる。router.pushが
+    // 例外を投げた場合にstatus:"success"のまま(ボタン無効化・エラー非表示)で
+    // 固着するのを防ぐため、失敗時はerror状態へフォールバックする。
     setStatus("success");
-  }
-
-  if (status === "success") {
-    return (
-      <p data-testid="auth-signup-success" className="text-sm text-emerald-700 dark:text-emerald-400">
-        {t.success}
-      </p>
-    );
+    try {
+      router.push("/dashboard");
+    } catch {
+      setErrorMessage(t.errorGeneric);
+      setStatus("error");
+    }
   }
 
   return (
@@ -121,7 +123,7 @@ export function SignUpForm({ locale }: { locale: Locale }) {
       )}
       <button
         type="submit"
-        disabled={status === "submitting"}
+        disabled={status === "submitting" || status === "success"}
         data-testid="auth-signup-submit"
         className="rounded bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
       >

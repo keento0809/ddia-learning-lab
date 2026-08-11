@@ -298,7 +298,6 @@
       "submitting": "Signing in…",
       "errorInvalidCredentials": "Incorrect email or password",
       "errorGeneric": "Sign in failed. Please try again later",
-      "success": "Signed in",
       "signupPrompt": "Don't have an account?",
       "signupLink": "Sign up",
       "resetLink": "Forgot your password?"
@@ -313,7 +312,6 @@
       "errorEmailTaken": "This email address is already registered",
       "errorValidation": "Please check your input",
       "errorGeneric": "Sign up failed. Please try again later",
-      "success": "Account created and signed in",
       "signinPrompt": "Already have an account?",
       "signinLink": "Sign in"
     },

@@ -46,12 +46,12 @@ export default async function SignInPage({
     <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-12">
       <h1 className="text-2xl font-semibold">{t.title}</h1>
       <SignInForm locale={locale} />
-      {/* T-007/T-101/T-112が未実装で遷移先のホーム画面がまだ存在しないため、
-          現時点で実在する/demo(Walking Skeleton)を暫定の遷移先とする。 */}
+      {/* T-112でダッシュボードが実装済みのため、サインイン完了後はS-07
+          (01§7.2)へ遷移する。 */}
       <OAuthButtons
         locale={locale}
         providers={getEnabledOAuthProviders()}
-        callbackUrl={`/${locale}/demo`}
+        callbackUrl={`/${locale}/dashboard`}
       />
       <p className="text-sm text-neutral-600 dark:text-neutral-400">
         <Link href="/auth/reset" className="underline underline-offset-2 hover:no-underline">
