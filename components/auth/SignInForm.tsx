@@ -3,9 +3,11 @@
 import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { getMessages, type Locale } from "@/lib/i18n/messages";
+import { useRouter } from "@/lib/i18n/navigation";
 
 export function SignInForm({ locale }: { locale: Locale }) {
   const t = getMessages(locale).auth.signin;
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -39,19 +41,17 @@ export function SignInForm({ locale }: { locale: Locale }) {
       setStatus("error");
       return;
     }
-    // T-007(共通レイアウト)/T-101(カリキュラム一覧)/T-112(ダッシュボード)が
-    // 未実装のため、サインイン後に遷移すべきホーム画面がまだ存在しない
-    // (存在しないパスへ遷移させると404になる)。現時点ではこの画面上に
-    // 成功状態を表示するのみとする。
+    // S-11→S-07(01§7.1/7.2)。redirect: falseで結果を先に検証しているため、
+    // 成功確定後にここで明示的にダッシュボードへ遷移させる。router.pushが
+    // 例外を投げた場合にstatus:"success"のまま(ボタン無効化・エラー非表示)で
+    // 固着するのを防ぐため、失敗時はerror状態へフォールバックする。
     setStatus("success");
-  }
-
-  if (status === "success") {
-    return (
-      <p data-testid="auth-signin-success" className="text-sm text-emerald-700 dark:text-emerald-400">
-        {t.success}
-      </p>
-    );
+    try {
+      router.push("/dashboard");
+    } catch {
+      setErrorMessage(t.errorGeneric);
+      setStatus("error");
+    }
   }
 
   return (
@@ -93,7 +93,7 @@ export function SignInForm({ locale }: { locale: Locale }) {
       )}
       <button
         type="submit"
-        disabled={status === "submitting"}
+        disabled={status === "submitting" || status === "success"}
         data-testid="auth-signin-submit"
         className="rounded bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
       >

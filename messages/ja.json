@@ -298,7 +298,6 @@
       "submitting": "サインイン中…",
       "errorInvalidCredentials": "メールアドレスまたはパスワードが正しくありません",
       "errorGeneric": "サインインに失敗しました。しばらくしてから再度お試しください",
-      "success": "サインインしました",
       "signupPrompt": "アカウントをお持ちでない場合は",
       "signupLink": "サインアップ",
       "resetLink": "パスワードをお忘れですか?"
@@ -313,7 +312,6 @@
       "errorEmailTaken": "このメールアドレスは既に登録されています",
       "errorValidation": "入力内容を確認してください",
       "errorGeneric": "登録に失敗しました。しばらくしてから再度お試しください",
-      "success": "登録が完了し、サインインしました",
       "signinPrompt": "既にアカウントをお持ちの場合は",
       "signinLink": "サインイン"
     },
