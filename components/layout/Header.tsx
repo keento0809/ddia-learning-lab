@@ -13,14 +13,17 @@ import { AccountMenu } from "@/components/layout/AccountMenu";
  * 決定事項ログ)を避けるためのprefetch={false}は外している。
  * isAuthenticatedはアカウントメニューの表示切替用。呼び出し元のlayout.tsxが
  * 既にGuestProgressImportGate向けに`auth()`結果を保持しているため、ここでは
- * 二重にセッション取得せずpropsで受け取る。
+ * 二重にセッション取得せずpropsで受け取る。AccountMenu.tsxと同じ
+ * isAuthenticatedでロゴの遷移先も分岐させる: ログイン済みは/dashboardへ、
+ * 未ログインは従来通り/(ランディング)へ。
  */
 export function Header({ locale, isAuthenticated }: { locale: Locale; isAuthenticated: boolean }) {
   const t = getMessages(locale).nav;
+  const logoHref = isAuthenticated ? "/dashboard" : "/";
 
   return (
     <header className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-      <Link href="/" prefetch={false} className="font-semibold">
+      <Link href={logoHref} prefetch={false} className="font-semibold">
         {t.brand}
       </Link>
       <nav aria-label={t.mainAriaLabel} className="flex flex-wrap gap-4 text-sm">
