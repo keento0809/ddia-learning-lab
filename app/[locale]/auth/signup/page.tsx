@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { OAuthButtons } from "@/components/auth/OAuthButtons";
-import { Link } from "@/lib/i18n/navigation";
+import { auth } from "@/lib/auth/config";
+import { Link, redirect } from "@/lib/i18n/navigation";
 import { getEnabledOAuthProviders } from "@/lib/auth/providers";
 import { getMessages } from "@/lib/i18n/messages";
 import { routing, type AppLocale } from "@/lib/i18n/routing";
@@ -39,6 +40,12 @@ export default async function SignUpPage({
   const { locale } = await params;
   if (!isAppLocale(locale)) {
     notFound();
+  }
+  // dashboard/page.tsx(未認証→signinへ誘導)の逆方向: ログイン済みでの直接アクセスは
+  // 既にアカウントがあるためサインアップの意味がなく、ダッシュボードへ誘導する。
+  const session = await auth();
+  if (session?.user?.id) {
+    redirect({ href: "/dashboard", locale });
   }
   const t = getMessages(locale).auth.signup;
 
