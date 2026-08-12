@@ -87,8 +87,12 @@ export const authConfig: NextAuthConfig = {
     async jwt({ token, user, account, profile }) {
       // OAuth初回サインイン: adapterを使わないため、ここでworker-apiの
       // oauth-upsertを呼びDB上のユーザーを解決する(以後はCredentialsと同様
-      // token.uidのみで完結する)。
-      if (account?.type === "oauth") {
+      // token.uidのみで完結する)。account.typeはプロバイダの実装方式で
+      // 分岐する(GitHub="oauth", Google="oidc")。"oauth"のみを見ると
+      // OIDCプロバイダがこの分岐から漏れ、Auth.js内部が生成するランダムな
+      // UUIDがtoken.uidに残ってしまう(DBに存在しないユーザーIDとなる)ため、
+      // 両方を対象にする。
+      if (account?.type === "oauth" || account?.type === "oidc") {
         const email = profile?.email ?? user?.email;
         if (typeof email === "string") {
           const upserted = await oauthUpsertViaWorkerApi({
