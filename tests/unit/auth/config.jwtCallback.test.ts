@@ -83,14 +83,21 @@ describe("lib/auth/config jwt callback: OAuth/OIDCプロバイダ双方でoauth-
     ).rejects.toThrow("oauth_account_link_conflict");
   });
 
-  it("Credentialsサインイン(account=null)は従来どおりuser.idをtoken.uidに設定する(回帰確認)", async () => {
+  it("Credentialsサインイン(account.type=\"credentials\")は従来どおりuser.idをtoken.uidに設定する(回帰確認)", async () => {
     vi.mocked(oauthUpsertViaWorkerApi).mockReset();
 
+    // @auth/core/lib/actions/callback/index.js: Credentialsサインインではaccountは
+    // nullではなく`{ type: "credentials", providerAccountId, provider }`が渡される。
     const user: User = { id: "credentials-user-id", email: "cred@example.com" };
+    const account: Account = {
+      type: "credentials",
+      provider: "credentials",
+      providerAccountId: "credentials-user-id",
+    };
     const token = await jwtCallback({
       token: baseToken(),
       user,
-      account: null,
+      account,
       trigger: "signIn",
     });
 
