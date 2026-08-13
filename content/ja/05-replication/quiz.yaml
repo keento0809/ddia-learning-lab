@@ -5,10 +5,10 @@ questions:
     options:
       - id: a
         label: "書き込みのレイテンシが常に高くなる"
-      - id: b
-        label: "確認応答をまだ受け取っていなかった変更がフォロワーに反映されず失われる可能性がある"
       - id: c
         label: "読み取りリクエストがすべて失敗するようになる"
+      - id: b
+        label: "確認応答をまだ受け取っていなかった変更がフォロワーに反映されず失われる可能性がある"
       - id: d
         label: "フォロワーの台数が自動的に減る"
     correctOptionIds: [b]
@@ -31,12 +31,12 @@ questions:
     prompt: "monotonic reads(単調読み取り)一貫性が崩れる典型的な原因は何か?"
     type: single
     options:
-      - id: a
-        label: "同一ユーザーからの連続したリクエストが、進み具合の異なる複数のレプリカへランダムに振られること"
       - id: b
         label: "書き込みがリーダー1台に集約されていること"
       - id: c
         label: "レプリカの台数が1台しかないこと"
+      - id: a
+        label: "同一ユーザーからの連続したリクエストが、進み具合の異なる複数のレプリカへランダムに振られること"
       - id: d
         label: "クォーラムのW値が大きすぎること"
     correctOptionIds: [a]
@@ -47,10 +47,10 @@ questions:
     options:
       - id: a
         label: "自分の投稿を削除した直後、自分のページにまだ表示されている"
-      - id: b
-        label: "同じレプリカに続けて読み取りをしているのにデータが古くなって見える"
       - id: c
         label: "掲示板で『回答』の投稿が先に表示され、その元になった『質問』の投稿がまだ見えない"
+      - id: b
+        label: "同じレプリカに続けて読み取りをしているのにデータが古くなって見える"
       - id: d
         label: "書き込みのレイテンシが同期レプリケーションより短い"
     correctOptionIds: [c]
@@ -59,10 +59,10 @@ questions:
     prompt: "マルチリーダー構成でLast-Write-Wins(LWW)によるコンフリクト解決を採用したときの主なデメリットは何か?"
     type: single
     options:
-      - id: a
-        label: "実装が非常に複雑になる"
       - id: b
         label: "負けた側の書き込みが黙って破棄され、ユーザーからは変更が消えたように見えることがある"
+      - id: a
+        label: "実装が非常に複雑になる"
       - id: c
         label: "コンフリクトが理論上発生しなくなる"
       - id: d
@@ -73,10 +73,10 @@ questions:
     prompt: "レプリカ総数N=4のリーダーレス構成でW=3としたとき、W+R>Nを満たす最小のRはいくつか?"
     type: single
     options:
-      - id: a
-        label: "R=1"
       - id: b
         label: "R=2"
+      - id: a
+        label: "R=1"
       - id: c
         label: "R=3"
       - id: d

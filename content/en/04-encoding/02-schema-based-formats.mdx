@@ -72,8 +72,8 @@ absence of bytes, between "this field was omitted" and "this field's value is
   id="field-tag-purpose"
   prompt="What is the main reason schema-based binary formats use a small integer 'tag' instead of a field name?"
   options={[
-    { id: "a", label: "Tag numbers are used as an encryption key" },
     { id: "b", label: "Identifying data by tag number rather than position makes it easier to distinguish and correctly interpret old and new data even after fields are added or fall out of use" },
+    { id: "a", label: "Tag numbers are used as an encryption key" },
     { id: "c", label: "Using tags always produces a human-readable format" },
     { id: "d", label: "Using tag numbers eliminates the need for a schema definition" }
   ]}

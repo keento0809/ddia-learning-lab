@@ -103,9 +103,9 @@ and tombstones along the way.
   prompt="What is the main role of compaction in an LSM-tree?"
   options={[
     { id: "a", label: "Applying writes directly to disk via random access" },
-    { id: "b", label: "Merging multiple SSTables to remove duplicate keys and unneeded tombstones" },
     { id: "c", label: "Automatically raising the memtable's size limit" },
-    { id: "d", label: "Disabling the bloom filter to simplify reads" }
+    { id: "d", label: "Disabling the bloom filter to simplify reads" },
+    { id: "b", label: "Merging multiple SSTables to remove duplicate keys and unneeded tombstones" }
   ]}
   correctOptionId="b"
   explanation="Compaction merges multiple SSTables in key order, keeps only the newest value for each key, and drops tombstones that are no longer needed — reducing both disk usage and the number of files a read has to check."

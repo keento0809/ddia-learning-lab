@@ -78,9 +78,9 @@ read-your-writes違反がどう再現され、どう解消されるかを手を�
   id="lag-anomaly-match"
   prompt="あるユーザーが投稿を削除したのに、直後にページを再読み込みするとまだ削除前の投稿が表示された。これはどの一貫性が崩れた例か?"
   options={[
-    { id: "a", label: "read-your-writes" },
     { id: "b", label: "monotonic reads" },
     { id: "c", label: "consistent prefix reads" },
+    { id: "a", label: "read-your-writes" },
     { id: "d", label: "どれにも該当しない" }
   ]}
   correctOptionId="a"

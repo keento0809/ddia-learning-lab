@@ -75,8 +75,8 @@ between the risk of losing a write and the latency/availability cost of avoiding
   id="lf-sync-vs-async"
   prompt="For a payment write where losing data must be avoided, versus a social feed update where some delay or loss is tolerable, which replication pairing fits best?"
   options={[
-    { id: "a", label: "Payment = asynchronous, feed update = synchronous" },
     { id: "b", label: "Payment = synchronous (or semi-synchronous), feed update = asynchronous" },
+    { id: "a", label: "Payment = asynchronous, feed update = synchronous" },
     { id: "c", label: "Everything should always be synchronous; there is no place for asynchronous" },
     { id: "d", label: "The replication mode has no effect on availability, so it does not matter" }
   ]}

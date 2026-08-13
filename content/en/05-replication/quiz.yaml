@@ -5,10 +5,10 @@ questions:
     options:
       - id: a
         label: "Write latency always becomes high"
-      - id: b
-        label: "A change that had not yet been acknowledged by a follower may fail to reach it and be lost"
       - id: c
         label: "All read requests start failing"
+      - id: b
+        label: "A change that had not yet been acknowledged by a follower may fail to reach it and be lost"
       - id: d
         label: "The number of followers automatically decreases"
     correctOptionIds: [b]
@@ -31,12 +31,12 @@ questions:
     prompt: "What is the typical root cause of a broken monotonic reads guarantee?"
     type: single
     options:
-      - id: a
-        label: "Consecutive requests from the same user land on different replicas at random, each at a different point of catch-up"
       - id: b
         label: "Writes are funneled through a single leader"
       - id: c
         label: "There is only one replica"
+      - id: a
+        label: "Consecutive requests from the same user land on different replicas at random, each at a different point of catch-up"
       - id: d
         label: "The quorum's W value is too large"
     correctOptionIds: [a]
@@ -47,10 +47,10 @@ questions:
     options:
       - id: a
         label: "A user's own post still shows immediately after they delete it"
-      - id: b
-        label: "Reading the same replica repeatedly still shows data getting older"
       - id: c
         label: "On a forum, an 'answer' post appears before the 'question' post it responds to"
+      - id: b
+        label: "Reading the same replica repeatedly still shows data getting older"
       - id: d
         label: "Write latency is lower than with synchronous replication"
     correctOptionIds: [c]
@@ -59,10 +59,10 @@ questions:
     prompt: "What is the main downside of using last-write-wins (LWW) for conflict resolution in a multi-leader setup?"
     type: single
     options:
-      - id: a
-        label: "The implementation becomes extremely complex"
       - id: b
         label: "The losing write is silently discarded, which can look to the user like their change vanished"
+      - id: a
+        label: "The implementation becomes extremely complex"
       - id: c
         label: "Conflicts theoretically stop happening"
       - id: d
@@ -73,10 +73,10 @@ questions:
     prompt: "In a leaderless setup with N=4 total replicas and W=3, what is the smallest R satisfying W+R>N?"
     type: single
     options:
-      - id: a
-        label: "R=1"
       - id: b
         label: "R=2"
+      - id: a
+        label: "R=1"
       - id: c
         label: "R=3"
       - id: d

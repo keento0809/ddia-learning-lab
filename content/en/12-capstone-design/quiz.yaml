@@ -3,14 +3,14 @@ questions:
     type: single
     prompt: "Which of the following best describes unbundling?"
     options:
-      - id: a
-        label: "Decomposing the roles a single database product used to play into multiple specialized data systems, each suited to a particular use case, and composing them into an overall system"
       - id: b
         label: "Integrating every feature into a single database product to eliminate any dependency on external systems"
       - id: c
         label: "Reducing the number of partitions to one and reverting to a single-node setup"
       - id: d
         label: "Removing replication and tolerating a single point of failure"
+      - id: a
+        label: "Decomposing the roles a single database product used to play into multiple specialized data systems, each suited to a particular use case, and composing them into an overall system"
     correctOptionIds: ["a"]
     explanation: "Unbundling is the idea of decomposing roles into systems specialized for a particular use case, such as search, caching, or an analytical store, and combining them."
 
@@ -33,10 +33,10 @@ questions:
     type: single
     prompt: "Which statement best captures the end-to-end argument?"
     options:
-      - id: a
-        label: "As long as lower-layer reliability (like TCP) is high enough, the application doesn't need to think about correctness at all"
       - id: b
         label: "An application-level correctness guarantee can't be fully delegated to lower layers — it ultimately has to be enforced by both ends of the communication (the application itself)"
+      - id: a
+        label: "As long as lower-layer reliability (like TCP) is high enough, the application doesn't need to think about correctness at all"
       - id: c
         label: "Adopting end-to-end encryption automatically solves the problem of duplicate execution"
       - id: d
@@ -48,10 +48,10 @@ questions:
     type: single
     prompt: "Which design for preventing duplicate execution of a request follows the end-to-end perspective?"
     options:
-      - id: a
-        label: "Make the network reliable enough that retransmission is banned entirely"
       - id: b
         label: "The client issues an idempotency key, and the server avoids treating a request carrying the same key as a new operation"
+      - id: a
+        label: "Make the network reliable enough that retransmission is banned entirely"
       - id: c
         label: "Set the server's timeout to zero"
       - id: d
@@ -63,12 +63,12 @@ questions:
     type: single
     prompt: "In a partitioned, unbundled environment, what's a typical trick for making a uniqueness constraint practical to enforce?"
     options:
-      - id: a
-        label: "Include the key you want to guarantee uniqueness for as (part of) the partition key, so the same key always lands on the same partition"
       - id: b
         label: "Give up on verifying uniqueness and accept that duplicates will occur"
       - id: c
         label: "Consolidate every partition back onto a single node"
+      - id: a
+        label: "Include the key you want to guarantee uniqueness for as (part of) the partition key, so the same key always lands on the same partition"
       - id: d
         label: "Only enforce a uniqueness constraint on the derived data side, and leave the primary database unconstrained"
     correctOptionIds: ["a"]

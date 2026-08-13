@@ -89,8 +89,8 @@ between a write-heavy workload and one that prioritizes stable read latency.
   prompt="What best explains why B-trees tend to have higher write amplification than LSM-trees?"
   options={[
     { id: "a", label: "Because B-trees have no memtable" },
-    { id: "b", label: "Because B-trees rewrite the entire relevant page in place on every small change" },
     { id: "c", label: "Because B-trees don't use a WAL" },
+    { id: "b", label: "Because B-trees rewrite the entire relevant page in place on every small change" },
     { id: "d", label: "Because B-trees don't use bloom filters" }
   ]}
   correctOptionId="b"

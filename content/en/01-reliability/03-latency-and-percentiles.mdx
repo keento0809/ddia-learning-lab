@@ -79,8 +79,8 @@ parallel calls — putting a number on the tail latency amplification described 
   id="latency-tail-amplification"
   prompt="In an architecture where a single request fires 10 backend calls in parallel, why does tail latency amplification occur?"
   options={[
-    { id: "a", label: "Because increasing the number of parallel calls always lowers the overall average response time" },
     { id: "b", label: "Because the overall response time matches whichever of the 10 calls is slowest, and the probability of drawing a slow outlier rises as the number of calls grows" },
+    { id: "a", label: "Because increasing the number of parallel calls always lowers the overall average response time" },
     { id: "c", label: "Because parallel calls change how the p99 itself is calculated" },
     { id: "d", label: "Because parallelizing backend calls always makes p50 and p99 equal" }
   ]}
