@@ -1,0 +1,96 @@
+slug: fixture-capstone-scenario
+title:
+  ja: "テスト用キャップストーンシナリオ"
+  en: "Fixture capstone scenario"
+brief:
+  ja: "generate:curriculumのテストフィクスチャ用の最小シナリオです。"
+  en: "A minimal scenario fixture for generate:curriculum tests."
+decisions:
+  - id: replication
+    prompt:
+      ja: "レプリケーション方式は?"
+      en: "Which replication approach?"
+    options:
+      - id: single-leader
+        label:
+          ja: "シングルリーダー"
+          en: "Single-leader"
+        description:
+          ja: "1台のリーダーが書き込みを受け付ける。"
+          en: "One leader accepts writes."
+      - id: leaderless
+        label:
+          ja: "リーダーレス"
+          en: "Leaderless"
+        description:
+          ja: "クォーラムで読み書きする。"
+          en: "Reads and writes go through quorums."
+  - id: partitioning
+    prompt:
+      ja: "パーティショニング戦略は?"
+      en: "Which partitioning strategy?"
+    options:
+      - id: hash
+        label:
+          ja: "ハッシュ分割"
+          en: "Hash partitioning"
+        description:
+          ja: "キーのハッシュ値で分割する。"
+          en: "Splits by key hash."
+      - id: none
+        label:
+          ja: "分割なし"
+          en: "No partitioning"
+        description:
+          ja: "単一ノードに配置する。"
+          en: "All data lives on a single node."
+  - id: consistency
+    prompt:
+      ja: "整合性モデルは?"
+      en: "Which consistency model?"
+    options:
+      - id: strong
+        label:
+          ja: "強整合性"
+          en: "Strong consistency"
+        description:
+          ja: "全ノードが常に同じ値に同意する。"
+          en: "All nodes always agree on the same value."
+      - id: eventual
+        label:
+          ja: "結果整合性"
+          en: "Eventual consistency"
+        description:
+          ja: "時間経過とともに収束する。"
+          en: "Converges over time."
+outcomes:
+  - id: fixture-broken
+    match:
+      partitioning: none
+    verdict: broken
+    score: 5
+    feedback:
+      ja: "単一ノードでは要件を満たせません。"
+      en: "A single node cannot satisfy the requirements."
+    consequences:
+      - ja: "単一障害点になります。"
+        en: "Becomes a single point of failure."
+  - id: fixture-optimal
+    match:
+      replication: leaderless
+      partitioning: hash
+      consistency: eventual
+    verdict: optimal
+    score: 95
+    feedback:
+      ja: "この組み合わせが最適です。"
+      en: "This combination is optimal."
+    consequences: []
+defaultOutcome:
+  id: default
+  verdict: acceptable
+  score: 55
+  feedback:
+    ja: "このフィクスチャのデフォルト結果です。"
+    en: "This is the fixture's default outcome."
+  consequences: []
