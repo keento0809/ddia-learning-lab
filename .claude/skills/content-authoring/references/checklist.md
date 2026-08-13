@@ -31,6 +31,16 @@
       使わない) [目視]
 - [ ] `<BookRef chapter>` の章番号が原著の対応章と一致している [目視]
 
+## quiz.yaml
+
+- [ ] `type: single` の設問について、`correctOptionIds` が指す選択肢が
+      `options` 配列内で何番目かを数え、モジュール内でその位置(1〜4番目)が
+      特定の1箇所に偏っていない(おおむね均等)ことを確認した
+      [目視。特定位置が突出して多い/ある位置が0件、は要修正のサイン]
+- [ ] 上記の位置調整は `options` の並び替え(`id`+`label`のペアを維持)のみで
+      行い、`correctOptionIds` の値やプロンプト・選択肢の文言は変更していない
+      [目視]
+
 ## 演習(labs/*.yaml)
 
 - [ ] `slug`/`language`/`entry`/`template`/`tests`/`timeoutMs` を

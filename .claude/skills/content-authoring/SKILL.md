@@ -71,6 +71,16 @@ content/{ja,en}/{module-slug}/
    スキーマが正式決定するまでは `questions: []` で仮置きするか、既存モジュールに
    倣う。設問形式を独自に確定させない(CLAUDE.md規則10、依存未充足の領域)。
 
+   **正解選択肢の位置バイアスを避ける**: `type: single` の設問は
+   `correctOptionIds` が指す選択肢が `options` 配列の何番目にあるかで
+   「正解の位置」が決まる。LLMによる設問生成では正解を特定の位置
+   (例: 常に2番目)に置きがちな自己バイアスが生じやすいため、**モジュール内の
+   単一選択設問全体を通して、正解の位置を1〜4番目(選択肢数がそれより多い/
+   少ない設問が混在する場合はその範囲)にほぼ均等に分散させること**。
+   特定の位置に偏らせてはならない。`options` 配列の並び替え(`id`と`label`は
+   常に対で移動させ、`correctOptionIds` の値そのものは変更しない)で調整する。
+   `type: multiple`(複数正解)の設問は位置分散の対象外でよい。
+
 5. **演習YAML(`labs/*.yaml`)を書く**。`slug`/`language`/`entry`/`template`/
    `tests`/`timeoutMs`/`hints` の構造は `lib/contracts/exercise.ts` を正とする。
    **`tests` はja/enで意味的に同一のロジックを保つこと**
