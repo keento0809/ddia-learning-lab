@@ -398,6 +398,9 @@
       "emptyTitle": "No learning in progress",
       "emptyBody": "Start learning from the curriculum",
       "emptyCta": "View curriculum",
+      "continueTitle": "You've completed a lesson",
+      "continueBody": "Continue on to the next lesson",
+      "continueCta": "Go to the next lesson",
       "quizLabel": "Quiz",
       "exerciseLabel": "Exercise"
     },

@@ -24,7 +24,7 @@ import type {
   true;
 
 const DASHBOARD_RESPONSE: GetDashboardResponse = {
-  overall: { lessonsDone: 1, lessonsTotal: 2, exercisesPassed: 1 },
+  overall: { lessonsDone: 0, lessonsTotal: 2, exercisesPassed: 1 },
   modules: [{ slug: "01-reliability", percent: 50 }],
   resume: null,
   streak: { currentDays: 3, longestDays: 3 },

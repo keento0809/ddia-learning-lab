@@ -140,6 +140,33 @@ describe("GET /api/dashboard (T-112)", () => {
     expect(body.badges).toEqual([]);
   });
 
+  it("in_progress行が0件でdone行が複数件の場合、resumeはnullでoverall.lessonsDoneは0より大きい", async () => {
+    await prisma.progress.create({
+      data: {
+        userId,
+        itemType: "lesson",
+        itemSlug: KNOWN_LESSON_1,
+        status: "done",
+        completedAt: new Date("2026-07-19T00:00:00.000Z"),
+      },
+    });
+    await prisma.progress.create({
+      data: {
+        userId,
+        itemType: "lesson",
+        itemSlug: KNOWN_LESSON_2,
+        status: "done",
+        completedAt: new Date("2026-07-20T00:00:00.000Z"),
+      },
+    });
+
+    const { status, body } = await getDashboard();
+    expect(status).toBe(200);
+    expect(body.resume).toBeNull();
+    expect(body.overall.lessonsDone).toBeGreaterThan(0);
+    expect(body.overall).toEqual({ lessonsDone: 2, lessonsTotal: 2, exercisesPassed: 0 });
+  });
+
   it("バッジ: user_badgesに存在する行はslug/grantedAtとして返す", async () => {
     const badge = await prisma.badge.create({
       data: { slug: "part1-complete", criteria: {} },

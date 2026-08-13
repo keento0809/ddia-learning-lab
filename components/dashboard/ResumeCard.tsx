@@ -5,7 +5,8 @@ import { resolveResumeDisplay, resolveResumeHref } from "@/lib/dashboard/resumeT
 
 /**
  * S-07「続きから再開」大型カード(02§4.4上段)。直近のin_progressアイテムへの
- * 導線。in_progressが無い場合はカリキュラムへのCTAを表示する。
+ * 導線。in_progressが無い場合、overall.lessonsDoneに応じて未着手/完了済みの
+ * 2種の空状態を出し分ける(02§4.4)。
  */
 export function ResumeCard({
   locale,
@@ -17,6 +18,7 @@ export function ResumeCard({
   overall: DashboardOverall;
 }) {
   const t = getMessages(locale).dashboard;
+  const hasProgress = overall.lessonsDone > 0;
 
   return (
     <section aria-labelledby="dashboard-resume-heading" data-testid="dashboard-resume" className="mb-8">
@@ -26,6 +28,20 @@ export function ResumeCard({
       <div className="flex flex-wrap items-center justify-between gap-4 rounded border border-neutral-200 p-4 dark:border-neutral-800">
         {resume ? (
           <ResumeContent locale={locale} resume={resume} />
+        ) : hasProgress ? (
+          <div className="flex flex-1 flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xl font-semibold">{t.resume.continueTitle}</p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">{t.resume.continueBody}</p>
+            </div>
+            <Link
+              href="/learn"
+              data-testid="dashboard-resume-continue-cta"
+              className="rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-neutral-100 dark:text-neutral-900"
+            >
+              {t.resume.continueCta}
+            </Link>
+          </div>
         ) : (
           <div className="flex flex-1 flex-wrap items-center justify-between gap-3">
             <div>
