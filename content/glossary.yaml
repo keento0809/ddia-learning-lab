@@ -498,6 +498,14 @@
     ja: システムにかかる負荷の大きさを表すために選ぶ指標。リクエスト数/秒、同時接続数、読み書き比率など、システムのアーキテクチャに応じて意味のある指標を選定する必要がある。
     en: A metric chosen to describe the load placed on a system, such as requests per second, concurrent connections, or the ratio of reads to writes. Which parameters are meaningful depends on the system's architecture.
 
+- slug: scalability
+  term:
+    ja: スケーラビリティ
+    en: scalability
+  definition:
+    ja: 利用者数やデータ量の増加に対して、システムが対処できる能力。スケールアップ(より高性能な1台への置き換え)とスケールアウト(台数を増やして負荷を分散)という2つのアプローチがあり、負荷パラメータを具体的に定めたうえで議論する必要がある。
+    en: A system's ability to cope with growth in users or data volume. Approaches broadly split into scaling up (replacing a machine with a more powerful one) and scaling out (adding more machines to spread the load), and discussing it meaningfully requires first defining concrete load parameters.
+
 - slug: throughput
   term:
     ja: スループット
