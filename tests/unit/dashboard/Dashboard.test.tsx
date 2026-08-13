@@ -93,17 +93,35 @@ describe("Dashboard", () => {
     expect(partIISection).toContain("0%");
   });
 
-  it("renders empty states when there is no resume item and no submissions", () => {
+  it("renders empty states when there is no resume item and no submissions (true new user, lessonsDone=0)", () => {
     const html = renderDashboard({
       curriculumModules: MODULES,
-      dashboard: { ...BASE_DASHBOARD, resume: null, badges: [] },
+      dashboard: {
+        ...BASE_DASHBOARD,
+        overall: { ...BASE_DASHBOARD.overall, lessonsDone: 0 },
+        resume: null,
+        badges: [],
+      },
       heatmapDays: [],
       recentSubmissions: [],
     });
     expect(html).toContain('data-testid="dashboard-resume-empty-cta"');
+    expect(html).not.toContain('data-testid="dashboard-resume-continue-cta"');
     expect(html).not.toContain('data-testid="dashboard-resume-cta"');
     expect(html).toContain('data-testid="dashboard-submissions-empty"');
     expect(html).not.toContain('data-testid="dashboard-badge-granted"');
+  });
+
+  it("renders a continue-to-next-lesson state when lessons are done but nothing is in progress (lessonsDone>0, resume=null)", () => {
+    const html = renderDashboard({
+      curriculumModules: MODULES,
+      dashboard: { ...BASE_DASHBOARD, resume: null },
+      heatmapDays: [],
+      recentSubmissions: [],
+    });
+    expect(html).toContain('data-testid="dashboard-resume-continue-cta"');
+    expect(html).not.toContain('data-testid="dashboard-resume-empty-cta"');
+    expect(html).not.toContain('data-testid="dashboard-resume-cta"');
   });
 
   it("resolves the resume card's title fallback to the module slug when the module is unknown", () => {
