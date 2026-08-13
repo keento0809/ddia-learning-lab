@@ -84,9 +84,9 @@ correctly recovering the remaining fields.
   prompt="Partway through a rolling deploy, an old-version server that hasn't been updated yet needs to read data written by an already-updated new-version server. Which kind of compatibility does this situation require?"
   options={[
     { id: "a", label: "Backward compatibility (new code can read old data)" },
-    { id: "b", label: "Forward compatibility (old code can read new data)" },
     { id: "c", label: "Neither kind of compatibility is relevant here" },
-    { id: "d", label: "This situation can't happen unless the schema is changed" }
+    { id: "d", label: "This situation can't happen unless the schema is changed" },
+    { id: "b", label: "Forward compatibility (old code can read new data)" }
   ]}
   correctOptionId="b"
   explanation="Because the old version (old code) needs to read data written by the new version, this is a question of forward compatibility. Since old and new code run simultaneously during a rolling deploy, both directions of compatibility need to be kept in mind."

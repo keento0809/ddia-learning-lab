@@ -75,8 +75,8 @@ as its own trade-off between propagation speed, fault tolerance, and operational
   id="ml-conflict-detection"
   prompt="What is the fundamental reason write conflicts are more likely in a multi-leader setup than in a single-leader one?"
   options={[
-    { id: "a", label: "Multi-leader setups always have slower networks" },
     { id: "b", label: "Writes are accepted in more than one place, and each leader responds without knowing about the other's write" },
+    { id: "a", label: "Multi-leader setups always have slower networks" },
     { id: "c", label: "In multi-leader setups, all reads must go through a leader" },
     { id: "d", label: "There are no followers in this setup" }
   ]}

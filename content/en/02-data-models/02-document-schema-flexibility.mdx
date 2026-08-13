@@ -84,9 +84,9 @@ often is this data read or written together?"
   prompt="When a team adopts schema-on-read, what new responsibility do they take on?"
   options={[
     { id: "a", label: "None — the database automatically detects every structural inconsistency for you" },
-    { id: "b", label: "Writing branching logic in the reading code that accounts for fields that may or may not be present, and variation in types" },
     { id: "c", label: "The responsibility of always running a migration at write time" },
-    { id: "d", label: "The responsibility of giving up document locality entirely" }
+    { id: "d", label: "The responsibility of giving up document locality entirely" },
+    { id: "b", label: "Writing branching logic in the reading code that accounts for fields that may or may not be present, and variation in types" }
   ]}
   correctOptionId="b"
   explanation="Because schema-on-read has no format enforcement at write time, the responsibility for interpreting the shape of the data shifts to the reading code. It has to be written with branches that assume old and new data shapes can coexist."

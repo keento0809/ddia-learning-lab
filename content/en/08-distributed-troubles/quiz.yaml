@@ -18,12 +18,12 @@ questions:
     type: single
     prompt: "Which tradeoff typically arises from setting a shorter timeout value?"
     options:
-      - id: a
-        label: "False positives increase — nodes that are actually still running get incorrectly classified as down"
       - id: b
         label: "False positives always decrease"
       - id: c
         label: "Network bandwidth consumption increases"
+      - id: a
+        label: "False positives increase — nodes that are actually still running get incorrectly classified as down"
       - id: d
         label: "The system becomes immune to clock drift"
     correctOptionIds: ["a"]
@@ -65,12 +65,12 @@ questions:
     options:
       - id: a
         label: "Variation in how long packets take to arrive due to network delay"
-      - id: b
-        label: "A gradual mismatch between a clock and true elapsed time caused by oscillator variation and environmental factors, accumulating over time"
       - id: c
         label: "A bug where an NTP server always returns an inaccurate time"
       - id: d
         label: "A phenomenon where a monotonic clock runs backward"
+      - id: b
+        label: "A gradual mismatch between a clock and true elapsed time caused by oscillator variation and environmental factors, accumulating over time"
     correctOptionIds: ["b"]
     explanation: "Clock drift is the error in a clock's rate caused by hardware and environmental factors, and it accumulates over time until the next correction."
 
@@ -95,10 +95,10 @@ questions:
     options:
       - id: a
         label: "A fault where a node stops completely and no longer responds"
-      - id: b
-        label: "Unpredictable misbehavior, such as a node sending contradictory information or violating the protocol"
       - id: c
         label: "A temporary delay in the network"
+      - id: b
+        label: "Unpredictable misbehavior, such as a node sending contradictory information or violating the protocol"
       - id: d
         label: "A state where clock drift has become extremely large"
     correctOptionIds: ["b"]

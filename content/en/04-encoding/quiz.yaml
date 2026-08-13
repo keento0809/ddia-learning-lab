@@ -5,22 +5,22 @@ questions:
     options:
       - id: a
         label: "Being viewable as-is via curl or a browser's developer tools"
-      - id: b
-        label: "Keeping size compact by avoiding writing out field name strings every time"
       - id: c
         label: "Being readable and writable right away in many programming languages"
       - id: d
         label: "Letting you trace the content visually while debugging"
+      - id: b
+        label: "Keeping size compact by avoiding writing out field name strings every time"
     correctOptionIds: [b]
     explanation: "Because textual formats write out field names and delimiters as-is, they tend to be larger than binary formats for the same amount of information."
   - id: q2
     prompt: "What is the main goal of using a small integer 'tag' instead of a field name in a schema-based binary format?"
     type: single
     options:
-      - id: a
-        label: "Using tags always makes the encoding human-readable"
       - id: b
         label: "Fields can be identified by tag number rather than position, allowing flexible handling of schema changes"
+      - id: a
+        label: "Using tags always makes the encoding human-readable"
       - id: c
         label: "Using tags removes the need to share a schema at all"
       - id: d
@@ -33,10 +33,10 @@ questions:
     options:
       - id: a
         label: "Forward compatibility"
-      - id: b
-        label: "Backward compatibility"
       - id: c
         label: "Horizontal scalability"
+      - id: b
+        label: "Backward compatibility"
       - id: d
         label: "Idempotence"
     correctOptionIds: [b]
@@ -45,10 +45,10 @@ questions:
     prompt: "When adding a field to a schema, what is the most important compatibility concern to watch for?"
     type: single
     options:
-      - id: a
-        label: "If the added field is treated as required, new code will fail to read old data that lacks it"
       - id: b
         label: "Adding a field always preserves every kind of compatibility automatically"
+      - id: a
+        label: "If the added field is treated as required, new code will fail to read old data that lacks it"
       - id: c
         label: "Adding a field always requires reusing a tag number"
       - id: d
@@ -103,11 +103,11 @@ questions:
     options:
       - id: a
         label: "When the same process never restarts"
-      - id: b
-        label: "When the code version at write time differs from the code version at read time (including app updates and rollbacks)"
       - id: c
         label: "Processing that completes entirely in memory without ever touching a database"
       - id: d
         label: "A configuration with no read-only replicas"
+      - id: b
+        label: "When the code version at write time differs from the code version at read time (including app updates and rollbacks)"
     correctOptionIds: [b]
     explanation: "Because the application's code version can differ between when data is written to a database and when it's read back (including updates and rollbacks), compatibility in both directions matters."

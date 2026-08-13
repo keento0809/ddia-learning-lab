@@ -3,10 +3,10 @@ questions:
     type: single
     prompt: "What is the main advantage of message delivery based on an append-only event log compared to a traditional message queue where messages are deleted once delivered?"
     options:
-      - id: a
-        label: "Multiple consumer groups can each read the same events independently, at their own pace, using their own separate offsets"
       - id: b
         label: "It guarantees that a message is always delivered exactly once"
+      - id: a
+        label: "Multiple consumer groups can each read the same events independently, at their own pace, using their own separate offsets"
       - id: c
         label: "It consumes no disk space at all"
       - id: d
@@ -18,10 +18,10 @@ questions:
     type: single
     prompt: "What is the role of a consumer offset?"
     options:
-      - id: a
-        label: "A setting that determines the retention period of the entire event log"
       - id: b
         label: "A position indicating how far a given consumer has read through the log"
+      - id: a
+        label: "A setting that determines the retention period of the entire event log"
       - id: c
         label: "A value representing the width (in milliseconds) of a windowed aggregation"
       - id: d
@@ -33,14 +33,14 @@ questions:
     type: single
     prompt: "Why is it a problem when application code writes to the DB and sends an event separately, as a 'dual write'?"
     options:
-      - id: a
-        label: "If a crash or similar failure happens between the two separate writes, there's no way to avoid an inconsistency where only one of them succeeded"
       - id: b
         label: "Writing to the DB is always slower than sending the event"
       - id: c
         label: "Event streams don't support transactions at all, so inconsistency is guaranteed"
       - id: d
         label: "Dual writes are technically impossible to implement"
+      - id: a
+        label: "If a crash or similar failure happens between the two separate writes, there's no way to avoid an inconsistency where only one of them succeeded"
     correctOptionIds: ["a"]
     explanation: "Writing to the DB and sending the event are independent operations against separate systems, so they can't be made to succeed or fail atomically together — an inconsistency where only one of them succeeds can occur."
 
@@ -48,10 +48,10 @@ questions:
     type: single
     prompt: "How does the outbox pattern avoid the dual-write problem?"
     options:
-      - id: a
-        label: "By writing the actual data update and the record of the event to send within the same database transaction"
       - id: b
         label: "By sending the event first, and only writing to the DB if that succeeds"
+      - id: a
+        label: "By writing the actual data update and the record of the event to send within the same database transaction"
       - id: c
         label: "By eliminating writes to the DB entirely and treating the event stream as the sole source of truth"
       - id: d
@@ -63,12 +63,12 @@ questions:
     type: single
     prompt: "Which statement correctly describes the difference between tumbling windows and sliding windows?"
     options:
-      - id: a
-        label: "A tumbling window divides time into non-overlapping fixed-length intervals, while a sliding window shifts by a configured step size, so neighboring windows can overlap"
       - id: b
         label: "A sliding window always has lower computational cost than a tumbling window"
       - id: c
         label: "A tumbling window allows a single event to belong to multiple windows"
+      - id: a
+        label: "A tumbling window divides time into non-overlapping fixed-length intervals, while a sliding window shifts by a configured step size, so neighboring windows can overlap"
       - id: d
         label: "A sliding window has no concept of an end time"
     correctOptionIds: ["a"]
@@ -78,14 +78,14 @@ questions:
     type: single
     prompt: "Which statement correctly describes the difference between event time and processing time?"
     options:
-      - id: a
-        label: "Event time is when something actually occurred, and processing time is when the stream processing system processed that event; the two aren't guaranteed to match"
       - id: b
         label: "Event time and processing time are always the same value"
       - id: c
         label: "Bucketing by processing time guarantees you get the same aggregate result every time, even after replaying and recomputing the stream"
       - id: d
         label: "Event time is taken from the processing system's server clock"
+      - id: a
+        label: "Event time is when something actually occurred, and processing time is when the stream processing system processed that event; the two aren't guaranteed to match"
     correctOptionIds: ["a"]
     explanation: "Event time (when something happened) and processing time (when it was processed) can diverge due to network delay, retransmission, and similar factors, so the two need to be treated as distinct."
 

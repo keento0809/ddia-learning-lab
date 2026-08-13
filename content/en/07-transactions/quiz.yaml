@@ -3,10 +3,10 @@ questions:
     type: single
     prompt: "Which ACID property guarantees that the operations in a transaction either all take effect or none of them do?"
     options:
-      - id: a
-        label: "Atomicity"
       - id: b
         label: "Consistency"
+      - id: a
+        label: "Atomicity"
       - id: c
         label: "Isolation"
       - id: d
@@ -18,12 +18,12 @@ questions:
     type: single
     prompt: "What is the name for the anomaly where a transaction reads a write made by another transaction before that write has committed?"
     options:
+      - id: c
+        label: "Dirty read"
       - id: a
         label: "Read skew"
       - id: b
         label: "Write skew"
-      - id: c
-        label: "Dirty read"
       - id: d
         label: "Dirty write"
     correctOptionIds: ["c"]
@@ -33,12 +33,12 @@ questions:
     type: single
     prompt: "What is the name for the anomaly where a transaction reads multiple values, another transaction commits an update to only some of them in between, and an inconsistent combination of values is observed?"
     options:
-      - id: a
-        label: "Read skew"
       - id: b
         label: "Write skew"
       - id: c
         label: "Dirty read"
+      - id: a
+        label: "Read skew"
       - id: d
         label: "Dirty write"
     correctOptionIds: ["a"]
@@ -65,10 +65,10 @@ questions:
     options:
       - id: a
         label: "It prevents both read skew and write skew"
-      - id: b
-        label: "It prevents read skew, but may not prevent write skew"
       - id: c
         label: "It does not prevent dirty reads"
+      - id: b
+        label: "It prevents read skew, but may not prevent write skew"
       - id: d
         label: "It always runs transactions one at a time, in order"
     correctOptionIds: ["b"]
@@ -80,12 +80,12 @@ questions:
     options:
       - id: a
         label: "It always processes transactions the fastest"
-      - id: b
-        label: "Running multiple transactions concurrently produces the same result as running them one at a time in some order"
       - id: c
         label: "It can be implemented entirely without locks"
       - id: d
         label: "It only prevents dirty reads"
+      - id: b
+        label: "Running multiple transactions concurrently produces the same result as running them one at a time in some order"
     correctOptionIds: ["b"]
     explanation: "Serializable guarantees that the result of running multiple transactions concurrently matches the result of running them one at a time in some serial order."
 
@@ -93,10 +93,10 @@ questions:
     type: single
     prompt: "Which description of two-phase locking's \"growing phase\" and \"shrinking phase\" is correct?"
     options:
-      - id: a
-        label: "The growing phase releases locks, and the shrinking phase acquires locks"
       - id: b
         label: "The growing phase acquires locks, the shrinking phase releases them, and no new lock may be acquired once the shrinking phase has begun"
+      - id: a
+        label: "The growing phase releases locks, and the shrinking phase acquires locks"
       - id: c
         label: "Locks can be freely acquired and released in either phase"
       - id: d

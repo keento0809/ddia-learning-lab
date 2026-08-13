@@ -100,9 +100,9 @@ cost scales with the amount of data.
   prompt="In an order system, you want to prioritize the display speed of the order list screen (orders and shipping addresses are read together frequently, but addresses are updated rarely). What's the most reasonable design decision?"
   options={[
     { id: "a", label: "Keep the address normalized, and join against the address table every time the order list is displayed" },
-    { id: "b", label: "Denormalize a snapshot of the shipping address into the order data, so a single read is enough" },
     { id: "c", label: "Don't store the address at all, and have the user re-enter it every time" },
-    { id: "d", label: "Normalization vs. denormalization makes no difference to performance either way" }
+    { id: "d", label: "Normalization vs. denormalization makes no difference to performance either way" },
+    { id: "b", label: "Denormalize a snapshot of the shipping address into the order data, so a single read is enough" }
   ]}
   correctOptionId="b"
   explanation="Data that's read frequently but updated rarely is the classic case where denormalizing to lower read cost outweighs the write cost. Shipping addresses in particular also carry meaning as a snapshot of the address at the time the order was placed."

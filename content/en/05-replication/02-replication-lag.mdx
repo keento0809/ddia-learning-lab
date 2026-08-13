@@ -81,9 +81,9 @@ read-your-writes violation gets reproduced — and resolved.
   id="lag-anomaly-match"
   prompt="A user deletes a post, but reloading the page right afterward still shows the deleted post. Which consistency expectation was broken here?"
   options={[
-    { id: "a", label: "read-your-writes" },
     { id: "b", label: "monotonic reads" },
     { id: "c", label: "consistent prefix reads" },
+    { id: "a", label: "read-your-writes" },
     { id: "d", label: "None of the above" }
   ]}
   correctOptionId="a"

@@ -3,10 +3,10 @@ questions:
     prompt: "Which statement about an append-only-log-plus-hash-index key-value store is correct?"
     type: single
     options:
-      - id: a
-        label: "The whole index doesn't necessarily need to fit in memory"
       - id: b
         label: "Writes are always sequential appends to the end of the file"
+      - id: a
+        label: "The whole index doesn't necessarily need to fit in memory"
       - id: c
         label: "It's good at range queries that rely on key ordering"
       - id: d
@@ -19,10 +19,10 @@ questions:
     options:
       - id: a
         label: "Rewrite and erase the matching line in the log directly"
-      - id: b
-        label: "Append a special marker value (a tombstone) as a new entry"
       - id: c
         label: "Just remove the key's entry from the index and leave the log untouched"
+      - id: b
+        label: "Append a special marker value (a tombstone) as a new entry"
       - id: d
         label: "Rebuild the entire log file from scratch"
     correctOptionIds: [b]
@@ -33,12 +33,12 @@ questions:
     options:
       - id: a
         label: "Because an SSTable doesn't go through a memtable"
-      - id: b
-        label: "Because entries within an SSTable are sorted by key, so a sparse index is enough to get close to the target"
       - id: c
         label: "Because an SSTable has no bloom filter"
       - id: d
         label: "Because an SSTable always lives in memory"
+      - id: b
+        label: "Because entries within an SSTable are sorted by key, so a sparse index is enough to get close to the target"
     correctOptionIds: [b]
     explanation: "Because an SSTable is sorted by key, there's no need to remember every key's position — a sparse index can jump close and then scan sequentially, which makes range queries and handling large datasets much easier."
   - id: q4
@@ -73,24 +73,24 @@ questions:
     prompt: "What's the main benefit of a B-tree index having a high branching factor (the number of child pages one page can point to)?"
     type: single
     options:
-      - id: a
-        label: "The tree's depth grows only slowly as data volume increases, keeping the number of pages a search touches low"
       - id: b
         label: "It eliminates the need for compaction"
       - id: c
         label: "Writes become append-only"
       - id: d
         label: "It eliminates the need for a memtable"
+      - id: a
+        label: "The tree's depth grows only slowly as data volume increases, keeping the number of pages a search touches low"
     correctOptionIds: [a]
     explanation: "The higher the branching factor, the shallower the tree can stay for the same amount of data, which keeps the number of pages traversed from root to leaf — roughly the number of disk accesses — low."
   - id: q7
     prompt: "Why do B-tree implementations commonly also use a write-ahead log (WAL)?"
     type: single
     options:
-      - id: a
-        label: "To speed up range queries"
       - id: b
         label: "To record changes ahead of time so they can be replayed for recovery if a crash happens partway through rewriting a page in place"
+      - id: a
+        label: "To speed up range queries"
       - id: c
         label: "To convert to column-oriented storage"
       - id: d
