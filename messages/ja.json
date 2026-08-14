@@ -399,8 +399,8 @@
       "emptyBody": "カリキュラムから学習を始めましょう",
       "emptyCta": "カリキュラムを見る",
       "continueTitle": "レッスンを完了しました",
-      "continueBody": "次のレッスンに進みましょう",
-      "continueCta": "次のレッスンに進む",
+      "continueBody": "引き続き学習を進めましょう",
+      "continueCta": "カリキュラムへ進む",
       "quizLabel": "確認クイズ",
       "exerciseLabel": "演習"
     },
