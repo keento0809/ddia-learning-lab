@@ -75,6 +75,17 @@ const ALLOWED_ADVISORIES = [
     package: "undici",
     reason: "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
   },
+  {
+    id: "GHSA-ggr8-5vv4-36mx",
+    package: "deepmerge-ts",
+    reason:
+      "prisma@7.9.1が要求する@prisma/config由来(`prisma generate`/CLI設定読み込み専用、" +
+      "prisma.config.tsのマージ処理にのみ使用)。ビルド・postinstall時のCLI実行でのみ" +
+      "動作し、アプリケーションコードから一切importされない。wrangler dry-runで生成した" +
+      "worker-app/worker-api双方の実Workerバンドルに'deepmerge-ts'文字列が0件であることを" +
+      "実測済み。npm auditが提示する唯一の修正経路はprisma@6.12.0へのメジャーダウングレード" +
+      "(ADR-007のPrisma採用方針に反する)。",
+  },
 ];
 
 const allowedIds = new Set(ALLOWED_ADVISORIES.map((a) => a.id));
