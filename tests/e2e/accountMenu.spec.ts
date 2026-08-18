@@ -1,26 +1,27 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * 回帰テスト: ヘッダーのアカウントメニュー(components/layout/AccountMenu.tsx)。
- * 修正前は未ログイン時の「ログイン」項目が存在しない/auth(index)を指しており
- * page not foundになっていた(正しくは/auth/signin)。また未ログイン/ログイン済み
- * の両方で同一の2項目(設定・ログイン)を出しており、未ログイン時に「設定」を押すと
- * 認証必須ゆえサインインへ押し戻される体験だった。isAuthenticatedに応じて
- * 出す項目を1つに絞ったため、未ログイン時にクリック→正しい遷移先になることを
- * ここで検証する。
+ * 回帰テスト: ヘッダーのアカウント表示(components/layout/AccountMenu.tsx)。
  *
- * ログイン済み状態のクリック回帰(設定への遷移)は本ファイルでは検証しない:
- * ログインにはCredentials検証(worker-api経由、dispatchToWorkerApi)が必要だが、
- * `next dev`はCloudflare Service Bindingをエミュレートできず
- * (2026-07-31付「next devはService Bindingをエミュレートできない」決定事項、
- * `npm run test:e2e`が使うwebServerは`next dev`)、この構成では
- * サインアップ/サインインが503で必ず失敗する。ログイン済み時の項目切替
- * (「設定」のみ表示・hrefが/settings)はtests/unit/layout/AccountMenu.test.tsxが
- * worker-api非依存で検証し、実ブラウザでのログイン済みクリック遷移は
- * `npm run preview`(実workerd)で手動確認する。
+ * PROMPT_HEADER_AVATARで、未ログイン時の導線を「アカウント」ボタン→
+ * ドロップダウンを開く→「ログイン」を選ぶという2段階から、ヘッダー上に
+ * 直接クリック可能な「ログイン」リンクへ変更した(ドロップダウンを介さず
+ * 1クリックでサインイン画面へ遷移する)。遷移先URL自体は変更していない
+ * (/auth/signin)。
+ *
+ * ログイン済み状態(アバター表示・クリックで既存ドロップダウンが開くこと)は
+ * 本ファイルでは検証しない: ログインにはCredentials検証(worker-api経由、
+ * dispatchToWorkerApi)が必要だが、`next dev`はCloudflare Service Bindingを
+ * エミュレートできず(2026-07-31付「next devはService Bindingをエミュレート
+ * できない」決定事項、`npm run test:e2e`が使うwebServerは`next dev`)、この
+ * 構成では サインアップ/サインインが503で必ず失敗する。ログイン済み時の
+ * トリガー要素の切替(アバターのprops)・ドロップダウンの中身(設定・ログアウト)
+ * 不変であることはtests/unit/layout/AccountMenu.test.tsxがworker-api非依存で
+ * 検証し、実ブラウザでのアバター表示・クリック開閉は`npm run preview`
+ * (実workerd)で手動確認する。
  */
 
-test("未ログイン時: アカウントメニューの「ログイン」がサインイン画面へ遷移する(404にならない)", async ({
+test("未ログイン時: ヘッダー上の「ログイン」がドロップダウンを介さず1クリックでサインイン画面へ遷移する(404にならない)", async ({
   page,
 }) => {
   const consoleErrors: string[] = [];
@@ -29,13 +30,16 @@ test("未ログイン時: アカウントメニューの「ログイン」がサ
   });
 
   await page.goto("/en/demo");
-  await page.getByRole("button", { name: "Open account menu", exact: true }).click();
 
-  const signInItem = page.getByRole("menuitem", { name: "Sign in", exact: true });
-  await expect(signInItem).toBeVisible();
-  await expect(page.getByRole("menuitem", { name: "Settings", exact: true })).toHaveCount(0);
+  // ドロップダウンのトリガー(「アカウントメニューを開く」ボタン)はもう存在しない。
+  await expect(
+    page.getByRole("button", { name: "Open account menu", exact: true }),
+  ).toHaveCount(0);
 
-  await signInItem.click();
+  const signInLink = page.getByRole("link", { name: "Sign in", exact: true });
+  await expect(signInLink).toBeVisible();
+
+  await signInLink.click();
 
   // /en/auth/signinの並列実行下オンデマンドコンパイル(初回アクセス)がtoHaveURLの
   // 既定タイムアウト(5s)を超えることがある(tests/e2e/labOfficialRoute.spec.ts:50-54と

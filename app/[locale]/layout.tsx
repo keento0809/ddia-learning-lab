@@ -37,6 +37,13 @@ export default async function LocaleLayout({
   }
   const session = await auth();
   const isAuthenticated = Boolean(session?.user?.id);
+  // OAuth(Google/GitHub)ユーザーはAuth.js側で既にsession.user.imageに
+  // profile.picture/avatar_urlが入る(next-auth既定のjwt/session処理、
+  // @auth/core/providers/github.js・providers.js参照。Credentialsユーザーは
+  // authorize()がimageを返さないためundefinedのまま)。lib/contracts/や
+  // next-authのSession型に変更は不要(DefaultUserが元からid/name/image任意)。
+  const avatarUrl = session?.user?.image ?? null;
+  const displayName = session?.user?.name ?? null;
 
   return (
     // テーマ切替のbeforeInteractiveスクリプトがハイドレーション前に<html>へ
@@ -56,7 +63,12 @@ export default async function LocaleLayout({
             usePathname/useRouterがこのProviderのロケールcontextに依存するため
             Provider自体は必須)。 */}
         <NextIntlClientProvider locale={locale} messages={{}}>
-          <Header locale={locale} isAuthenticated={isAuthenticated} />
+          <Header
+            locale={locale}
+            isAuthenticated={isAuthenticated}
+            avatarUrl={avatarUrl}
+            displayName={displayName}
+          />
           <AppQueryProvider>
             <GuestProgressImportGate isAuthenticated={isAuthenticated} />
             <div className="flex-1">{children}</div>
