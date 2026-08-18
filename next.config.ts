@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
 import remarkFrontmatter from "remark-frontmatter";
+import remarkGfm from "remark-gfm";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
@@ -20,9 +21,11 @@ const nextConfig: NextConfig = {
  * MDXコンポーネント側でこの値を使う必要はないため`remark-mdx-frontmatter`
  * (値のexport)までは導入しない。
  */
+export const mdxRemarkPlugins = [remarkFrontmatter, remarkGfm];
+
 const withMDX = createMDX({
   options: {
-    remarkPlugins: [remarkFrontmatter],
+    remarkPlugins: mdxRemarkPlugins,
   },
 });
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
