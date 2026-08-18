@@ -16,8 +16,21 @@ import { AccountMenu } from "@/components/layout/AccountMenu";
  * 二重にセッション取得せずpropsで受け取る。AccountMenu.tsxと同じ
  * isAuthenticatedでロゴの遷移先も分岐させる: ログイン済みは/dashboardへ、
  * 未ログインは従来通り/(ランディング)へ。
+ * avatarUrl/displayNameはヘッダー右端のアバター表示(AccountMenu.tsx)用。
+ * こちらも同様にlayout.tsxのauth()結果をpropsで受け取るのみで、
+ * ここでは加工しない。
  */
-export function Header({ locale, isAuthenticated }: { locale: Locale; isAuthenticated: boolean }) {
+export function Header({
+  locale,
+  isAuthenticated,
+  avatarUrl,
+  displayName,
+}: {
+  locale: Locale;
+  isAuthenticated: boolean;
+  avatarUrl?: string | null;
+  displayName?: string | null;
+}) {
   const t = getMessages(locale).nav;
   const logoHref = isAuthenticated ? "/dashboard" : "/";
 
@@ -40,7 +53,12 @@ export function Header({ locale, isAuthenticated }: { locale: Locale; isAuthenti
       <div className="ml-auto flex items-center gap-2 text-sm">
         <LocaleToggle locale={locale} />
         <ThemeToggle locale={locale} />
-        <AccountMenu locale={locale} isAuthenticated={isAuthenticated} />
+        <AccountMenu
+          locale={locale}
+          isAuthenticated={isAuthenticated}
+          avatarUrl={avatarUrl}
+          displayName={displayName}
+        />
       </div>
     </header>
   );

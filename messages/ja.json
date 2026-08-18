@@ -26,11 +26,12 @@
     "switchToLight": "ライトテーマに切り替える"
   },
   "account": {
-    "menuLabel": "アカウント",
     "menuAriaLabel": "アカウントメニューを開く",
     "settings": "設定",
     "signIn": "ログイン",
-    "logout": "ログアウト"
+    "logout": "ログアウト",
+    "avatarAlt": "{name}のアバター画像",
+    "avatarAltDefault": "ユーザーのアバター画像"
   },
   "footer": {
     "navAriaLabel": "フッタナビゲーション",

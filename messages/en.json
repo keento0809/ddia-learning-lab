@@ -26,11 +26,12 @@
     "switchToLight": "Switch to light theme"
   },
   "account": {
-    "menuLabel": "Account",
     "menuAriaLabel": "Open account menu",
     "settings": "Settings",
     "signIn": "Sign in",
-    "logout": "Log out"
+    "logout": "Log out",
+    "avatarAlt": "{name}'s avatar",
+    "avatarAltDefault": "User avatar"
   },
   "footer": {
     "navAriaLabel": "Footer navigation",
