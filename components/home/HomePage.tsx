@@ -1,3 +1,4 @@
+import { auth } from "@/lib/auth/config";
 import { Link } from "@/lib/i18n/navigation";
 import { formatMessage, getMessages, type Locale } from "@/lib/i18n/messages";
 import {
@@ -11,17 +12,27 @@ import {
  * 03_実装タスク分割書.md のタスクDAGにS-01が含まれておらず(T-101から開始)、
  * `app/[locale]/page.tsx` 自体が未実装のまま`/{locale}`が404を返していたため、
  * T-100として本タスクを起票し実装した(STATUS.md 決定事項ログ参照)。
+ *
+ * ログイン中でもヒーローの登録導線(ctaSecondary→/auth/signup)がそのまま
+ * 表示され、既存ユーザーに再登録を促していたため、認証状態をここで直接
+ * auth()から取得し、続行導線(→/dashboard)に出し分ける(強制リダイレクトは
+ * シェアURL/ADR-009のPublic設計を損なうため不採用)。
  */
-export function HomePage({
+export async function HomePage({
   locale,
   modules,
 }: {
   locale: Locale;
   modules: readonly CurriculumModuleSummary[];
 }) {
+  const session = await auth();
+  const isAuthenticated = Boolean(session?.user?.id);
   const t = getMessages(locale).home;
   const curriculumT = getMessages(locale).curriculum;
   const grouped = groupModulesByPart(modules);
+  const secondaryCta = isAuthenticated
+    ? { href: "/dashboard" as const, label: t.ctaSecondaryAuthenticated }
+    : { href: "/auth/signup" as const, label: t.ctaSecondary };
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
@@ -37,11 +48,11 @@ export function HomePage({
             {t.ctaPrimary}
           </Link>
           <Link
-            href="/auth/signup"
+            href={secondaryCta.href}
             data-testid="home-cta-secondary"
             className="rounded border border-neutral-300 px-4 py-2 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
           >
-            {t.ctaSecondary}
+            {secondaryCta.label}
           </Link>
         </div>
       </section>
