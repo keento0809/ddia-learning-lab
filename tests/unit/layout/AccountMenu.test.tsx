@@ -177,7 +177,40 @@ describe("AccountAvatar: 画像・イニシャル・デフォルトアイコン�
     expect(img.props.alt).toBe("Ada Lovelace's avatar");
   });
 
-  it("画像読み込み失敗(onError)時はimgを非表示にし、下のイニシャルへフォールバックする", () => {
+  /**
+   * PR#141→本修正: CSP img-srcブロック時にonErrorが発火しないブラウザ実装差異
+   * (WebKit/Safari系の既知挙動)があるため、imgは初期状態で非表示にし、
+   * onLoad成功時のみ表示へ切り替える設計にした(onErrorのみに依存しない)。
+   */
+  it("imgは初期状態で非表示(下のイニシャル/デフォルトアイコンが見える)にする", () => {
+    const avatar = AccountAvatar({
+      avatarUrl: "https://example.com/avatar.png",
+      displayName: "Ada Lovelace",
+      altText: "Ada Lovelace's avatar",
+    });
+    const [, img] = avatar.props.children as [ReactElement, ReactElement<{ style: { display: string } }>];
+
+    expect(img.props.style.display).toBe("none");
+  });
+
+  it("画像読み込み成功(onLoad)時にimgを表示へ切り替える", () => {
+    const avatar = AccountAvatar({
+      avatarUrl: "https://example.com/avatar.png",
+      displayName: "Ada Lovelace",
+      altText: "Ada Lovelace's avatar",
+    });
+    const [, img] = avatar.props.children as [
+      ReactElement,
+      ReactElement<{ onLoad: (event: { currentTarget: { style: { display: string } } }) => void }>,
+    ];
+    const fakeEvent = { currentTarget: { style: { display: "none" } } };
+
+    img.props.onLoad(fakeEvent);
+
+    expect(fakeEvent.currentTarget.style.display).toBe("");
+  });
+
+  it("画像読み込み失敗(onError、CSP以外の要因でerrorイベントが発火するケース)時はimgを非表示のままにし、下のイニシャルへフォールバックする", () => {
     const avatar = AccountAvatar({
       avatarUrl: "https://example.com/broken.png",
       displayName: "Ada Lovelace",
