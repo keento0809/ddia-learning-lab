@@ -31,4 +31,31 @@ describe("renderNoteMarkdown", () => {
     expect(html).toContain("<li>項目1</li>");
     expect(html).toContain("<strong>強調</strong>");
   });
+
+  /**
+   * tests/security/csp-t704-repentest.test.ts参照。style属性はDOMPurify既定の
+   * 許可属性で、<style>要素と異なりCSS値のサニタイズを通らないためurl()が
+   * そのまま残る(=残存XSS/ビーコン経路)。style属性ごと禁止して無害化する。
+   */
+  it("strips the style attribute (including url()) from injected HTML", () => {
+    const html = renderNoteMarkdown('<p style="background:url(http://127.0.0.1:8899/exfil)">本文</p>');
+    expect(html).not.toContain("style=");
+    expect(html).not.toContain("url(");
+    expect(html).not.toContain("127.0.0.1:8899");
+    expect(html).toContain("本文");
+  });
+
+  it("strips the style attribute using an alternate quoting/url() form", () => {
+    const html = renderNoteMarkdown("<div style=\"background-image:url('http://127.0.0.1:8899/exfil2')\">本文</div>");
+    expect(html).not.toContain("style=");
+    expect(html).not.toContain("127.0.0.1:8899");
+    expect(html).toContain("本文");
+  });
+
+  it("still removes <style> elements entirely (content is dropped, not just the tag)", () => {
+    const html = renderNoteMarkdown("<style>body{background:url(http://127.0.0.1:8899/exfil3)}</style>本文");
+    expect(html).not.toContain("<style");
+    expect(html).not.toContain("127.0.0.1:8899");
+    expect(html).toContain("本文");
+  });
 });
