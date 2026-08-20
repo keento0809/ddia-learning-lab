@@ -12,8 +12,13 @@ marked.setOptions({ breaks: true, gfm: true });
  * DOMPurifyは`window`/`document`に依存するためブラウザ専用(呼び出し側は
  * `next/dynamic({ssr:false})`でクライアントのみロードすること、
  * components/lesson/LessonNotes.tsx参照)。
+ *
+ * `style`属性は既定の許可属性に含まれ、`<style>`要素と異なりDOMPurifyの
+ * CSS値サニタイズを通らないため`url()`が無害化されずに残る
+ * (tests/security/csp-t704-repentest.test.ts参照)。ノートのMarkdown表示に
+ * インラインstyleを要する正当な用途はないため、属性ごと禁止する。
  */
 export function renderNoteMarkdown(bodyMd: string): string {
   const rawHtml = marked.parse(bodyMd, { async: false });
-  return DOMPurify.sanitize(rawHtml);
+  return DOMPurify.sanitize(rawHtml, { FORBID_ATTR: ["style"] });
 }
