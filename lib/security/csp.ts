@@ -34,6 +34,39 @@ const JSDELIVR_ORIGIN = "https://cdn.jsdelivr.net";
 // Sentry.init自体が呼ばれずリクエストも発生しないため許可しても実害はないが、
 // 最小権限のため許可先はSentryのingestエンドポイントのみに限定する。
 const SENTRY_INGEST_ORIGIN = "https://*.sentry.io";
+// PR#141(アバター機能)がimg-src更新を伴わずに追加したOAuthプロフィール画像
+// への依存を追加許可する(app/[locale]/layout.tsx: session.user.imageは
+// Auth.js既定のGoogle/GitHub providerがそれぞれのprofile.picture/avatar_urlを
+// そのまま渡す。components/layout/AccountMenu.tsx参照)。
+// GoogleのOAuthプロフィール画像は`lh3.googleusercontent.com`が実体だが、
+// Googleアカウント設定変更等でサブドメインが変わりうるため`*.googleusercontent.com`
+// をワイルドカード許可する。ただしこのホストはGoogle Photos/Drive公開共有等
+// 任意ユーザーコンテンツも同じドメイン配下でホストされ得るため、img-src以外
+// (script-src/connect-src等)には決して広げないこと。
+//
+// 既知の残存リスク(未解消、要フォローアップ): tests/security/csp-t704-repentest.test.ts
+// が指摘する通り、DOMPurify(lib/notes/renderNoteMarkdown.ts、ノート機能T-307)は
+// インラインstyle属性のurl()を除去しない(本タスクでjsdom+dompurify、かつ
+// marked.parse→DOMPurify.sanitizeの実パイプラインを再現してprobe済み:
+// `<style>...</style>`要素は既定の`FORBID_CONTENTS`(node_modules/dompurify/
+// dist/purify.min.jsのデフォルト設定に'style'を含む、README.mdのFORBID_CONTENTS
+// 節参照)によりコンテンツごと除去される一方、`style="background:url(...)"`
+// 属性は`ALLOWED_ATTR`に'style'が含まれるため通過することを確認した)。
+// これまでimg-srcが'self' data:のみだったためCSPが別レイヤーで
+// ブロックしていたが、今回`*.googleusercontent.com`を許可したことで、ノート内に
+// このホストを指すurl()を仕込まれた場合に画像リクエスト(=閲覧トラッキング
+// ビーコン)が成立する経路が理論上再び開く。
+// 重大度メモ: lib/notes/api.ts・app/api/[...path]/route.tsの実装は他の
+// progress/submissions/account系エンドポイントと同じセッションuserId
+// スコープパターンであり、ノートは自分専用(他ユーザーの閲覧・共有・
+// エクスポート導線は本リポジトリに現状存在しない)ため、悪用しても
+// 攻撃者自身に対するビーコンにしかならず実害は限定的と判断した。
+// 恒久対策(本タスクのスコープ外、lib/notes/renderNoteMarkdown.tsの変更が
+// 必要なため未実施): DOMPurifyの設定でstyle属性内のurl()、または
+// style属性自体をFORBID_ATTRで除去する。ノート共有/エクスポート機能を
+// 追加する場合は着手前に必須で対応すること。
+const GOOGLE_AVATAR_ORIGIN = "https://*.googleusercontent.com";
+const GITHUB_AVATAR_ORIGIN = "https://avatars.githubusercontent.com";
 
 export function buildMainPageCsp(): string {
   const directives: [string, string[]][] = [
@@ -41,7 +74,7 @@ export function buildMainPageCsp(): string {
     ["script-src", ["'self'", "'unsafe-inline'", JSDELIVR_ORIGIN]],
     ["style-src", ["'self'", "'unsafe-inline'", JSDELIVR_ORIGIN]],
     ["font-src", ["'self'", "data:", JSDELIVR_ORIGIN]],
-    ["img-src", ["'self'", "data:"]],
+    ["img-src", ["'self'", "data:", GOOGLE_AVATAR_ORIGIN, GITHUB_AVATAR_ORIGIN]],
     ["connect-src", ["'self'", JSDELIVR_ORIGIN, SENTRY_INGEST_ORIGIN]],
     ["worker-src", ["'self'", "blob:", JSDELIVR_ORIGIN]],
     ["object-src", ["'none'"]],

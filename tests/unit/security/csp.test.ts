@@ -46,6 +46,33 @@ describe("buildMainPageCsp", () => {
     }
   });
 
+  /**
+   * PR#141(アバター機能)がimg-src更新を伴わずにOAuthプロバイダの画像ホスト
+   * (Google/GitHub)への依存を追加し、実ブラウザでCSPブロック(壊れた画像
+   * アイコン表示)が発生していた回帰の再発防止テスト
+   * (components/layout/AccountMenu.tsx参照)。
+   */
+  it("img-srcはOAuthプロバイダのアバター画像ホスト(Google/GitHub)を許可する", () => {
+    const csp = buildMainPageCsp();
+    const imgSrc = csp.split("; ").find((d) => d.startsWith("img-src"))!;
+    expect(imgSrc).toContain("https://*.googleusercontent.com");
+    expect(imgSrc).toContain("https://avatars.githubusercontent.com");
+  });
+
+  it("img-srcのホストは'self'・data:・許可済みOAuthアバターホストのみに限定する(任意外部ホスト不可)", () => {
+    const csp = buildMainPageCsp();
+    const imgSrc = csp.split("; ").find((d) => d.startsWith("img-src"))!;
+    const sources = imgSrc.split(" ").slice(1);
+    expect(sources.sort()).toEqual(
+      [
+        "'self'",
+        "data:",
+        "https://*.googleusercontent.com",
+        "https://avatars.githubusercontent.com",
+      ].sort(),
+    );
+  });
+
   it("object-src/base-uri/frame-ancestorsは'none'で固定する", () => {
     const csp = buildMainPageCsp();
     expect(csp).toContain("object-src 'none'");

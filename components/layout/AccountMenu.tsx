@@ -48,12 +48,26 @@ export function AccountAvatar({
           src={avatarUrl}
           alt={altText}
           className="absolute inset-0 h-full w-full object-cover"
+          // 初期状態は非表示(下に敷いたイニシャル/デフォルトアイコンを見せる)にし、
+          // onLoad成功時のみ表示へ切り替える設計(React state不使用: このコンポーネントは
+          // tests/unit/layout/AccountMenu.test.tsxがレンダラを介さず直接関数呼び出し
+          // するため、フックを使うと"Invalid hook call"で落ちる。下記handleLogoutの
+          // 既存コメントと同じ制約)。
+          //
+          // 当初はonErrorのみでフォールバックしていたが、CSP img-src違反による
+          // ブロック時にonErrorが発火しない実装(WebKit/Safari系ブラウザの既知の
+          // 挙動差異、CSP違反はネットワークエラーとして扱われずerrorイベントを
+          // 発火させない場合がある)が確認され、壊れた画像アイコンが表示されたまま
+          // フォールバックに切り替わらない不具合(PR#141→本修正)につながった。
+          // 初期非表示+onLoadで表示に切り替える方式なら、CSPブロック時に
+          // onErrorが発火しなくても(img自体が非表示のままなので)フォールバック
+          // 表示が保たれる。onErrorも念のため残す(画像ホスト到達後のHTTPエラー
+          // 等、CSP以外の失敗要因では引き続きerrorイベントが確実に発火するため)。
+          style={{ display: "none" }}
+          onLoad={(event) => {
+            event.currentTarget.style.display = "";
+          }}
           onError={(event) => {
-            // 画像読み込み失敗時、下に敷いたイニシャル/デフォルトアイコンへ
-            // フォールバックする(React state不使用: このコンポーネントは
-            // tests/unit/layout/AccountMenu.test.tsxがレンダラを介さず直接
-            // 関数呼び出しするため、フックを使うと"Invalid hook call"で
-            // 落ちる。下記handleLogoutの既存コメントと同じ制約)。
             event.currentTarget.style.display = "none";
           }}
         />
