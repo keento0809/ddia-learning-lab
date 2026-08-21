@@ -50,3 +50,22 @@ body {
 .lesson-article :not(pre) > code {
   @apply rounded bg-neutral-100 px-1 py-0.5 text-[0.9em] dark:bg-neutral-800;
 }
+
+/*
+ * remark-gfm(PR#140)が生成する<table>の見た目。@tailwindcss/typography未導入
+ * (CLAUDE.md規則1)のため、他要素と同様に素のCSSで罫線・パディング・
+ * ダークモード配色を与える。table自体をdisplay:blockのスクロールコンテナ
+ * にすることで、追加のラッパー要素なしにモバイル幅での横スクロールに対応する。
+ */
+.lesson-article table {
+  @apply my-6 block w-full max-w-full overflow-x-auto border-collapse text-sm;
+}
+.lesson-article :where(th, td) {
+  @apply border border-neutral-200 px-3 py-2 text-left align-top dark:border-neutral-800;
+}
+.lesson-article thead th {
+  @apply bg-neutral-100 font-semibold dark:bg-neutral-900;
+}
+.lesson-article tbody tr:nth-child(even) {
+  @apply bg-neutral-50 dark:bg-neutral-900/40;
+}
