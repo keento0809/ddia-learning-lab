@@ -89,7 +89,7 @@ export function QuizQuestionCard({
         data-testid={`quiz-question-${question.id}-check`}
         disabled={selectedOptionIds.length === 0}
         onClick={onCheck}
-        className="mt-3 rounded bg-neutral-900 px-3 py-1 text-sm text-white disabled:opacity-40 dark:bg-neutral-100 dark:text-neutral-900"
+        className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded bg-neutral-900 px-3 text-sm text-white disabled:opacity-40 dark:bg-neutral-100 dark:text-neutral-900"
       >
         {checked ? t.recheckLabel : t.checkLabel}
       </button>

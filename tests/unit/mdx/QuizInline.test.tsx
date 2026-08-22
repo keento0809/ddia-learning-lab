@@ -38,4 +38,27 @@ describe("QuizInline", () => {
     expect(html).not.toContain("Correct!");
     expect(html).not.toContain("Not quite");
   });
+
+  /**
+   * 失敗→恒久対策(モバイル診断): 「回答する」ボタンがpx-3 py-1 text-smのみ
+   * だと実測高さ28pxとなり、44pxのタップ領域基準(WCAG 2.5.5相当)を
+   * 下回っていた。min-h-[44px]でボタンの最小高さを固定する。
+   */
+  it("gives the submit button a minimum 44px tap target", () => {
+    const html = renderToStaticMarkup(
+      <LessonLocaleProvider locale="ja">
+        <QuizInline
+          id="q3"
+          prompt="タップ領域確認用"
+          options={OPTIONS}
+          correctOptionId="a"
+        />
+      </LessonLocaleProvider>,
+    );
+    const buttonMatch = html.match(
+      /<button[^>]*data-testid="quiz-inline-q3-submit"[^>]*class="([^"]*)"/,
+    );
+    expect(buttonMatch).not.toBeNull();
+    expect(buttonMatch![1]).toContain("min-h-[44px]");
+  });
 });

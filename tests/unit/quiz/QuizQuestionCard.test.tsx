@@ -147,4 +147,29 @@ describe("QuizQuestionCard", () => {
     expect(html).toContain("text-red-700");
     expect(html).not.toContain("text-emerald-700");
   });
+
+  /**
+   * 失敗→恒久対策(モバイル診断): 「回答する」ボタンがpx-3 py-1 text-smのみ
+   * だと実測高さ28pxとなり、44pxのタップ領域基準(WCAG 2.5.5相当)を
+   * 下回っていた。min-h-[44px]でボタンの最小高さを固定する。
+   */
+  it("gives the check button a minimum 44px tap target", () => {
+    const html = renderToStaticMarkup(
+      <QuizQuestionCard
+        locale="ja"
+        index={1}
+        question={SINGLE}
+        selectedOptionIds={[]}
+        checkedOptionIds={undefined}
+        checked={false}
+        onChangeSelection={() => {}}
+        onCheck={() => {}}
+      />,
+    );
+    const buttonMatch = html.match(
+      /<button[^>]*data-testid="quiz-question-q1-check"[^>]*class="([^"]*)"/,
+    );
+    expect(buttonMatch).not.toBeNull();
+    expect(buttonMatch![1]).toContain("min-h-[44px]");
+  });
 });
