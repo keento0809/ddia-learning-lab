@@ -64,7 +64,7 @@ export function QuizInline({
         data-testid={`quiz-inline-${id}-submit`}
         disabled={!selected}
         onClick={() => setSubmitted(true)}
-        className="mt-3 rounded bg-neutral-900 px-3 py-1 text-sm text-white disabled:opacity-40 dark:bg-neutral-100 dark:text-neutral-900"
+        className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded bg-neutral-900 px-3 text-sm text-white disabled:opacity-40 dark:bg-neutral-100 dark:text-neutral-900"
       >
         {t.submitLabel}
       </button>

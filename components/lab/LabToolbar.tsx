@@ -33,28 +33,41 @@ export function LabToolbar({
   const busy = RUNNING_STATES.includes(status) || submissionInFlight;
 
   return (
-    <div className="flex items-center gap-3 border-b border-neutral-200 px-3 py-2 text-sm dark:border-neutral-800">
+    <div className="flex items-center gap-3 overflow-x-auto border-b border-neutral-200 px-3 py-2 text-sm dark:border-neutral-800">
       <button
         type="button"
         onClick={onRun}
         disabled={busy}
         data-testid="lab-run-button"
-        className="rounded bg-neutral-900 px-3 py-1.5 font-medium text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
+        className="shrink-0 whitespace-nowrap rounded bg-neutral-900 px-3 py-1.5 font-medium text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
       >
-        {`${t.run} (${t.runShortcutHint})`}
+        {t.run}
+        {/*
+          失敗→恒久対策: ショートカット表記(⌘/Ctrl + Enter)はマウス/キーボード
+          操作者向けのヒントであり、タッチ操作(pointer: coarse)では意味を持たない
+          上、ボタン内で折り返して不格好になる。プライマリポインタ種別で出し分ける
+          (Tailwindの`pointer-coarse:`は`@media (pointer: coarse)`に対応)。
+        */}
+        <span className="pointer-coarse:hidden">{` (${t.runShortcutHint})`}</span>
       </button>
       <button
         type="button"
         onClick={onReset}
         data-testid="lab-reset-button"
-        className="rounded border border-neutral-300 px-3 py-1.5 dark:border-neutral-700"
+        className="shrink-0 whitespace-nowrap rounded border border-neutral-300 px-3 py-1.5 dark:border-neutral-700"
       >
         {t.reset}
       </button>
-      <span data-testid="lab-status-label" className="text-neutral-500">
+      <span
+        data-testid="lab-status-label"
+        className="shrink-0 whitespace-nowrap text-neutral-500"
+      >
         {statusMessages[status]}
       </span>
-      <span className="ml-auto text-neutral-500" data-testid="lab-autosave-indicator">
+      <span
+        className="ml-auto shrink-0 whitespace-nowrap text-neutral-500"
+        data-testid="lab-autosave-indicator"
+      >
         {autosaving ? t.saving : t.autosaved}
       </span>
     </div>
