@@ -1,6 +1,82 @@
 @import "tailwindcss";
 
 /*
+ * ADR-012 §2.1/§2.2: デザイントークン(S1)。
+ * ブランドカラーはfavicon(public/icon.svg)の図形色 #38BDF8 を基準とする。
+ * セマンティックカラーはこのブランドカラー(青系)と調和する色相を選定する。
+ * 各トークンは50(最も明るい)〜900(最も暗い)のスケールとして定義し、
+ * ライト/ダークいずれの背景でも十分なコントラストの値を選べるようにする
+ * (neutral-*が既に採用している、シェード番号違いでライト/ダークに対応する方式に倣う)。
+ * ニュートラルカラーは既存のTailwind neutral-*を継続使用するため、ここでは
+ * 定義しない(ADR-012 §2.2, §4.3)。
+ * S1では既存コンポーネントへの適用を一切行わない(ADR-012 §3、Step S1)ため、
+ * どのユーティリティクラスからも参照されない。Tailwind v4は既定では未参照の
+ * @themeテーマ変数を生成CSSから除去するため、`static`修飾子を付けて常に
+ * :rootへ出力させ、CSSとして確認可能な状態にする。
+ */
+@theme static {
+  /* ブランド: favicon図形色 #38BDF8(Tailwind標準skyパレットのsky-400と一致) */
+  --color-brand-50: #f0f9ff;
+  --color-brand-100: #e0f2fe;
+  --color-brand-200: #bae6fd;
+  --color-brand-300: #7dd3fc;
+  --color-brand-400: #38bdf8;
+  --color-brand-500: #0ea5e9;
+  --color-brand-600: #0284c7;
+  --color-brand-700: #0369a1;
+  --color-brand-800: #075985;
+  --color-brand-900: #0c4a6e;
+
+  /* セマンティック: danger(エラー・削除・失敗) */
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-200: #fecaca;
+  --color-danger-300: #fca5a5;
+  --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+  --color-danger-800: #991b1b;
+  --color-danger-900: #7f1d1d;
+
+  /* セマンティック: success(成功・合格・完了)。favicon副色 #4ADE80(green-400)と調和 */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+
+  /* セマンティック: warning(警告・注意喚起) */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+
+  /* セマンティック: info(補足情報・Callout)。ブランドのsky系と区別しつつ同じ青系統で調和 */
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-200: #bfdbfe;
+  --color-info-300: #93c5fd;
+  --color-info-400: #60a5fa;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+  --color-info-800: #1e40af;
+  --color-info-900: #1e3a8a;
+}
+
+/*
  * Tailwind v4はデフォルトでdark:をprefers-color-schemeメディアクエリに
  * 束縛する。02§6のテーマ状態(Zustand+localStorage)によるユーザー手動切替を
  * 反映するため、.dark クラス戦略に切り替える。
