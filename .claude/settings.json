@@ -77,7 +77,6 @@
       "Bash(eval \"$(nodenv init -)\":*)",
       "Bash(nodenv:*)",
       "Read(tmp/**)",
-      "Write(tmp/**)",
       "Edit(tmp/**)",
       "Bash(mkdir -p tmp:*)",
       "Read(node_modules/**)",
@@ -106,12 +105,8 @@
       "Read(.env.*)",
       "Edit(.env)",
       "Edit(.env.*)",
-      "Write(.env)",
-      "Write(.env.*)",
       "Edit(docs/design/**)",
-      "Write(docs/design/**)",
-      "Edit(.claude/settings.json)",
-      "Write(.claude/settings.json)"
+      "Edit(.claude/settings.json)"
     ]
   }
 }
