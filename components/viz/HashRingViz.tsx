@@ -201,11 +201,19 @@ export function HashRingViz() {
           <p data-testid="hash-ring-no-nodes-note">{t.stats.noNodesNote}</p>
         ) : (
           <ul className="space-y-1">
+            {/* ノード数・キー数は合否判定を伴わない現況の統計値なので、ADR-012 §2.2.2の
+                非セマンティック・アクセントカラーで強調する。標準偏差・移動キー率は
+                期待値(≈1/n)との比較用途(02§8.2)のため、成功/失敗トークンとの混同を
+                避けて既存の無色表示のままにする。 */}
             <li data-testid="hash-ring-stat-node-count">
-              {formatMessage(t.stats.nodeCountLabel, { count: state.nodes.length })}
+              <span className="inline-flex items-center rounded-full border border-accent-200 bg-accent-50 px-2 py-0.5 text-neutral-900 dark:border-accent-800 dark:bg-accent-900/40 dark:text-neutral-100">
+                {formatMessage(t.stats.nodeCountLabel, { count: state.nodes.length })}
+              </span>
             </li>
             <li data-testid="hash-ring-stat-key-count">
-              {formatMessage(t.stats.keyCountLabel, { count: state.keys.length })}
+              <span className="inline-flex items-center rounded-full border border-accent-200 bg-accent-50 px-2 py-0.5 text-neutral-900 dark:border-accent-800 dark:bg-accent-900/40 dark:text-neutral-100">
+                {formatMessage(t.stats.keyCountLabel, { count: state.keys.length })}
+              </span>
             </li>
             <li data-testid="hash-ring-stat-stddev">
               {formatMessage(t.stats.stdDevLabel, { value: stdDev.toFixed(2) })}
