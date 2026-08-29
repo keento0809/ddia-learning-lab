@@ -1,5 +1,11 @@
 # T-004: 統合テスト・ローカルmigrate/seed用のPostgres 16。
 # 起動: docker compose -f docker-compose.test.yml up -d
+# T-707: Docker Hubへのegressが制限されたサンドボックス環境(Claude Code on the web等)
+# では本ファイルの`docker compose up`がイメージpullで失敗するため、
+# scripts/test-security.sh・scripts/test-integration.shはUSE_NATIVE_POSTGRES=1の場合
+# ネイティブPostgresにフォールバックする(.claude/hooks/session-start.shが
+# CLAUDE_CODE_REMOTE=true時に自動セット、詳細はscripts/lib/test-db.sh)。
+# ローカル開発でDockerが使える環境では本ファイル・挙動とも変更なし。
 services:
   postgres-test:
     image: postgres:16-alpine

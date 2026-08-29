@@ -5,7 +5,15 @@
 # に対する生成物(lib/generated/search-index*.json)を必要とするため、
 # pretest:security(package.json)で縮小フィクスチャではなく実コンテンツに対して
 # npm run generate:curriculum を実行済みであることを前提とする。
+# T-707: USE_NATIVE_POSTGRES=1(Docker Hub egress制限のあるサンドボックス向け。
+# .claude/hooks/session-start.shがCLAUDE_CODE_REMOTE=true時に自動セット)の場合、
+# DB起動をネイティブPostgresにフォールバックする(scripts/lib/test-db.sh)。
+# 未設定時の挙動(docker-compose経路)は変更していない。
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/test-db.sh
+source "$SCRIPT_DIR/lib/test-db.sh"
 
 COMPOSE_FILE="docker-compose.test.yml"
 SERVICE="postgres-test"
@@ -13,25 +21,8 @@ export DATABASE_URL="postgresql://ddia:ddia@localhost:5433/ddia_test?schema=publ
 export DIRECT_URL="$DATABASE_URL"
 export AUTH_SECRET="test-integration-auth-secret-not-for-production-use"
 
-cleanup() {
-  docker compose -f "$COMPOSE_FILE" down -v
-}
-trap cleanup EXIT
-
-docker compose -f "$COMPOSE_FILE" up -d
-
-CID=$(docker compose -f "$COMPOSE_FILE" ps -q "$SERVICE")
-for _ in $(seq 1 30); do
-  HEALTH=$(docker inspect --format='{{.State.Health.Status}}' "$CID")
-  if [ "$HEALTH" = "healthy" ]; then
-    break
-  fi
-  sleep 1
-done
-if [ "$HEALTH" != "healthy" ]; then
-  echo "postgres-test did not become healthy in time" >&2
-  exit 1
-fi
+trap test_db_down EXIT
+test_db_up
 
 npx prisma migrate deploy
 npx vitest run -c vitest.security.config.ts
