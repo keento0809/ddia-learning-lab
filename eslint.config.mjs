@@ -13,6 +13,11 @@ const eslintConfig = [
       ".next/**",
       ".open-next/**",
       ".wrangler/**",
+      // 恒久対策: `.wrangler/**`はリポジトリ直下の.wranglerしか一致せず、
+      // `workers/api/.wrangler/tmp/**`のようなネストした.wranglerディレクトリ
+      // (wrangler dev実行中にのみ生成される一時ビルド成果物。.gitignore済み)
+      // には一致しないため、`**/`を付けてどの深さの.wranglerでも除外する。
+      "**/.wrangler/**",
       "**/.worker-dryrun*/**",
       // 恒久対策: 元は`.tmp-worker-api-dryrun-*`のみを除外していたが、
       // `.tmp-worker-api-internal-auth-dryrun-*`/`.tmp-worker-api-routes-dryrun-*`
