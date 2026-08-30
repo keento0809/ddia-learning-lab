@@ -131,6 +131,18 @@ describe("HashRingViz", () => {
     expect(el("hash-ring-stat-key-count").textContent).toContain(String(BULK_KEY_COUNT));
   });
 
+  it("applies the ADR-012 accent badge to stddev/moved-ratio only, not node/key count (02§8.2)", async () => {
+    await renderViz();
+    act(() => {
+      el<HTMLButtonElement>("hash-ring-add-node").click();
+    });
+
+    expect(el("hash-ring-stat-stddev").querySelector("span.bg-accent-50")).toBeTruthy();
+    expect(el("hash-ring-stat-moved-ratio").querySelector("span.bg-accent-50")).toBeTruthy();
+    expect(el("hash-ring-stat-node-count").querySelector("span.bg-accent-50")).toBeNull();
+    expect(el("hash-ring-stat-key-count").querySelector("span.bg-accent-50")).toBeNull();
+  });
+
   it("uses native, keyboard-operable form controls for every action", async () => {
     await renderViz();
     act(() => {
