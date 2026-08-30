@@ -201,27 +201,29 @@ export function HashRingViz() {
           <p data-testid="hash-ring-no-nodes-note">{t.stats.noNodesNote}</p>
         ) : (
           <ul className="space-y-1">
-            {/* ノード数・キー数は合否判定を伴わない現況の統計値なので、ADR-012 §2.2.2の
-                非セマンティック・アクセントカラーで強調する。標準偏差・移動キー率は
-                期待値(≈1/n)との比較用途(02§8.2)のため、成功/失敗トークンとの混同を
-                避けて既存の無色表示のままにする。 */}
             <li data-testid="hash-ring-stat-node-count">
-              <span className="inline-flex items-center rounded-full border border-accent-200 bg-accent-50 px-2 py-0.5 text-neutral-900 dark:border-accent-800 dark:bg-accent-900/40 dark:text-neutral-100">
-                {formatMessage(t.stats.nodeCountLabel, { count: state.nodes.length })}
-              </span>
+              {formatMessage(t.stats.nodeCountLabel, { count: state.nodes.length })}
             </li>
             <li data-testid="hash-ring-stat-key-count">
+              {formatMessage(t.stats.keyCountLabel, { count: state.keys.length })}
+            </li>
+            {/* 標準偏差・移動キー率は02§8.2が「指標パネル」として明示する2値であり、
+                レッスン本文(触って確かめる節)も操作時にこの2つを見るよう促している。
+                合否を判定するUIではなく(理論値±15%の比較はテストの統計的受入基準に
+                とどまり、画面上では色分けしていない)、ADR-012 §2.2.2の非セマンティック・
+                アクセントカラーで「注目すべき指標」として強調する。既存のsuccess/danger
+                トークンはこのコンポーネントに存在しないため、混同の余地はない。 */}
+            <li data-testid="hash-ring-stat-stddev">
               <span className="inline-flex items-center rounded-full border border-accent-200 bg-accent-50 px-2 py-0.5 text-neutral-900 dark:border-accent-800 dark:bg-accent-900/40 dark:text-neutral-100">
-                {formatMessage(t.stats.keyCountLabel, { count: state.keys.length })}
+                {formatMessage(t.stats.stdDevLabel, { value: stdDev.toFixed(2) })}
               </span>
             </li>
-            <li data-testid="hash-ring-stat-stddev">
-              {formatMessage(t.stats.stdDevLabel, { value: stdDev.toFixed(2) })}
-            </li>
             <li data-testid="hash-ring-stat-moved-ratio">
-              {formatMessage(t.stats.movedRatioLabel, {
-                value: (state.lastOperation.movedRatio * 100).toFixed(1),
-              })}
+              <span className="inline-flex items-center rounded-full border border-accent-200 bg-accent-50 px-2 py-0.5 text-neutral-900 dark:border-accent-800 dark:bg-accent-900/40 dark:text-neutral-100">
+                {formatMessage(t.stats.movedRatioLabel, {
+                  value: (state.lastOperation.movedRatio * 100).toFixed(1),
+                })}
+              </span>
             </li>
           </ul>
         )}
