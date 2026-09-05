@@ -86,6 +86,71 @@ const ALLOWED_ADVISORIES = [
       "実測済み。npm auditが提示する唯一の修正経路はprisma@6.12.0へのメジャーダウングレード" +
       "(ADR-007のPrisma採用方針に反する)。",
   },
+  {
+    id: "GHSA-5jgf-p345-68v8",
+    package: "fast-uri",
+    reason:
+      "workers/apiのprisma@7.9.1(CLI devDependency)が要求する@prisma/dev経由の" +
+      "@prisma/streams-local -> ajv -> fast-uriの依存チェーン由来(`prisma generate`等の" +
+      "CLI実行時のスキーマバリデーションにのみ使用)。アプリケーションコードから一切" +
+      "importされない。wrangler dry-runでworker-app/worker-api双方を実バンドル化し、" +
+      "生成物本体(worker.js/index.js)およびソースマップの収録元ファイル一覧の双方に" +
+      "'fast-uri'/'ajv'が0件であることを実測済み。",
+  },
+  {
+    id: "GHSA-f65p-4m7j-42xc",
+    package: "fast-uri",
+    reason: "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-fph4-wmhf-6fwf",
+    package: "fast-uri",
+    reason: "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-jqff-g426-hqxp",
+    package: "fast-uri",
+    reason: "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-3f6p-5ww8-9rcr",
+    package: "mysql2",
+    reason:
+      "workers/apiのprisma@7.9.1(CLI devDependency)が直接要求するmysql2@3.15.3由来" +
+      "(Prisma CLIがMySQL用ドライバも同梱する構成のため。本プロジェクトはADR-007により" +
+      "PostgreSQL(@prisma/adapter-pg + pg)のみを使用し、mysql2は一切importされない)。" +
+      "wrangler dry-runで生成したworker.js中の'mysql2'文字列3件は全て" +
+      "Next.jsの既定experimental.optimizePackageImportsリストに含まれる文字列" +
+      "\"@effect/sql-mysql2\"由来の部分一致であり、mysql2パッケージ本体のコードではない" +
+      "ことを目視確認済み。加えてmysql2固有の内部識別子" +
+      "(mysql_native_password/mysql_clear_password/COM_QUERY/node_modules/mysql2)が" +
+      "worker-app/worker-api双方の実バンドルに0件、両ソースマップの収録元ファイル一覧にも" +
+      "mysql2由来のファイルが0件であることを実測済み。npm auditが提示する修正経路は" +
+      "prisma@6系へのメジャーダウングレード(ADR-007のPrisma採用方針に反する)。",
+  },
+  {
+    id: "GHSA-rgwj-5xj2-c3m3",
+    package: "mysql2",
+    reason: "GHSA-3f6p-5ww8-9rcrと同一根拠(prisma CLI直接依存のmysql2、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-x5fp-wj9c-mxmx",
+    package: "qs",
+    reason:
+      "`npm run build:worker`/`npm run preview`で使う@opennextjs/cloudflare -> " +
+      "@opennextjs/aws -> express(body-parser含む) -> qsの依存チェーン由来。expressは" +
+      "OpenNextのビルド/ローカルpreviewツール内でのみ使用され、wrangler deployで実際に" +
+      "デプロイされるWorkerバンドルには含まれない構成(OpenNextのビルド出力である" +
+      ".open-next/worker.jsそのものがwrangler.jsoncのmainとしてバンドル化される)。" +
+      "wrangler dry-runで生成したworker-app実バンドル(worker.js)に'qs'/'express'/" +
+      "'body-parser'関連の文字列が0件、ソースマップの収録元ファイル一覧にも該当ファイルが" +
+      "0件であることを実測済み。",
+  },
+  {
+    id: "GHSA-4mjr-xmp4-gh2g",
+    package: "qs",
+    reason: "GHSA-x5fp-wj9c-mxmxと同一根拠(OpenNextビルドツール内蔵express経由のqs、実バンドル非混入を実測済み)。",
+  },
 ];
 
 const allowedIds = new Set(ALLOWED_ADVISORIES.map((a) => a.id));
