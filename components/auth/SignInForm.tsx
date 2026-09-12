@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { getMessages, type Locale } from "@/lib/i18n/messages";
 import { useRouter } from "@/lib/i18n/navigation";
+import { Button } from "@/components/ui/Button";
 
 export function SignInForm({ locale }: { locale: Locale }) {
   const t = getMessages(locale).auth.signin;
@@ -91,14 +92,13 @@ export function SignInForm({ locale }: { locale: Locale }) {
           {errorMessage}
         </p>
       )}
-      <button
+      <Button
         type="submit"
         disabled={status === "submitting" || status === "success"}
         data-testid="auth-signin-submit"
-        className="rounded bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
       >
         {status === "submitting" ? t.submitting : t.submit}
-      </button>
+      </Button>
     </form>
   );
 }
