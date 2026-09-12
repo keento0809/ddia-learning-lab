@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Button } from "@/components/ui/Button";
 import type { ExerciseDefinition } from "@/lib/contracts/exercise";
 import type { LabLeftTab } from "@/lib/store/labStore";
 import { revealedHintCount, HINT_1_THRESHOLD, HINT_2_THRESHOLD } from "@/lib/lab/hints";
@@ -233,14 +234,9 @@ function ExplanationTab({
     return (
       <div data-testid="lab-explanation-locked">
         <p className="mb-3 text-neutral-500">{t.locked}</p>
-        <button
-          type="button"
-          onClick={onReveal}
-          data-testid="lab-reveal-explanation"
-          className="rounded border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
-        >
+        <Button type="button" onClick={onReveal} data-testid="lab-reveal-explanation" variant="secondary" size="small">
           {t.reveal}
-        </button>
+        </Button>
       </div>
     );
   }

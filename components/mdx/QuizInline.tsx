@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { getMessages } from "@/lib/i18n/messages";
 import { useLessonLocale } from "@/lib/lesson/localeContext";
 
@@ -59,15 +60,17 @@ export function QuizInline({
           </label>
         ))}
       </div>
-      <button
+      <Button
         type="button"
         data-testid={`quiz-inline-${id}-submit`}
         disabled={!selected}
         onClick={() => setSubmitted(true)}
-        className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded bg-neutral-900 px-3 text-sm text-white disabled:opacity-40 dark:bg-neutral-100 dark:text-neutral-900"
+        variant="primary"
+        size="small"
+        className="mt-3 min-h-[44px]"
       >
         {t.submitLabel}
-      </button>
+      </Button>
       {submitted ? (
         <div className="mt-3 text-sm" role="status">
           <p

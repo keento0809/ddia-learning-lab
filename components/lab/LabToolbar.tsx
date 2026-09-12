@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { getMessages, type Locale } from "@/lib/i18n/messages";
 import type { LabStatus } from "@/lib/store/labStore";
 
@@ -34,12 +35,14 @@ export function LabToolbar({
 
   return (
     <div className="flex items-center gap-3 overflow-x-auto border-b border-neutral-200 px-3 py-2 text-sm dark:border-neutral-800">
-      <button
+      <Button
         type="button"
         onClick={onRun}
         disabled={busy}
         data-testid="lab-run-button"
-        className="shrink-0 whitespace-nowrap rounded bg-neutral-900 px-3 py-1.5 font-medium text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
+        variant="primary"
+        size="small"
+        className="shrink-0 whitespace-nowrap"
       >
         {t.run}
         {/*
@@ -49,15 +52,17 @@ export function LabToolbar({
           (Tailwindの`pointer-coarse:`は`@media (pointer: coarse)`に対応)。
         */}
         <span className="pointer-coarse:hidden">{` (${t.runShortcutHint})`}</span>
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         onClick={onReset}
         data-testid="lab-reset-button"
-        className="shrink-0 whitespace-nowrap rounded border border-neutral-300 px-3 py-1.5 dark:border-neutral-700"
+        variant="secondary"
+        size="small"
+        className="shrink-0 whitespace-nowrap"
       >
         {t.reset}
-      </button>
+      </Button>
       <span
         data-testid="lab-status-label"
         className="shrink-0 whitespace-nowrap text-neutral-500"
