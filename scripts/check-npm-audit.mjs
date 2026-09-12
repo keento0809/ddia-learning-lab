@@ -151,6 +151,32 @@ const ALLOWED_ADVISORIES = [
     package: "qs",
     reason: "GHSA-x5fp-wj9c-mxmxと同一根拠(OpenNextビルドツール内蔵express経由のqs、実バンドル非混入を実測済み)。",
   },
+  {
+    id: "GHSA-82fw-gwwq-j7x9",
+    package: "@vitest/mocker",
+    reason:
+      "vitest@3.2.7(devDependency)が要求する@vitest/mocker由来。vitest/mockerは" +
+      "`npm run test`実行時にのみ使用され、アプリケーションコードから一切importされない。" +
+      "wrangler dry-runで生成したworker-app(worker.js)/worker-api(index.js)双方の" +
+      "実バンドルに'@vitest/mocker'文字列およびvitest/mocker由来コードが0件、両ソース" +
+      "マップの収録元ファイル一覧にも'vitest'を含むファイルが0件であることを実測済み" +
+      "(worker-api側で1件ヒットした'vitest'文字列は無関係な別パッケージが内包する" +
+      "package.jsonメタデータ中の`\"test\": \"vitest run\"`スクリプト定義の部分一致であり、" +
+      "@vitest/mockerのコードではないことを目視確認済み)。npm auditが提示する修正経路は" +
+      "vitest@5.0.0へのメジャーアップグレード(未検証のため見送り)。",
+  },
+  {
+    id: "GHSA-rgj7-g3m4-5g8c",
+    package: "sharp",
+    reason:
+      "GHSA-f88m-g3jw-g9cj(next内蔵sharp@0.34.5)およびminiflare内蔵sharp@0.35.2" +
+      "(devDependency、ローカル`wrangler dev`用のWorkers runtimeエミュレータ経由)由来。" +
+      "sharpはネイティブバイナリでworkerd(V8 isolate)上では動作できずWorkerバンドルに" +
+      "同梱不可能な構造。wrangler dry-runで生成したworker-app/worker-api双方の実バンドルに" +
+      "'sharp'/'libvips'/'libheif'文字列が0件、両ソースマップの収録元ファイル一覧にも" +
+      "該当ファイルが0件であることを実測済み。npm auditが提示する修正経路はminiflare@" +
+      "5.20260911.0-alphaへのメジャーアップグレード(alpha版のため見送り)。",
+  },
 ];
 
 const allowedIds = new Set(ALLOWED_ADVISORIES.map((a) => a.id));
