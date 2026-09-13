@@ -55,10 +55,13 @@ describe("QuizInline", () => {
         />
       </LessonLocaleProvider>,
     );
-    const buttonMatch = html.match(
-      /<button[^>]*data-testid="quiz-inline-q3-submit"[^>]*class="([^"]*)"/,
-    );
-    expect(buttonMatch).not.toBeNull();
-    expect(buttonMatch![1]).toContain("min-h-[44px]");
+    // S3第2弾(components/ui/Button.tsx採用)でclass/data-testidの属性出力順が
+    // 入れ替わったため、属性順に依存しないタグ全体マッチ→class抽出に変更する
+    // (検証内容自体(min-h-[44px]の有無)は変更しない)。
+    const tagMatch = html.match(/<button[^>]*data-testid="quiz-inline-q3-submit"[^>]*>/);
+    expect(tagMatch).not.toBeNull();
+    const classMatch = tagMatch![0].match(/class="([^"]*)"/);
+    expect(classMatch).not.toBeNull();
+    expect(classMatch![1]).toContain("min-h-[44px]");
   });
 });

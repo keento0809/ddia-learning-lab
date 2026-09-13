@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import type { QuizQuestion } from "@/lib/contracts/quiz";
 import { isQuestionCorrect } from "@/lib/quiz/scoring";
 import type { Locale } from "@/lib/i18n/messages";
@@ -84,15 +85,17 @@ export function QuizQuestionCard({
           </label>
         ))}
       </div>
-      <button
+      <Button
         type="button"
         data-testid={`quiz-question-${question.id}-check`}
         disabled={selectedOptionIds.length === 0}
         onClick={onCheck}
-        className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded bg-neutral-900 px-3 text-sm text-white disabled:opacity-40 dark:bg-neutral-100 dark:text-neutral-900"
+        variant="primary"
+        size="small"
+        className="mt-3 min-h-[44px]"
       >
         {checked ? t.recheckLabel : t.checkLabel}
-      </button>
+      </Button>
       {checked ? (
         <div className="mt-3 text-sm" role="status">
           <p
