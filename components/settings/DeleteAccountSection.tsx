@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { signOut } from "next-auth/react";
+import { Button } from "@/components/ui/Button";
 import type { AccountRecord } from "@/lib/settings/schemas";
 import { AccountApiError } from "@/lib/settings/api";
 import { useDeleteAccountMutation } from "@/lib/settings/useDeleteAccountMutation";
@@ -163,14 +164,14 @@ export function DeleteAccountSection({ account, locale }: { account: AccountReco
               >
                 {t.cancel}
               </button>
-              <button
+              <Button
                 type="submit"
+                variant="danger"
                 disabled={!canConfirm || mutation.isPending}
                 data-testid="settings-delete-confirm"
-                className="rounded bg-red-700 px-4 py-2 text-sm text-white hover:bg-red-800 disabled:opacity-50"
               >
                 {mutation.isPending ? t.deleting : t.confirmButton}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
