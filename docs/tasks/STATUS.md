@@ -209,3 +209,4 @@
   正確な現状(2026-09-12時点):
   S1完了/S2完了/S3進行中(7/33ファイル移行)/S4未完了(初期)/
   S5未着手/S6進行中(HashRingVizのみ)。
+- 2026-11-06: T-709(npm-auditゲート修正とNext.jsサポート切れへの対応)に着手(T-709は着手前にリポジトリ・リモートブランチ・PRで未使用を確認)。`next`を15.5.29、`@opennextjs/cloudflare`を1.20.2へ更新し、`npm audit fix`でlockfileを更新した。OpenNextは実行時脆弱性GHSA-2vc4-c4r6-p6v6の修正版を採用し、`wrangler`/`miniflare`を変更せずに済む最小版を選んだ(1.20.16は`wrangler ^4.148`が必須で、`miniflare` 5系のalpha/betaへの移行を伴うため見送り)。**未解決**: OpenNextは日付判定でNext 15のビルドを拒否するため(2026-10-21でサポート終了)、`build:worker`/`preview`が失敗し、mainのデプロイも停止する。回避フラグ`--dangerouslyUseUnsupportedNextVersion`の追加はツール権限で拒否され未実施。許容リスト外の開発依存29件は、worker-appの実バンドルを生成できないため実測できず、許容リストへ追加していない。**失敗→恒久対策**: T-708で`check:npm-audit`を検証せずpushし、CIで初めて失敗に気づいた→コミット前に毎回実行するよう`CLAUDE.md`の開発コマンドへ反映。
