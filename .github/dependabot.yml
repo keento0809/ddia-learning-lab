@@ -1,0 +1,68 @@
+# T-708: 依存更新方針(ADR-011 §3.5 DP-1、01 §10、07 G-3)。
+# mainへのマージは本番デプロイに直結し、PR時CIは test:workers/test:integration/
+# test:security/E2E を実行しないため、自動マージは設定しない(運用ルールはSTATUS.md
+# 2026-11-06)。セキュリティ更新は groups の applies-to 既定(version-updates)により
+# グループ化されず、cooldown も適用されない。
+version: 2
+updates:
+  - package-ecosystem: npm
+    # npmワークスペース(workers/api)はルートのpackage-lock.jsonで管理される。
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    cooldown:
+      default-days: 14
+    ignore:
+      # メジャー更新はDependabotでは扱わず個別タスクとして起票する。
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # 依存は最初に一致したグループへ入るため、連動して上げるべき依存を先に定義する。
+      cloudflare:
+        patterns:
+          - "wrangler"
+          - "miniflare"
+          - "@opennextjs/cloudflare"
+      nextjs:
+        patterns:
+          - "next"
+          - "@next/*"
+          - "eslint-config-next"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      prisma:
+        patterns:
+          - "prisma"
+          - "@prisma/*"
+      auth:
+        patterns:
+          - "next-auth"
+          - "@auth/*"
+      dev-minor-patch:
+        dependency-type: development
+        update-types: ["minor", "patch"]
+      prod-minor-patch:
+        dependency-type: production
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Tokyo
+    commit-message:
+      prefix: "ci"
+    cooldown:
+      default-days: 14
