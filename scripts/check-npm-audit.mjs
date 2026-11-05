@@ -25,17 +25,20 @@ const ALLOWED_ADVISORIES = [
   {
     id: "GHSA-6g55-p6wh-862q",
     package: "postcss",
-    reason: "GHSA-qx2v-qp2m-jg93と同一根拠(next内蔵postcss、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-qx2v-qp2m-jg93と同一根拠(next内蔵postcss、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-r28c-9q8g-f849",
     package: "postcss",
-    reason: "GHSA-qx2v-qp2m-jg93と同一根拠(next内蔵postcss、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-qx2v-qp2m-jg93と同一根拠(next内蔵postcss、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-fxqj-rqcc-2cmp",
     package: "postcss",
-    reason: "GHSA-qx2v-qp2m-jg93と同一根拠(next内蔵postcss、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-qx2v-qp2m-jg93と同一根拠(next内蔵postcss、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-f88m-g3jw-g9cj",
@@ -58,22 +61,26 @@ const ALLOWED_ADVISORIES = [
   {
     id: "GHSA-4cwx-7wf7-3272",
     package: "undici",
-    reason: "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-m8rv-5g2x-5cg5",
     package: "undici",
-    reason: "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-jr45-8vmc-qm54",
     package: "undici",
-    reason: "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-v3r7-h72x-cjcm",
     package: "undici",
-    reason: "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-ggr8-5vv4-36mx",
@@ -100,17 +107,20 @@ const ALLOWED_ADVISORIES = [
   {
     id: "GHSA-f65p-4m7j-42xc",
     package: "fast-uri",
-    reason: "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-fph4-wmhf-6fwf",
     package: "fast-uri",
-    reason: "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-jqff-g426-hqxp",
     package: "fast-uri",
-    reason: "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-3f6p-5ww8-9rcr",
@@ -121,7 +131,7 @@ const ALLOWED_ADVISORIES = [
       "PostgreSQL(@prisma/adapter-pg + pg)のみを使用し、mysql2は一切importされない)。" +
       "wrangler dry-runで生成したworker.js中の'mysql2'文字列3件は全て" +
       "Next.jsの既定experimental.optimizePackageImportsリストに含まれる文字列" +
-      "\"@effect/sql-mysql2\"由来の部分一致であり、mysql2パッケージ本体のコードではない" +
+      '"@effect/sql-mysql2"由来の部分一致であり、mysql2パッケージ本体のコードではない' +
       "ことを目視確認済み。加えてmysql2固有の内部識別子" +
       "(mysql_native_password/mysql_clear_password/COM_QUERY/node_modules/mysql2)が" +
       "worker-app/worker-api双方の実バンドルに0件、両ソースマップの収録元ファイル一覧にも" +
@@ -131,7 +141,8 @@ const ALLOWED_ADVISORIES = [
   {
     id: "GHSA-rgwj-5xj2-c3m3",
     package: "mysql2",
-    reason: "GHSA-3f6p-5ww8-9rcrと同一根拠(prisma CLI直接依存のmysql2、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-3f6p-5ww8-9rcrと同一根拠(prisma CLI直接依存のmysql2、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-x5fp-wj9c-mxmx",
@@ -149,7 +160,8 @@ const ALLOWED_ADVISORIES = [
   {
     id: "GHSA-4mjr-xmp4-gh2g",
     package: "qs",
-    reason: "GHSA-x5fp-wj9c-mxmxと同一根拠(OpenNextビルドツール内蔵express経由のqs、実バンドル非混入を実測済み)。",
+    reason:
+      "GHSA-x5fp-wj9c-mxmxと同一根拠(OpenNextビルドツール内蔵express経由のqs、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-82fw-gwwq-j7x9",
@@ -161,7 +173,7 @@ const ALLOWED_ADVISORIES = [
       "実バンドルに'@vitest/mocker'文字列およびvitest/mocker由来コードが0件、両ソース" +
       "マップの収録元ファイル一覧にも'vitest'を含むファイルが0件であることを実測済み" +
       "(worker-api側で1件ヒットした'vitest'文字列は無関係な別パッケージが内包する" +
-      "package.jsonメタデータ中の`\"test\": \"vitest run\"`スクリプト定義の部分一致であり、" +
+      'package.jsonメタデータ中の`"test": "vitest run"`スクリプト定義の部分一致であり、' +
       "@vitest/mockerのコードではないことを目視確認済み)。npm auditが提示する修正経路は" +
       "vitest@5.0.0へのメジャーアップグレード(未検証のため見送り)。",
   },
@@ -177,13 +189,160 @@ const ALLOWED_ADVISORIES = [
       "該当ファイルが0件であることを実測済み。npm auditが提示する修正経路はminiflare@" +
       "5.20260911.0-alphaへのメジャーアップグレード(alpha版のため見送り)。",
   },
+  {
+    id: "GHSA-qxg6-89mg-rqv8",
+    package: "@vitest/mocker",
+    reason:
+      "GHSA-82fw-gwwq-j7x9と同一根拠(vitest内蔵@vitest/mocker)。T-709でwrangler dry-runにより生成したworker-app(worker.js)/worker-api(index.js)双方の実バンドルに'@vitest/mocker'文字列が0件であることをT-709で再実測済み。",
+  },
+  {
+    id: "GHSA-3g3m-2fjr-6pw4",
+    package: "glob",
+    reason:
+      "@opennextjs/cloudflare(devDependency)および@opennextjs/aws -> @node-minify/core由来で、`opennextjs-cloudflare build`実行時にのみ使用される。T-709でwrangler dry-runにより生成したworker-app(worker.js)/worker-api(index.js)双方の実バンドルに'glob/dist'/'node-minify'文字列が0件、両ソースマップの収録元ファイル一覧にも該当ファイルが0件であることを実測済み。",
+  },
+  {
+    id: "GHSA-g3hv-75wg-m249",
+    package: "minimatch",
+    reason:
+      "@opennextjs/aws -> @node-minify/core -> glob、および@typescript-eslint(eslint-config-next経由)由来で、ビルド/lint時にのみ使用される。T-709でwrangler dry-runにより生成したworker-app(worker.js)/worker-api(index.js)双方の実バンドルに'minimatch'文字列が0件、両ソースマップの収録元ファイル一覧にも該当ファイルが0件であることを実測済み。",
+  },
+  {
+    id: "GHSA-wq5f-xc86-pv6w",
+    package: "sharp",
+    reason:
+      "miniflare内蔵sharp@0.35.2(devDependency、ローカル`wrangler dev`用)由来。nextが使うsharpは修正版の0.35.5に更新済み。sharpはネイティブバイナリでworkerd上では動作できない構造で、T-709でwrangler dry-runにより生成したworker-app(worker.js)/worker-api(index.js)双方の実バンドルに'sharp'/'libvips'文字列が0件、両ソースマップの収録元ファイル一覧にも該当ファイルが0件であることを実測済み。",
+  },
+  {
+    id: "GHSA-5gmw-xhrv-c9v3",
+    package: "tinypool",
+    reason:
+      "vitest@3.2.7(devDependency)が要求するtinypool由来で、`npm run test`実行時にのみ使用される。T-709でwrangler dry-runにより生成したworker-app(worker.js)/worker-api(index.js)双方の実バンドルに'tinypool'文字列が0件、両ソースマップの収録元ファイル一覧にも該当ファイルが0件であることを実測済み。npm auditが提示する修正経路はvitest@5系へのメジャーアップグレード(未検証のため見送り、別タスクで対応)。",
+  },
+  {
+    id: "GHSA-85c8-ppgw-ccpr",
+    package: "tinypool",
+    reason:
+      "GHSA-5gmw-xhrv-c9v3と同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-3wwx-pv8p-q78v",
+    package: "undici",
+    reason:
+      "jsdom(devDependency、vitestのテスト環境)およびminiflare(devDependency、ローカル`wrangler dev`用)由来。本番Workerは実際のCloudflareエッジ(workerd)で実行されundiciを含まない。T-709でwrangler dry-runにより生成したworker-app(worker.js)/worker-api(index.js)双方の実バンドルに'undici'文字列が0件、両ソースマップの収録元ファイル一覧にも該当ファイルが0件であることを実測済み。npm auditが提示する修正経路はminiflareのメジャー変更。",
+  },
+  {
+    id: "GHSA-pmjh-fq2x-6v4x",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-r53p-7pc4-xj5r",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-rfgv-xxqx-mfg5",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-3xpg-4rpp-hhhm",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-2jfj-6hjv-fm6j",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-2gqq-gqf2-x968",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-w293-vg96-wgc3",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-8436-99hf-9mmv",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-rx4f-c7p8-82vq",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-4qv8-2p9j-2685",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-f72v-6w45-q472",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-xjj6-f33q-929c",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-4w7w-5xrc-9h26",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-2m5v-pch6-74hx",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-qrxm-fqhp-jwvm",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-9fm3-97px-rjf6",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-55wc-3pg8-jfw6",
+    package: "undici",
+    reason:
+      "GHSA-3wwx-pv8p-q78vと同一根拠(T-709、実バンドル非混入を実測済み)。",
+  },
 ];
 
 const allowedIds = new Set(ALLOWED_ADVISORIES.map((a) => a.id));
 
 function runAudit() {
   try {
-    return execFileSync("npm", ["audit", "--json"], { encoding: "utf-8", maxBuffer: 1024 * 1024 * 32 });
+    return execFileSync("npm", ["audit", "--json"], {
+      encoding: "utf-8",
+      maxBuffer: 1024 * 1024 * 32,
+    });
   } catch (err) {
     // npm auditは脆弱性を検出しただけでexit 1を返す。標準出力に本体のJSONが乗るため
     // エラー時もerr.stdoutから拾う(エラー自体はここでは無視し、後段のロジックで判定する)。
@@ -200,8 +359,12 @@ const data = JSON.parse(raw);
 // 乗る。これを「vulnerabilities未検出」と誤読すると監査コマンド自体の失敗をCI green
 // として見逃す(ゲートのfail-open)。`vulnerabilities`キーの不在を監査失敗として扱う。
 if (!("vulnerabilities" in data)) {
-  console.error("[check-npm-audit] npm audit --jsonの出力が想定外の形式です(vulnerabilitiesキーが無い)。");
-  console.error("  監査コマンド自体が脆弱性検出以外の理由で失敗した可能性があります。生出力:");
+  console.error(
+    "[check-npm-audit] npm audit --jsonの出力が想定外の形式です(vulnerabilitiesキーが無い)。",
+  );
+  console.error(
+    "  監査コマンド自体が脆弱性検出以外の理由で失敗した可能性があります。生出力:",
+  );
   console.error(raw);
   process.exit(1);
 }
@@ -212,7 +375,11 @@ for (const vuln of Object.values(data.vulnerabilities ?? {})) {
     if (typeof via === "object" && via.url) {
       const match = via.url.match(/GHSA-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+/);
       if (match) {
-        found.set(match[0], { severity: via.severity, title: via.title, url: via.url });
+        found.set(match[0], {
+          severity: via.severity,
+          title: via.title,
+          url: via.url,
+        });
       }
     }
   }

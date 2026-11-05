@@ -83,6 +83,7 @@ DDIA(分散データシステム)の概念を学ぶバイリンガル(ja/en)学�
 - npm run lint / npm run typecheck / npm run test
 - npm run validate:content # T-006以降
 - npm run build
+- npm run check:npm-audit # コミット前に毎回実行し、結果を表示する(設定・docsのみの変更も対象)
 - npm run test:e2e # E2Eを含むタスクのみ
 
 ## コーディング規約(要点)
