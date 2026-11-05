@@ -17,8 +17,7 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     cooldown:
-      default-days: 7
-      semver-patch-days: 3
+      default-days: 14
     ignore:
       # メジャー更新はDependabotでは扱わず個別タスクとして起票する。
       - dependency-name: "*"
@@ -66,4 +65,4 @@ updates:
     commit-message:
       prefix: "ci"
     cooldown:
-      default-days: 7
+      default-days: 14
