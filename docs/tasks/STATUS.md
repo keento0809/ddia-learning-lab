@@ -209,3 +209,4 @@
   正確な現状(2026-09-12時点):
   S1完了/S2完了/S3進行中(7/33ファイル移行)/S4未完了(初期)/
   S5未着手/S6進行中(HashRingVizのみ)。
+- 2026-11-06: T-708(Dependabot設定)を新規採番し実施。ADR-011 §4のT-706は`SECURITY.md`/CIゲート常設/Dependabot/スキル追記を一括で予約しているが、今回はDependabot設定のみを切り出すため、ユーザー判断でT-706の枝番ではなく新規IDとした(T-708は着手前にリポジトリ・リモートブランチ・PRで未使用を確認)。T-706のうちDependabot設定はT-708で扱い、`SECURITY.md`とスキル追記は未着手のままT-706に残る。成果物は`.github/dependabot.yml`(npm/github-actionsを毎週月曜9:00 JSTに更新、メジャー更新除外、グループ化、cooldownあり)。**運用ルール**: mainへのマージは本番デプロイに直結し、PR時CIは`test:workers`/`test:integration`/`test:security`/E2Eを実行しないため自動マージは使わない。dev系minor/patchはCI成功後に手動マージ、prod系minor/patchはCI成功と差分確認の後にマージ、`cloudflare`/`nextjs`/`prisma`/`auth`グループは手元で`npm run preview`と上記3テストを実行してからマージする。メジャー更新は個別タスクとして起票する。`ignore`がセキュリティ更新PRを抑止するかは公式ドキュメントで確認できなかったが、Dependabotアラートは`dependabot.yml`の影響を受けないため検知は継続する。リポジトリ設定のDependabot alerts/security updates有効化は人間作業。
