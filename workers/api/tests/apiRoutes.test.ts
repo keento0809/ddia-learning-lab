@@ -3,10 +3,11 @@ import { mkdtempSync, rmSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
-import { Miniflare } from "miniflare";
+import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import { encode } from "@auth/core/jwt";
 import { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { bundleModules } from "./helpers/bundleModules";
 
 /**
  * ADR-008(docs/design/09) §2・T-502受入基準(2)(3)(4): progress/submissions/
@@ -71,7 +72,7 @@ describe("worker-app -> worker-api service binding: 実APIルート(T-502)", () 
       { cwd: repoRoot, stdio: "inherit" },
     );
 
-    mf = new Miniflare({
+    mf = new Miniflare(convertV4MiniflareOptions({
       workers: [
         {
           name: "worker-app-stub",
@@ -87,18 +88,14 @@ describe("worker-app -> worker-api service binding: 実APIルート(T-502)", () 
         },
         {
           name: "ddia-learning-lab-api",
-          modules: true,
-          scriptPath: path.join(outDir, "index.js"),
-          // workers/api/tests/serviceBinding.test.tsと同じ理由(T-502失敗→恒久対策):
-          // Prisma(runtime="workerd")のquery compiler WASMをMiniflareへ明示的に
-          // CompiledWasmモジュールとして解決させる。
-          modulesRules: [{ type: "CompiledWasm", include: ["**/*.wasm"] }],
+          modules: bundleModules(outDir),
+          modulesRoot: outDir,
           compatibilityDate: COMPATIBILITY_DATE,
           compatibilityFlags: ["nodejs_compat"],
           bindings: { AUTH_SECRET, DATABASE_URL },
         },
       ],
-    });
+    }));
 
     db = new Client({ connectionString: DATABASE_URL });
     await db.connect();

@@ -2,8 +2,9 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Miniflare } from "miniflare";
+import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { bundleModules } from "./helpers/bundleModules";
 
 /**
  * ADR-008(docs/design/09) §2・T-501受入基準(5): worker-appからservice binding
@@ -40,7 +41,7 @@ describe("worker-app -> worker-api service binding", () => {
       { cwd: repoRoot, stdio: "inherit" },
     );
 
-    mf = new Miniflare({
+    mf = new Miniflare(convertV4MiniflareOptions({
       workers: [
         {
           name: "worker-app-stub",
@@ -56,14 +57,13 @@ describe("worker-app -> worker-api service binding", () => {
         },
         {
           name: "ddia-learning-lab-api",
-          modules: true,
-          scriptPath: path.join(outDir, "index.js"),
           // T-502失敗→恒久対策: `wrangler deploy --dry-run --outdir`が抽出した
           // Prisma(runtime="workerd")のquery compiler WASMファイルは、`wrangler dev`/
           // 実デプロイ時はwrangler自身がCompiledWasmモジュールとして自動認識するが、
-          // ビルド済みディレクトリを直接Miniflareへ渡す本テストの構成では明示的な
-          // modulesRulesが無いと解決できない("no matching module rules")。
-          modulesRules: [{ type: "CompiledWasm", include: ["**/*.wasm"] }],
+          // ビルド済みディレクトリを直接Miniflareへ渡す本テストの構成では明示指定が
+          // 無いと解決できない("no matching module rules")。
+          modules: bundleModules(outDir),
+          modulesRoot: outDir,
           compatibilityDate: COMPATIBILITY_DATE,
           compatibilityFlags: ["nodejs_compat"],
           bindings: {
@@ -72,7 +72,7 @@ describe("worker-app -> worker-api service binding", () => {
           },
         },
       ],
-    });
+    }));
   }, 60_000);
 
   afterAll(async () => {

@@ -209,3 +209,4 @@
   正確な現状(2026-09-12時点):
   S1完了/S2完了/S3進行中(7/33ファイル移行)/S4未完了(初期)/
   S5未着手/S6進行中(HashRingVizのみ)。
+- 2026-11-06: T-708(セキュリティ依存更新)実施。@opennextjs/cloudflare 1.20.1はNext.jsのサポート期限を「公開から2年」で機械判定するため、Next 15が2026-10-21を過ぎた時点で`build:worker`を拒否し、main上でデプロイ不能になっていることが判明した。next 15.5.28・@opennextjs/cloudflare 1.20.13・wrangler 4.152.0・miniflare 5 beta等へ更新して解消。miniflare 5のAPI変更に伴いworkers/api/testsのMiniflare設定を移行した(検証内容は変更なし)。`check:npm-audit`の許容リストは解消済み16件を削除し、開発・ビルド時専用の残存分のみに整理した。**失敗→恒久対策**: 公開直後の版を避けるため、依存更新は間接依存を含め公開14日以上の版に限定する。**反映先**: `.claude/rules/tooling.md`。なおnpm 10.9.8は`min-release-age`設定に未対応のため、当面は`npm install --before`で運用する。

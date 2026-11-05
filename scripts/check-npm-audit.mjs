@@ -17,7 +17,7 @@ const ALLOWED_ADVISORIES = [
     id: "GHSA-qx2v-qp2m-jg93",
     package: "postcss",
     reason:
-      "next@15.5.23が内蔵するpostcss(node_modules/next/node_modules/postcss)由来。" +
+      "next@15.5.28が内蔵するpostcss(node_modules/next/node_modules/postcss)由来。" +
       "postcssはNext.jsのCSSビルドパイプライン(next build時)でのみ使われ、" +
       "wrangler dry-runで生成した実Workerバンドルに'postcss'文字列が0件であることを実測済み。" +
       "next@16系メジャーアップグレードが唯一の修正経路(T-705検討済み、未着手)。",
@@ -38,120 +38,6 @@ const ALLOWED_ADVISORIES = [
     reason: "GHSA-qx2v-qp2m-jg93と同一根拠(next内蔵postcss、実バンドル非混入を実測済み)。",
   },
   {
-    id: "GHSA-f88m-g3jw-g9cj",
-    package: "sharp",
-    reason:
-      "next@15.5.23が要求するsharp@0.34.5由来(next/image最適化用、Node.js実行時のみ使用)。" +
-      "sharpはネイティブバイナリでworkerd(V8 isolate)上では動作できずWorkerバンドルに" +
-      "同梱不可能な構造。wrangler dry-runの実Workerバンドルに'sharp'/'libvips'文字列が" +
-      "0件であることを実測済み。next@16系メジャーアップグレードが唯一の修正経路。",
-  },
-  {
-    id: "GHSA-8xcm-r25x-g524",
-    package: "undici",
-    reason:
-      "miniflare(ローカル`wrangler dev`用のWorkers runtimeエミュレータ、devDependency経由)" +
-      "が内蔵するundici由来。本番Workerは実際のCloudflareエッジ(workerd)で実行され" +
-      "miniflare/undiciを一切含まない。wrangler dry-runの実Workerバンドルに'undici'文字列が" +
-      "0件であることを実測済み。miniflare@5系alphaへのメジャーアップグレードが唯一の修正経路。",
-  },
-  {
-    id: "GHSA-4cwx-7wf7-3272",
-    package: "undici",
-    reason: "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
-  },
-  {
-    id: "GHSA-m8rv-5g2x-5cg5",
-    package: "undici",
-    reason: "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
-  },
-  {
-    id: "GHSA-jr45-8vmc-qm54",
-    package: "undici",
-    reason: "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
-  },
-  {
-    id: "GHSA-v3r7-h72x-cjcm",
-    package: "undici",
-    reason: "GHSA-8xcm-r25x-g524と同一根拠(miniflare内蔵undici、実バンドル非混入を実測済み)。",
-  },
-  {
-    id: "GHSA-ggr8-5vv4-36mx",
-    package: "deepmerge-ts",
-    reason:
-      "prisma@7.9.1が要求する@prisma/config由来(`prisma generate`/CLI設定読み込み専用、" +
-      "prisma.config.tsのマージ処理にのみ使用)。ビルド・postinstall時のCLI実行でのみ" +
-      "動作し、アプリケーションコードから一切importされない。wrangler dry-runで生成した" +
-      "worker-app/worker-api双方の実Workerバンドルに'deepmerge-ts'文字列が0件であることを" +
-      "実測済み。npm auditが提示する唯一の修正経路はprisma@6.12.0へのメジャーダウングレード" +
-      "(ADR-007のPrisma採用方針に反する)。",
-  },
-  {
-    id: "GHSA-5jgf-p345-68v8",
-    package: "fast-uri",
-    reason:
-      "workers/apiのprisma@7.9.1(CLI devDependency)が要求する@prisma/dev経由の" +
-      "@prisma/streams-local -> ajv -> fast-uriの依存チェーン由来(`prisma generate`等の" +
-      "CLI実行時のスキーマバリデーションにのみ使用)。アプリケーションコードから一切" +
-      "importされない。wrangler dry-runでworker-app/worker-api双方を実バンドル化し、" +
-      "生成物本体(worker.js/index.js)およびソースマップの収録元ファイル一覧の双方に" +
-      "'fast-uri'/'ajv'が0件であることを実測済み。",
-  },
-  {
-    id: "GHSA-f65p-4m7j-42xc",
-    package: "fast-uri",
-    reason: "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
-  },
-  {
-    id: "GHSA-fph4-wmhf-6fwf",
-    package: "fast-uri",
-    reason: "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
-  },
-  {
-    id: "GHSA-jqff-g426-hqxp",
-    package: "fast-uri",
-    reason: "GHSA-5jgf-p345-68v8と同一根拠(prisma CLI経由のajv内蔵fast-uri、実バンドル非混入を実測済み)。",
-  },
-  {
-    id: "GHSA-3f6p-5ww8-9rcr",
-    package: "mysql2",
-    reason:
-      "workers/apiのprisma@7.9.1(CLI devDependency)が直接要求するmysql2@3.15.3由来" +
-      "(Prisma CLIがMySQL用ドライバも同梱する構成のため。本プロジェクトはADR-007により" +
-      "PostgreSQL(@prisma/adapter-pg + pg)のみを使用し、mysql2は一切importされない)。" +
-      "wrangler dry-runで生成したworker.js中の'mysql2'文字列3件は全て" +
-      "Next.jsの既定experimental.optimizePackageImportsリストに含まれる文字列" +
-      "\"@effect/sql-mysql2\"由来の部分一致であり、mysql2パッケージ本体のコードではない" +
-      "ことを目視確認済み。加えてmysql2固有の内部識別子" +
-      "(mysql_native_password/mysql_clear_password/COM_QUERY/node_modules/mysql2)が" +
-      "worker-app/worker-api双方の実バンドルに0件、両ソースマップの収録元ファイル一覧にも" +
-      "mysql2由来のファイルが0件であることを実測済み。npm auditが提示する修正経路は" +
-      "prisma@6系へのメジャーダウングレード(ADR-007のPrisma採用方針に反する)。",
-  },
-  {
-    id: "GHSA-rgwj-5xj2-c3m3",
-    package: "mysql2",
-    reason: "GHSA-3f6p-5ww8-9rcrと同一根拠(prisma CLI直接依存のmysql2、実バンドル非混入を実測済み)。",
-  },
-  {
-    id: "GHSA-x5fp-wj9c-mxmx",
-    package: "qs",
-    reason:
-      "`npm run build:worker`/`npm run preview`で使う@opennextjs/cloudflare -> " +
-      "@opennextjs/aws -> express(body-parser含む) -> qsの依存チェーン由来。expressは" +
-      "OpenNextのビルド/ローカルpreviewツール内でのみ使用され、wrangler deployで実際に" +
-      "デプロイされるWorkerバンドルには含まれない構成(OpenNextのビルド出力である" +
-      ".open-next/worker.jsそのものがwrangler.jsoncのmainとしてバンドル化される)。" +
-      "wrangler dry-runで生成したworker-app実バンドル(worker.js)に'qs'/'express'/" +
-      "'body-parser'関連の文字列が0件、ソースマップの収録元ファイル一覧にも該当ファイルが" +
-      "0件であることを実測済み。",
-  },
-  {
-    id: "GHSA-4mjr-xmp4-gh2g",
-    package: "qs",
-    reason: "GHSA-x5fp-wj9c-mxmxと同一根拠(OpenNextビルドツール内蔵express経由のqs、実バンドル非混入を実測済み)。",
-  },
-  {
     id: "GHSA-82fw-gwwq-j7x9",
     package: "@vitest/mocker",
     reason:
@@ -165,17 +51,98 @@ const ALLOWED_ADVISORIES = [
       "@vitest/mockerのコードではないことを目視確認済み)。npm auditが提示する修正経路は" +
       "vitest@5.0.0へのメジャーアップグレード(未検証のため見送り)。",
   },
+  // T-708: 以下はnext@15.5.28/@opennextjs/cloudflare@1.20.13/wrangler@4.152.0への更新後に
+  // 残存または混入した開発・ビルド時ツール由来のもの。`npm audit --omit=dev`に現れないこと、
+  // およびwrangler dry-runのworker.js/index.js本体に当該パッケージのコードが無いことを
+  // 実測済み(ソースマップ収録元も0件。worker-appのマップはhandler.mjsを1ソースとして
+  // 扱うため本文スキャンを主な根拠とする)。各項目の解消条件はreasonに記載する。
   {
-    id: "GHSA-rgj7-g3m4-5g8c",
-    package: "sharp",
+    id: "GHSA-5gmw-xhrv-c9v3",
+    package: "tinypool",
     reason:
-      "GHSA-f88m-g3jw-g9cj(next内蔵sharp@0.34.5)およびminiflare内蔵sharp@0.35.2" +
-      "(devDependency、ローカル`wrangler dev`用のWorkers runtimeエミュレータ経由)由来。" +
-      "sharpはネイティブバイナリでworkerd(V8 isolate)上では動作できずWorkerバンドルに" +
-      "同梱不可能な構造。wrangler dry-runで生成したworker-app/worker-api双方の実バンドルに" +
-      "'sharp'/'libvips'/'libheif'文字列が0件、両ソースマップの収録元ファイル一覧にも" +
-      "該当ファイルが0件であることを実測済み。npm auditが提示する修正経路はminiflare@" +
-      "5.20260911.0-alphaへのメジャーアップグレード(alpha版のため見送り)。",
+      "vitest@3.2.7(devDependency)が要求するtinypool@1系由来。`npm run test`実行時の" +
+      "ワーカー管理にのみ使用され、アプリケーションコードからimportされない。実バンドルに" +
+      "非混入を実測済み。修正版は2.1.2以上で1系には無く、解消経路はvitest@4以上への" +
+      "メジャーアップグレード(T-719)。",
+  },
+  {
+    id: "GHSA-85c8-ppgw-ccpr",
+    package: "tinypool",
+    reason: "GHSA-5gmw-xhrv-c9v3と同一根拠(vitest内蔵tinypool、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-qxg6-89mg-rqv8",
+    package: "@vitest/mocker",
+    reason: "GHSA-5gmw-xhrv-c9v3と同一根拠(vitestのテスト実行時のみ、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-5j98-mcp5-4vw2",
+    package: "glob",
+    reason:
+      "T-708の@opennextjs/cloudflare更新で新たに混入した項目(mainには無い)。" +
+      "@opennextjs/aws -> @node-minify/core@9.0.2がglob@10.3.3を固定する。脆弱性はglobの" +
+      "CLI(-c/--cmd)に限られ、本プロジェクトはビルドツール内のライブラリ利用のみでCLIを" +
+      "実行しない。実バンドルに非混入を実測済み。解消には上流の依存更新が必要。",
+  },
+  {
+    id: "GHSA-3g3m-2fjr-6pw4",
+    package: "glob",
+    reason:
+      "@opennextjs/cloudflare直下のglob@13.0.6および@node-minify/core配下のglob由来。" +
+      "ビルド時のみ実行され、実バンドルに非混入を実測済み。修正版は14.0.2以上だが" +
+      "@opennextjs/cloudflare最新版も^13を要求するため、解消には上流の依存更新が必要。",
+  },
+  {
+    id: "GHSA-g3hv-75wg-m249",
+    package: "minimatch",
+    reason:
+      "@opennextjs/cloudflareのビルド依存およびeslint-config-next経由の" +
+      "@typescript-eslint/typescript-estree配下のminimatch由来。ビルド/lint時のみ実行され、" +
+      "実バンドルに非混入を実測済み。解消には上流の依存更新が必要。",
+  },
+  {
+    id: "GHSA-4qv8-2p9j-2685",
+    package: "undici",
+    reason:
+      "miniflare@5.20261019.2-beta(devDependency)がundici@7.29.1を固定する由来。" +
+      "ローカル`wrangler dev`とテスト専用で、実バンドルに非混入を実測済み。" +
+      "修正版undiciを要求するminiflare(wrangler@4.153.0相当)が公開14日を経過した時点で" +
+      "更新して削除する。",
+  },
+  {
+    id: "GHSA-f72v-6w45-q472",
+    package: "undici",
+    reason: "GHSA-4qv8-2p9j-2685と同一根拠(miniflare固定のundici、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-xjj6-f33q-929c",
+    package: "undici",
+    reason: "GHSA-4qv8-2p9j-2685と同一根拠(miniflare固定のundici、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-4w7w-5xrc-9h26",
+    package: "undici",
+    reason: "GHSA-4qv8-2p9j-2685と同一根拠(miniflare固定のundici、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-2m5v-pch6-74hx",
+    package: "undici",
+    reason: "GHSA-4qv8-2p9j-2685と同一根拠(miniflare固定のundici、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-qrxm-fqhp-jwvm",
+    package: "undici",
+    reason: "GHSA-4qv8-2p9j-2685と同一根拠(miniflare固定のundici、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-9fm3-97px-rjf6",
+    package: "undici",
+    reason: "GHSA-4qv8-2p9j-2685と同一根拠(miniflare固定のundici、実バンドル非混入を実測済み)。",
+  },
+  {
+    id: "GHSA-55wc-3pg8-jfw6",
+    package: "undici",
+    reason: "GHSA-4qv8-2p9j-2685と同一根拠(miniflare固定のundici、実バンドル非混入を実測済み)。",
   },
 ];
 
