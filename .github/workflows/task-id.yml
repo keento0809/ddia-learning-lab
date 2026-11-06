@@ -1,0 +1,27 @@
+name: Task ID
+
+# T-726: PRのタスクIDが予約済みで、タイトルとブランチ名で一致することを検査する。
+# タイトル変更でも再検査が要るため`edited`を含める。ci.ymlに置くと全ジョブが
+# タイトル変更のたびに再実行されるので、別workflowに分けている。
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  task-id:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # タイトルとブランチ名はPR作成者が自由に書けるため、${{ }}をrunへ直接埋め込まず
+      # 環境変数で渡す(シェルインジェクション防止)。
+      - run: node scripts/task-id.mjs check-pr
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BRANCH: ${{ github.head_ref }}
+          GH_TOKEN: ${{ github.token }}
