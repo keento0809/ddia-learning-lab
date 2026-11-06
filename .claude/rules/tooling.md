@@ -19,3 +19,9 @@
   `npm install --before=<14日前の日付>`で解決し、lockfileの変更分を公開日と
   突き合わせて確認する。緊急の修正が14日未満の版にしかない場合は独断で採用せず、
   報告して判断を仰ぐ(詳細: STATUS.md 2026-11-06、T-710)。
+- Dependabot PRが`npm ci`の`Missing: ... from lock file`で失敗する場合は、PRごとに
+  lockfileを直さず、任意peerのネストエントリがDependabotの再生成で消えていないかを
+  確認し、`package.json`の`overrides`で単一バージョンへ統一して解消すること。
+  `overrides`の`@swc/helpers`は`next`の固定版と`@swc/core`の任意peerの不一致を
+  解消するためのもので、`next`更新時に要否を再確認すること(詳細: STATUS.md 2026-11-06、
+  T-711)。
