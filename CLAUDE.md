@@ -83,6 +83,8 @@ DDIA(分散データシステム)の概念を学ぶバイリンガル(ja/en)学�
 - npm run lint / npm run typecheck / npm run test
 - npm run validate:content # T-006以降
 - npm run build
+- npm run build:worker # Workersバンドル。CIのbundle-sizeと同じビルド
+- npm run verify:ci # npm ciから上記を一括実行。依存を変更したタスクはPR作成前に必須
 - npm run check:npm-audit # コミット前に毎回実行し、結果を表示する(設定・docsのみの変更も対象)
 - npm run test:e2e # E2Eを含むタスクのみ
 
