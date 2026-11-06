@@ -240,3 +240,47 @@ describe("evaluatePullRequest", () => {
     ).toEqual([]);
   });
 });
+
+describe("reserveTaskId の境界", () => {
+  it("上限回数まで先着に負け続けたら予約せずに失敗する", async () => {
+    const taken = Array.from({ length: 10 }, (_, index) => `T-${726 + index}`);
+    const client = fakeClient({ reserved: ["T-725"], taken });
+    await expect(reserveTaskId(client, { summary: "作業" })).rejects.toThrow(
+      "10回試しても",
+    );
+    expect(client.created).toEqual([]);
+  });
+
+  it("上限の直前で空きが出れば予約できる", async () => {
+    const taken = Array.from({ length: 9 }, (_, index) => `T-${726 + index}`);
+    const client = fakeClient({ reserved: ["T-725"], taken });
+    await expect(reserveTaskId(client, { summary: "作業" })).resolves.toBe(
+      "T-735",
+    );
+  });
+
+  it("未使用のIDを指定すれば作業概要つきで予約する", async () => {
+    const client = fakeClient({});
+    await expect(
+      reserveTaskId(client, { summary: "指定作業", id: "T-730" }),
+    ).resolves.toBe("T-730");
+    expect(client.created).toEqual([{ id: "T-730", summary: "指定作業" }]);
+  });
+});
+
+describe("系列と大文字小文字", () => {
+  it("上の系列のIDは次の番号の計算に含めない", () => {
+    expect(nextTaskId(new Set(["T-725", "T-801"]))).toBe("T-726");
+  });
+
+  it("小文字のIDも検査対象にする", () => {
+    const pr = {
+      title: "fix (t-730)",
+      branch: "fix/t-730-foo",
+      reservedIds: new Set<string>(),
+    };
+    expect(evaluatePullRequest(pr)).toEqual([
+      expect.stringContaining("T-730 は未予約"),
+    ]);
+  });
+});
