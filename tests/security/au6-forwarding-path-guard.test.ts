@@ -3,13 +3,18 @@ import { describe, expect, it, vi } from "vitest";
 /**
  * T-712 AU-6(docs/design/11_ADR-011 §3.2)。worker-appの転送経路が、エンコードされた
  * パスを使っても/api/配下以外へ到達しないことを固定する回帰テスト。
+ * tests/integration/setup.tsはdispatchToWorkerApiをモックするため、ここでは
+ * importActualで実装本体を検証する。
  */
 vi.mock("@opennextjs/cloudflare", () => ({
   getCloudflareContext: vi.fn(),
 }));
 
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { dispatchToWorkerApi } from "@/lib/api/workerApiDispatch";
+
+const { dispatchToWorkerApi } = await vi.importActual<
+  typeof import("@/lib/api/workerApiDispatch")
+>("@/lib/api/workerApiDispatch");
 
 describe("AU-6: 転送パスの境界", () => {
   it.each([
