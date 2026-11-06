@@ -14,6 +14,11 @@
   pre-hookが期待どおり発火することを確認すること(同種の重複キー事故が
   3タスクにまたがり再発した実績がある。詳細: STATUS.md 2026-07-19以降、
   T-109/T-107b/T-102)。
+- 依存更新で採用する版は、間接依存を含め公開から14日以上経過したものに限る
+  (Dependabotの`cooldown.default-days: 14`と同じ基準)。手動更新では
+  `npm install --before=<14日前の日付>`で解決し、lockfileの変更分を公開日と
+  突き合わせて確認する。緊急の修正が14日未満の版にしかない場合は独断で採用せず、
+  報告して判断を仰ぐ(詳細: STATUS.md 2026-11-06、T-710)。
 - Dependabot PRが`npm ci`の`Missing: ... from lock file`で失敗する場合は、PRごとに
   lockfileを直さず、任意peerのネストエントリがDependabotの再生成で消えていないかを
   確認し、`package.json`の`overrides`で単一バージョンへ統一して解消すること。
