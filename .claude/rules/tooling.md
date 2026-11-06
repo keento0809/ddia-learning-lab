@@ -14,3 +14,9 @@
   pre-hookが期待どおり発火することを確認すること(同種の重複キー事故が
   3タスクにまたがり再発した実績がある。詳細: STATUS.md 2026-07-19以降、
   T-109/T-107b/T-102)。
+- Dependabot PRが`npm ci`の`Missing: ... from lock file`で失敗する場合は、PRごとに
+  lockfileを直さず、任意peerのネストエントリがDependabotの再生成で消えていないかを
+  確認し、`package.json`の`overrides`で単一バージョンへ統一して解消すること。
+  `overrides`の`@swc/helpers`は`next`の固定版と`@swc/core`の任意peerの不一致を
+  解消するためのもので、`next`更新時に要否を再確認すること(詳細: STATUS.md 2026-11-06、
+  T-711)。
