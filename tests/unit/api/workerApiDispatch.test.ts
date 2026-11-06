@@ -71,4 +71,48 @@ describe("dispatchToWorkerApi", () => {
 
     expect(result).toBe(expected);
   });
+
+  // T-712: 転送先はworker-apiの公開APIである/api/配下に限定する。
+  it.each(["/other", "/api", "/api/", "/apiary/progress"])(
+    "rejects %s with 404 without calling env.API.fetch",
+    async (requestPath) => {
+      const fetchSpy = vi.fn(async () => new Response(null, { status: 200 }));
+      vi.mocked(getCloudflareContext).mockResolvedValue({
+        env: { API: { fetch: fetchSpy } },
+      } as unknown as Awaited<ReturnType<typeof getCloudflareContext>>);
+
+      const result = await dispatchToWorkerApi(
+        new Request(`https://ddia-learning-lab.example${requestPath}`),
+      );
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(result.status).toBe(404);
+      expect(result.headers.get("content-type")).toContain("application/problem+json");
+      await expect(result.json()).resolves.toEqual({
+        type: "about:blank#not-found",
+        title: "not_found",
+        status: 404,
+      });
+    },
+  );
+
+  it.each([
+    "/api/progress",
+    "/api/notes/05-replication/02-lag",
+    "/api/guest-progress/import",
+    "/api/submissions?exercise=05-replication%2Fquorum-lab",
+  ])("forwards %s with the URL unchanged", async (requestPath) => {
+    const fetchSpy = vi.fn<(req: Request) => Promise<Response>>(
+      async () => new Response(null, { status: 200 }),
+    );
+    vi.mocked(getCloudflareContext).mockResolvedValue({
+      env: { API: { fetch: fetchSpy } },
+    } as unknown as Awaited<ReturnType<typeof getCloudflareContext>>);
+
+    const url = `https://ddia-learning-lab.example${requestPath}`;
+    await dispatchToWorkerApi(new Request(url));
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0][0].url).toBe(url);
+  });
 });
