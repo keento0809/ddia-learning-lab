@@ -90,6 +90,7 @@
     "msw": "^2.15.0",
     "postcss": "^8.5.26",
     "prettier": "^3.9.5",
+    "prisma": "7.10.1",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.1",
     "typescript": "5.7.2",
@@ -106,6 +107,8 @@
     "@node-minify/core": {
       "glob": "10.5.0"
     },
-    "js-yaml": "4.3.2"
+    "js-yaml": "4.3.2",
+    "exsolve": "1.1.1",
+    "confbox": "0.2.4"
   }
 }
