@@ -3,9 +3,10 @@ import { mkdtempSync, rmSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
-import { Miniflare } from "miniflare";
+import type { Miniflare } from "miniflare";
 import { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { bundleModules, createMiniflare } from "./helpers/miniflare";
 import { createResetToken } from "../../../lib/auth/resetToken";
 
 /**
@@ -43,13 +44,12 @@ describe("worker-api: /internal/auth/* (T-503, 実バンドル)", () => {
       { cwd: repoRoot, stdio: "inherit" },
     );
 
-    mf = new Miniflare({
+    mf = createMiniflare({
       workers: [
         {
           name: "ddia-learning-lab-api",
-          modules: true,
-          scriptPath: path.join(outDir, "index.js"),
-          modulesRules: [{ type: "CompiledWasm", include: ["**/*.wasm"] }],
+          modules: bundleModules(outDir),
+          modulesRoot: outDir,
           compatibilityDate: COMPATIBILITY_DATE,
           compatibilityFlags: ["nodejs_compat"],
           bindings: { AUTH_SECRET, DATABASE_URL },
