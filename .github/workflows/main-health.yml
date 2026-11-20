@@ -1,0 +1,40 @@
+name: Main Health
+
+# T-727: mainを差分なしで定期検証する。npm auditの判定は公開済みアドバイザリに、
+# OpenNextのNextサポート判定は実行日に依存するため、コードが変わらなくても結果が
+# 変わる。2026-09-18〜11-05はCIが1度も走らず、次のPR(T-708)で初めて発覚した。
+#
+# GitHubの仕様上、公開リポジトリのscheduleは60日間活動がないと自動で無効化される。
+# 失敗通知はcronを最後に変更したユーザーへ送られる。
+on:
+  schedule:
+    - cron: "0 21 * * *" # 毎日 06:00 JST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  npm-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run check:npm-audit
+
+  build-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      # build:workerはprebuildフックを持たないため、ci.ymlのbundle-sizeと同じく先に生成する。
+      - run: npm run generate:curriculum && npm run validate:content
+      - run: npm run build:worker

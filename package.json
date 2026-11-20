@@ -39,6 +39,7 @@
     "check:task-id": "node scripts/task-id.mjs check-pr",
     "task:reserve": "node scripts/task-id.mjs reserve",
     "task:check": "node scripts/task-id.mjs check",
+    "verify:ci": "npm ci && npm run lint && npm run typecheck && npm run test && npm run build && npm run build:worker && npm run check:npm-audit",
     "validate:content": "tsx scripts/validate-content.ts",
     "test:e2e": "playwright test",
     "db:migrate": "prisma migrate dev",

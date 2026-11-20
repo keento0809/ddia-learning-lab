@@ -25,3 +25,9 @@
   `overrides`の`@swc/helpers`は`next`の固定版と`@swc/core`の任意peerの不一致を
   解消するためのもので、`next`更新時に要否を再確認すること(詳細: STATUS.md 2026-11-06、
   T-711)。
+- `package.json`/`package-lock.json`/`overrides`を変更したタスクは、PR作成前に
+  `npm run verify:ci`を実行すること。既存の`node_modules`が残ったままの検証では、
+  rootに宣言のない依存が解決できてしまい、CIの`npm ci`で初めて失敗する(T-710で
+  `prisma: not found`が発生)。rootの`scripts`やコードから使うパッケージは
+  ワークスペースの巻き上げに頼らず、rootの`package.json`に宣言すること
+  (詳細: STATUS.md 2026-11-06、T-727)。
