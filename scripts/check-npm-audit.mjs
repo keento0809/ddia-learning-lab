@@ -41,26 +41,6 @@ const ALLOWED_ADVISORIES = [
       "GHSA-qx2v-qp2m-jg93と同一根拠(next内蔵postcss、実バンドル非混入を実測済み)。",
   },
   {
-    id: "GHSA-82fw-gwwq-j7x9",
-    package: "@vitest/mocker",
-    reason:
-      "vitest@3.2.7(devDependency)が要求する@vitest/mocker由来。vitest/mockerは" +
-      "`npm run test`実行時にのみ使用され、アプリケーションコードから一切importされない。" +
-      "wrangler dry-runで生成したworker-app(worker.js)/worker-api(index.js)双方の" +
-      "実バンドルに'@vitest/mocker'文字列およびvitest/mocker由来コードが0件、両ソース" +
-      "マップの収録元ファイル一覧にも'vitest'を含むファイルが0件であることを実測済み" +
-      "(worker-api側で1件ヒットした'vitest'文字列は無関係な別パッケージが内包する" +
-      'package.jsonメタデータ中の`"test": "vitest run"`スクリプト定義の部分一致であり、' +
-      "@vitest/mockerのコードではないことを目視確認済み)。修正経路はvitestのメジャー" +
-      "アップグレードのみで、依存更新の別タスクで対応する。",
-  },
-  {
-    id: "GHSA-qxg6-89mg-rqv8",
-    package: "@vitest/mocker",
-    reason:
-      "GHSA-82fw-gwwq-j7x9と同一根拠(vitest内蔵@vitest/mocker)。T-710でwrangler dry-runにより生成したworker-app(worker.js)/worker-api(index.js)双方の実バンドルに'@vitest/mocker'文字列が0件であることを再実測済み。",
-  },
-  {
     id: "GHSA-3g3m-2fjr-6pw4",
     package: "glob",
     reason:
@@ -71,18 +51,6 @@ const ALLOWED_ADVISORIES = [
     package: "minimatch",
     reason:
       "@opennextjs/cloudflare -> glob@13、@opennextjs/aws -> @node-minify/core -> glob、および@typescript-eslint(eslint-config-next経由)由来で、ビルド/lint時にのみ使用される。T-710でwrangler dry-runにより生成したworker-app(worker.js)/worker-api(index.js)双方の実バンドルに'minimatch'文字列が0件、両ソースマップの収録元ファイル一覧にも該当ファイルが0件であることを実測済み。",
-  },
-  {
-    id: "GHSA-5gmw-xhrv-c9v3",
-    package: "tinypool",
-    reason:
-      "vitest@3.2.7(devDependency)が要求するtinypool由来で、`npm run test`実行時にのみ使用される。T-710でwrangler dry-runにより生成したworker-app(worker.js)/worker-api(index.js)双方の実バンドルに'tinypool'文字列が0件、両ソースマップの収録元ファイル一覧にも該当ファイルが0件であることを実測済み。修正経路はvitestのメジャーアップグレードのみで、依存更新の別タスクで対応する。",
-  },
-  {
-    id: "GHSA-85c8-ppgw-ccpr",
-    package: "tinypool",
-    reason:
-      "GHSA-5gmw-xhrv-c9v3と同一根拠(T-710、実バンドル非混入を実測済み)。",
   },
   {
     id: "GHSA-4qv8-2p9j-2685",
