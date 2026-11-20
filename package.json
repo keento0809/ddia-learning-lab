@@ -36,6 +36,9 @@
     "check:bundle-size": "node scripts/check-bundle-size.mjs",
     "check:worker-visibility": "node scripts/check-worker-visibility.mjs",
     "check:npm-audit": "node scripts/check-npm-audit.mjs",
+    "check:task-id": "node scripts/task-id.mjs check-pr",
+    "task:reserve": "node scripts/task-id.mjs reserve",
+    "task:check": "node scripts/task-id.mjs check",
     "verify:ci": "npm ci && npm run lint && npm run typecheck && npm run test && npm run build && npm run build:worker && npm run check:npm-audit",
     "validate:content": "tsx scripts/validate-content.ts",
     "test:e2e": "playwright test",
@@ -113,6 +116,9 @@
     "js-yaml": "4.3.2",
     "exsolve": "1.1.1",
     "pkg-types": "2.3.1",
-    "@swc/helpers": "0.5.23"
+    "@swc/helpers": "0.5.23",
+    "@prisma/config": {
+      "effect": "3.22.4"
+    }
   }
 }
