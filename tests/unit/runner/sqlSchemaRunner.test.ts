@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import type { SqlSchemaRequest, SqlSchemaResult } from "@/lib/runner/sqlSchemaContracts";
 import { EXTERNAL_TIMEOUT_MS, runSqlSchemaExercise, type SqlSchemaWorkerLike } from "@/lib/runner/sqlSchemaRunner";
 
@@ -6,10 +6,10 @@ function baseRequest(overrides: Partial<SqlSchemaRequest> = {}): SqlSchemaReques
   return { setupSql: "CREATE TABLE t(id INTEGER);", ...overrides };
 }
 
-function createFakeWorker(): SqlSchemaWorkerLike & { terminate: ReturnType<typeof vi.fn> } {
+function createFakeWorker(): SqlSchemaWorkerLike & { terminate: Mock<() => void> } {
   return {
     postMessage: vi.fn(),
-    terminate: vi.fn(),
+    terminate: vi.fn<() => void>(),
     onmessage: null,
     onerror: null,
   };

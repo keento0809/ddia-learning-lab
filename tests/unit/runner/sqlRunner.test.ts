@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import type { SqlRunRequest, SqlRunResult } from "@/lib/runner/sqlContracts";
 import { EXTERNAL_TIMEOUT_MS, runSqlExercise, type SqlWorkerLike } from "@/lib/runner/sqlRunner";
 
@@ -12,10 +12,10 @@ function baseRequest(overrides: Partial<SqlRunRequest> = {}): SqlRunRequest {
   };
 }
 
-function createFakeWorker(): SqlWorkerLike & { terminate: ReturnType<typeof vi.fn> } {
+function createFakeWorker(): SqlWorkerLike & { terminate: Mock<() => void> } {
   return {
     postMessage: vi.fn(),
-    terminate: vi.fn(),
+    terminate: vi.fn<() => void>(),
     onmessage: null,
     onerror: null,
   };

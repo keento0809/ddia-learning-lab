@@ -25,3 +25,9 @@
   `overrides`の`@swc/helpers`は`next`の固定版と`@swc/core`の任意peerの不一致を
   解消するためのもので、`next`更新時に要否を再確認すること(詳細: STATUS.md 2026-11-06、
   T-711)。
+- `test:integration`/`test:workers`/`test:security`をDocker以外のDBで代替実行する場合も、
+  `npx vitest run -c ...`を直接呼ばず、対応する`pre<script>`(slugマニフェストを
+  フィクスチャへ切り替える)を先に実行すること。失敗した実行の結果はvitestの
+  キャッシュ(`node_modules/.vite/vitest`)に残り、次回は失敗ファイルが先に走るため、
+  実行順に依存するテストが連鎖して失敗する。結果を信用する前にキャッシュを退避し、
+  DBも作り直すこと(詳細: STATUS.md 2026-11-20、T-728)。

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import type { RunRequest, RunResult } from "@/lib/contracts/runner";
 import { EXTERNAL_TIMEOUT_MS, runExercise, type WorkerLike } from "@/lib/runner/jsRunner";
 
@@ -13,10 +13,10 @@ function baseRequest(overrides: Partial<RunRequest> = {}): RunRequest {
 }
 
 /** テスト用の最小Workerフェイク。postMessage呼び出しをトリガーに応答を制御する。 */
-function createFakeWorker(): WorkerLike & { terminate: ReturnType<typeof vi.fn> } {
+function createFakeWorker(): WorkerLike & { terminate: Mock<() => void> } {
   return {
     postMessage: vi.fn(),
-    terminate: vi.fn(),
+    terminate: vi.fn<() => void>(),
     onmessage: null,
     onerror: null,
   };
